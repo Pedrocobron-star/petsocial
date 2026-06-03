@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "Pet Social",
+    "slug": "petsocial",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "petsocial",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png",
+      "name": "Pet Social — Saúde do pet + comunidade",
+      "shortName": "Pet Social",
+      "description": "Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu cachorro, gato, coelho e mais.",
+      "lang": "pt-BR",
+      "themeColor": "#F97316",
+      "backgroundColor": "#FFFBF5",
+      "display": "standalone",
+      "orientation": "portrait",
+      "startUrl": "/",
+      "scope": "/",
+      "categories": [
+        "lifestyle",
+        "social",
+        "health"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFBF5",
+          "dark": {
+            "backgroundColor": "#1A1410"
+          }
+        }
+      ],
+      "expo-video",
+      "@react-native-community/datetimepicker",
+      "expo-font",
+      "expo-quick-actions",
+      "expo-localization"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+# Páginas estáticas e share URLs (renderizadas pela edge function share-meta)
+# têm meta tags completas pra crawlers. Páginas /app/* são SPA — crawlers
+# vão ver shell + meta defaults, conteúdo dinâmico atualizado client-side.
+
+Sitemap: https://pet.social/sitemap.xml
+
+# Não indexar telas autenticadas — não tem valor pra busca pública
+Disallow: /onboarding
+Disallow: /account
+Disallow: /notification-settings
+Disallow: /language
+Disallow: /messages
+Disallow: /chat/
+Disallow: /saved
+Disallow: /notifications
+Disallow: /edit-profile
+Disallow: /pets-overview

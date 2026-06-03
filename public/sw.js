@@ -1,0 +1,100 @@
+/**
+ * Pet Social — Service Worker
+ *
+ * Estratégia:
+ *  - Cache-first pra assets estáticos (fontes, ícones, JS/CSS bundle)
+ *  - Network-first pra navegação HTML (sempre tenta versão fresca, fallback cache)
+ *  - Network-first pra API Supabase (não cacheia POST/PATCH/DELETE; GETs leves opcionais)
+ *  - Fallback /offline.html quando nem rede nem cache têm a resposta
+ *
+ * Bump CACHE_VERSION ao mudar assets — força refresh do cache.
+ */
+
+const CACHE_VERSION = 'pet-social-v1';
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
+
+const STATIC_ASSETS = [
+  '/',
+  '/offline.html',
+  '/assets/assets/images/icon-192.png',
+  '/assets/assets/images/icon-512.png',
+  '/assets/assets/images/favicon.png',
+];
+
+// ----- INSTALL -----
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS).catch(() => undefined)),
+  );
+  self.skipWaiting();
+});
+
+// ----- ACTIVATE -----
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((k) => !k.startsWith(CACHE_VERSION))
+          .map((k) => caches.delete(k)),
+      ),
+    ),
+  );
+  self.clients.claim();
+});
+
+// ----- FETCH -----
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+
+  // Pula non-GET (auth, mutations)
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+
+  // Pula Supabase API + auth (precisa estar sempre fresh)
+  if (url.host.endsWith('supabase.co')) return;
+
+  // Pula extensions
+  if (url.protocol.startsWith('chrome-extension')) return;
+
+  // HTML navigation: network-first, fallback cache, fallback /offline.html
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // Atualiza cache em background
+          const copy = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => undefined);
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then((cached) => cached || caches.match('/offline.html')),
+        ),
+    );
+    return;
+  }
+
+  // Assets estáticos: cache-first
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request)
+        .then((response) => {
+          // Só cacheia 200 OK
+          if (response.ok && response.type === 'basic') {
+            const copy = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => undefined);
+          }
+          return response;
+        })
+        .catch(() => cached);
+    }),
+  );
+});
+
+// Mensagem do app pra forçar reload do SW (usado em deploy)
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+});

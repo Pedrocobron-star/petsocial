@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sitemap estático com rotas marketing/legais que merecem indexação.
+  Rotas dinâmicas (/pet/{id}, /post/{id}, /id/{token}) NÃO entram aqui
+  porque (a) os IDs são privados e (b) crawlers descobrem via shares e
+  Open Graph nas próprias páginas.
+
+  Caso queira indexar pets públicos, gerar sitemap-dynamic.xml via edge
+  function (sitemap-feed) que consulta a tabela `pets` filtrando os que
+  estão flag `is_public=true` — feature futura.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://pet.social/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://pet.social/welcome</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://pet.social/pro</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pet.social/legal/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://pet.social/legal/terms</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://pet.social/legal/privacy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://pet.social/legal/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>

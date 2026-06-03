@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Splash icon: pata em squircle laranja, com margem extra (resizeMode contain) -->
+  <rect width="1024" height="1024" rx="260" ry="260" fill="#F97316"/>
+  <g transform="translate(512 512) scale(7.5) translate(-32 -32)">
+    <ellipse cx="32" cy="40" rx="11" ry="9" fill="#FFFFFF"/>
+    <ellipse cx="20" cy="26" rx="4.5" ry="6" fill="#FFFFFF"/>
+    <ellipse cx="28" cy="20" rx="4.5" ry="6.5" fill="#FFFFFF"/>
+    <ellipse cx="36" cy="20" rx="4.5" ry="6.5" fill="#FFFFFF"/>
+    <ellipse cx="44" cy="26" rx="4.5" ry="6" fill="#FFFFFF"/>
+  </g>
+</svg>
