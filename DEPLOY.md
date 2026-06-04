@@ -89,7 +89,30 @@ supabase secrets set PUBLIC_APP_URL=https://petsocial-xxx.vercel.app
 Depois disso, links tipo `https://petsocial-xxx.vercel.app/share/post/{id}` mostram preview
 bonito quando compartilhados.
 
-### 3. (Opcional) Domínio próprio
+### 3. Push web (notificações no navegador/PWA, mesmo com o app fechado)
+
+O app já tem todo o código (service worker, inscrição, edge function `send-web-push`,
+cron de lembretes). Falta só ligar no Supabase:
+
+```bash
+# Deploy da function
+supabase functions deploy send-web-push --no-verify-jwt
+
+# Secrets VAPID (a pública já está no client; a privada é só sua)
+supabase secrets set VAPID_PUBLIC_KEY=BGYcFqQLkmKMnuwWAhQNmoBnHUOQAFa-3aSkdTuMlCT5XRYvGOg_a4KYO7gLNjmf9K4hB41A56DQ5xc5ZTuX9XU
+supabase secrets set VAPID_PRIVATE_KEY=<SUA_CHAVE_PRIVADA_VAPID>
+supabase secrets set VAPID_SUBJECT=mailto:pedrocobron@gmail.com
+```
+
+**Lembretes automáticos diários** (opcional):
+1. Dashboard → Database → Extensions: ligue `pg_cron` e `pg_net`.
+2. No SQL editor, rode `supabase/push-reminders-cron.sql` + os 2 `ALTER DATABASE`
+   comentados no topo dele (URL da function + service_role key).
+
+**Testar:** app → Notificações → "Ativar push no navegador" → Permitir → "Enviar teste".
+(A tabela `push_subscriptions` já foi criada.)
+
+### 4. (Opcional) Domínio próprio
 1. Compre em Registro.br (.com.br) ou Namecheap (.com)
 2. Vercel → seu projeto → **Settings** → **Domains**
 3. Adicione o domínio, configure os DNS conforme Vercel mostra
@@ -161,6 +184,9 @@ Se rodar local ok, vai rodar no Vercel.
 - `ai_conversations`, `ai_messages`
 - `memorial_messages`, `pet_milestones`, `blocked_users`, `reports`
 - `app_errors`
+- `recalls`, `vet_endorsements`, `pet_documents`, `pet_expenses`
+- `offers`, `adoption_listings`, `push_subscriptions`
+- (pets ganhou a coluna `sinpatinhas_id`)
 
 **Storage buckets** (públicos):
 - `avatars`
@@ -176,7 +202,9 @@ Se rodar local ok, vai rodar no Vercel.
 **Edge functions** (deploy após app):
 - `share-meta` — OG previews
 - `ai-pet-assistant` — chat IA (precisa OPENAI_API_KEY ou ANTHROPIC_API_KEY no secrets)
-- `send-push` — push notifications
+- `send-push` — push nativo (Expo, só nos apps de loja)
+- `send-web-push` — push web/PWA (precisa secrets VAPID — ver seção Push web acima)
+- `endorse_fetch` / `endorse_submit` / `caretaker_shared_pets` / `track_offer_click` — RPCs (já no banco)
 - `create-checkout-session` + `stripe-webhook` — Pet Pro (opcional, só ativa quando ligar Stripe)
 
 ---
