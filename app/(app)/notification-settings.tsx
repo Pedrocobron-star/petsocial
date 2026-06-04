@@ -6,12 +6,22 @@ import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native
 
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
+import { PressScale } from '@/components/ui/press-scale';
 import { Shimmer } from '@/components/ui/shimmer';
 import { FONTS } from '@/lib/fonts';
 import {
   cancelAllHealthReminders,
   listScheduledHealthReminders,
 } from '@/lib/health-notifications';
+import {
+  isPushSubscribed,
+  isPushSupported,
+  pushPermission,
+  sendTestPush,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from '@/lib/web-push';
+import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
@@ -27,6 +37,7 @@ interface ScheduledItem {
 export default function NotificationSettingsScreen() {
   const { theme } = useTheme();
   const toast = useToast();
+  const { session } = useSession();
   const [permission, setPermission] = useState<PermissionState>('unknown');
   const [scheduled, setScheduled] = useState<ScheduledItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,12 +108,16 @@ export default function NotificationSettingsScreen() {
       <Stack.Screen options={{ title: 'Notificações' }} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
         {/* Status banner */}
-        <PermissionBanner
-          state={permission}
-          onRequest={requestPermission}
-          onRefresh={refresh}
-          refreshing={refreshing}
-        />
+        {Platform.OS === 'web' ? (
+          <WebPushToggle userId={session?.user.id} />
+        ) : (
+          <PermissionBanner
+            state={permission}
+            onRequest={requestPermission}
+            onRefresh={refresh}
+            refreshing={refreshing}
+          />
+        )}
 
         {/* Lista de agendados */}
         {loading ? (
@@ -198,6 +213,133 @@ export default function NotificationSettingsScreen() {
 // ----------------------------------------------------------------------------
 // Components
 // ----------------------------------------------------------------------------
+
+function WebPushToggle({ userId }: { userId?: string }) {
+  const { theme } = useTheme();
+  const toast = useToast();
+  const [supported, setSupported] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [perm, setPerm] = useState<NotificationPermission | 'unsupported'>('unsupported');
+
+  useEffect(() => {
+    setSupported(isPushSupported());
+    setPerm(pushPermission());
+    isPushSubscribed().then(setSubscribed);
+  }, []);
+
+  const enable = async () => {
+    if (!userId) return;
+    setBusy(true);
+    const r = await subscribeToPush(userId);
+    setBusy(false);
+    setPerm(pushPermission());
+    if (r === 'subscribed') {
+      setSubscribed(true);
+      toast.success('Push ativado! 🔔', 'Você recebe lembretes mesmo com o app fechado.');
+    } else if (r === 'denied') {
+      toast.error('Permissão negada', 'Libere as notificações nas configurações do navegador.');
+    } else if (r === 'unsupported') {
+      toast.info('Este navegador não suporta push');
+    } else {
+      toast.error('Não foi possível ativar', 'Tente de novo.');
+    }
+  };
+
+  const disable = async () => {
+    setBusy(true);
+    await unsubscribeFromPush();
+    setBusy(false);
+    setSubscribed(false);
+    toast.success('Push desativado');
+  };
+
+  const test = async () => {
+    if (!userId) return;
+    setTesting(true);
+    const r = await sendTestPush(userId);
+    setTesting(false);
+    if (r.ok) {
+      toast.success('Enviado!', 'Deve chegar uma notificação em segundos.');
+    } else {
+      toast.error('Não chegou', 'A edge function send-web-push precisa estar deployada com as secrets VAPID.');
+    }
+  };
+
+  if (!supported) {
+    return (
+      <View style={{ backgroundColor: '#FEF3C7', padding: 14, borderRadius: 14, gap: 6 }}>
+        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#92400E' }}>
+          🌐 Push não disponível aqui
+        </Text>
+        <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#78350F', lineHeight: 17 }}>
+          Seu navegador não suporta notificações push (ou está em aba privada). Instale o Pet Social
+          como app (banner "Instalar") pra ativar.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ backgroundColor: subscribed ? '#DCFCE7' : '#FFFBEB', padding: 14, borderRadius: 14, gap: 12, borderWidth: 1, borderColor: subscribed ? '#86EFAC' : '#FDE68A' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <Text style={{ fontSize: 22 }}>{subscribed ? '🔔' : '🔕'}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: subscribed ? '#166534' : '#92400E' }}>
+            {subscribed ? 'Push do navegador ativo' : 'Receba lembretes no navegador'}
+          </Text>
+          <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: subscribed ? '#15803D' : '#78350F', marginTop: 2, lineHeight: 17 }}>
+            {subscribed
+              ? 'Vacinas, vermífugo e consultas chegam mesmo com o app fechado.'
+              : 'Ative pra ser avisado dos cuidados do seu pet sem precisar abrir o app.'}
+          </Text>
+        </View>
+      </View>
+
+      {subscribed ? (
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <PressScale
+            onPress={test}
+            disabled={testing}
+            style={{ flex: 1, backgroundColor: '#16A34A', paddingVertical: 9, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: testing ? 0.6 : 1 }}
+          >
+            <Ionicons name="paper-plane" size={14} color="#FFFFFF" />
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#FFFFFF' }}>
+              {testing ? 'Enviando...' : 'Enviar teste'}
+            </Text>
+          </PressScale>
+          <PressScale
+            onPress={disable}
+            disabled={busy}
+            style={{ backgroundColor: '#FFFFFF', paddingVertical: 9, paddingHorizontal: 16, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#BBF7D0', opacity: busy ? 0.6 : 1 }}
+          >
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#166534' }}>
+              {busy ? '...' : 'Desativar'}
+            </Text>
+          </PressScale>
+        </View>
+      ) : (
+        <PressScale
+          onPress={enable}
+          disabled={busy || !userId}
+          style={{ backgroundColor: '#F59E0B', paddingVertical: 11, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: busy ? 0.6 : 1 }}
+        >
+          <Ionicons name="notifications" size={16} color="#FFFFFF" />
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FFFFFF' }}>
+            {busy ? 'Ativando...' : 'Ativar push no navegador'}
+          </Text>
+        </PressScale>
+      )}
+
+      {perm === 'denied' && !subscribed ? (
+        <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#92400E' }}>
+          Você bloqueou as notificações. Clique no cadeado 🔒 da barra de endereço → Notificações → Permitir.
+        </Text>
+      ) : null}
+    </View>
+  );
+}
 
 function PermissionBanner({
   state,

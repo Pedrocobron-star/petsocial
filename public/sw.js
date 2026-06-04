@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION ao mudar assets — força refresh do cache.
  */
 
-const CACHE_VERSION = 'pet-social-v1';
+const CACHE_VERSION = 'pet-social-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -90,6 +90,44 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => cached);
+    }),
+  );
+});
+
+// ----- PUSH (Web Push API) -----
+// Payload esperado (JSON): { title, body, url, icon, tag }
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: 'Pet Social', body: event.data ? event.data.text() : '' };
+  }
+  const title = data.title || 'Pet Social 🐾';
+  const options = {
+    body: data.body || '',
+    icon: data.icon || '/assets/assets/images/icon-192.png',
+    badge: '/assets/assets/images/icon-192.png',
+    data: { url: data.url || '/' },
+    tag: data.tag,
+    renotify: !!data.tag,
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// ----- NOTIFICATION CLICK -----
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client) {
+          if ('navigate' in client) client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
     }),
   );
 });
