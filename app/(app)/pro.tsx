@@ -18,7 +18,7 @@ import { useToast } from '@/providers/toast-provider';
 const HERO_BENEFITS = [
   { emoji: '🐾', title: 'Pets ilimitados', desc: 'Toda a família num lugar só' },
   { emoji: '📤', title: 'Carteirinha sem marca d\'água', desc: 'PDF profissional pro vet' },
-  { emoji: '🚫', title: 'Zero anúncios', desc: 'Experiência limpa, focada nos pets' },
+  { emoji: '📈', title: 'Histórico de saúde', desc: 'Evolução completa, sem limite de meses' },
 ] as const;
 
 const PRO_FEATURES = [
