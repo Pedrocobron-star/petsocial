@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, Text, View } from 'react-native';
-import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 
 import { FONTS } from '@/lib/fonts';
 import { track } from '@/lib/analytics';
@@ -9,39 +8,36 @@ import { track } from '@/lib/analytics';
 /**
  * Banner sticky no topo que oferece instalar o Pet Social como PWA.
  *
- * Mostra SÓ quando:
- *  - Plataforma é web
- *  - User-Agent é mobile (iOS/Android)
- *  - Browser NÃO está em standalone (já instalado)
- *  - User não fez dismiss antes
- *  - (Chrome/Edge) tem evento beforeinstallprompt disponível, OU
- *  - (iOS Safari) detectamos iOS+Safari e mostramos hint manual
+ * Mostra em QUALQUER celular (web), a não ser que:
+ *  - já esteja instalado (standalone), ou
+ *  - o user tenha dispensado recentemente.
  *
- * Dismiss persiste em localStorage por 14 dias (depois reaparece —
- * usuário pode ter mudado de ideia).
+ * Modo:
+ *  - 'native'  → navegador disparou `beforeinstallprompt` (Android Chrome/Edge/Brave…):
+ *                botão "Instalar" abre o prompt nativo (1 toque).
+ *  - 'android' → mobile sem a API: botão "Como instalar" → passo a passo do menu.
+ *  - 'ios'     → iPhone: botão "Como instalar" → passo a passo do Safari.
  *
- * Visual: banner laranja no topo full-width, ícone do pet, texto curto,
- * CTA "Instalar". Botão X pra fechar.
+ * Antes dependia 100% do `beforeinstallprompt` (caprichoso) — agora há fallback
+ * por timer (2,5s) que mostra instruções manuais se o evento não vier.
  */
 
-const DISMISS_KEY = 'pet-social.mobile-banner-dismissed-until';
-const DISMISS_DAYS = 14;
+const DISMISS_KEY = 'pet-social.install-banner-dismissed-until.v2';
+const DISMISS_DAYS = 7;
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-interface BannerState {
-  visible: boolean;
-  /** 'native' = Android/Chrome com beforeinstallprompt; 'ios' = iOS Safari hint manual. */
-  mode: 'native' | 'ios' | null;
-}
+type Mode = 'native' | 'android' | 'ios';
 
 export function MobileAppBanner() {
-  const [state, setState] = useState<BannerState>({ visible: false, mode: null });
+  const [visible, setVisible] = useState(false);
+  const [mode, setMode] = useState<Mode>('android');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showIosHint, setShowIosHint] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const shownRef = useRef(false);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
@@ -50,48 +46,50 @@ export function MobileAppBanner() {
     if (window.matchMedia?.('(display-mode: standalone)').matches) return;
     if ((window.navigator as { standalone?: boolean }).standalone) return;
 
-    // Dismissed recentemente?
+    // Dispensado recentemente?
     try {
-      const dismissedUntil = window.localStorage?.getItem(DISMISS_KEY);
-      if (dismissedUntil && Number(dismissedUntil) > Date.now()) return;
+      const until = window.localStorage?.getItem(DISMISS_KEY);
+      if (until && Number(until) > Date.now()) return;
     } catch {
       // localStorage indisponível (modo privado) — segue tentando mostrar
     }
 
-    // Detecta mobile via UA + viewport
+    // Só em mobile
     const ua = window.navigator.userAgent.toLowerCase();
     const isMobile = /mobi|android|iphone|ipad|ipod/i.test(ua) || window.innerWidth < 768;
     if (!isMobile) return;
+    const isIos = /iphone|ipad|ipod/i.test(ua);
 
-    // Caso 1: Chrome/Edge Android — escuta beforeinstallprompt
+    // Chrome/Edge/Brave/Samsung… → instalação nativa (preferida)
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setState({ visible: true, mode: 'native' });
+      setMode('native');
+      setVisible(true);
+      shownRef.current = true;
       track('mobile_banner_shown', { mode: 'native' });
     };
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
 
-    // Caso 2: iOS Safari — sem API, mostra hint manual após 2s
-    const isIos = /iphone|ipad|ipod/i.test(ua);
-    const isSafari = /safari/i.test(ua) && !/crios|fxios|edgios|chrome|edg|firefox|opera/i.test(ua);
-    if (isIos && isSafari) {
-      const tid = setTimeout(() => {
-        setState({ visible: true, mode: 'ios' });
-        track('mobile_banner_shown', { mode: 'ios' });
-      }, 1500);
-      return () => {
-        clearTimeout(tid);
-        window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-      };
-    }
+    // Fallback: depois de 2,5s, se o evento nativo não veio, mostra mesmo assim
+    // com instruções manuais (iOS ou Android).
+    const tid = setTimeout(() => {
+      if (shownRef.current) return;
+      setMode(isIos ? 'ios' : 'android');
+      setVisible(true);
+      shownRef.current = true;
+      track('mobile_banner_shown', { mode: isIos ? 'ios' : 'android' });
+    }, 2500);
 
-    return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+    return () => {
+      clearTimeout(tid);
+      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+    };
   }, []);
 
   const dismiss = () => {
-    setState({ visible: false, mode: null });
-    setShowIosHint(false);
+    setVisible(false);
+    setShowHint(false);
     setDeferredPrompt(null);
     try {
       const until = Date.now() + DISMISS_DAYS * 24 * 60 * 60 * 1000;
@@ -103,47 +101,50 @@ export function MobileAppBanner() {
   };
 
   const handleInstall = async () => {
-    if (state.mode === 'ios') {
-      setShowIosHint(true);
-      track('mobile_banner_ios_hint_opened');
+    // Instalação nativa disponível → dispara o prompt do navegador
+    if (mode === 'native' && deferredPrompt) {
+      track('mobile_banner_install_clicked');
+      try {
+        await deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        track('mobile_banner_install_result', { outcome: choice.outcome });
+        if (choice.outcome === 'accepted') dismiss();
+      } catch {
+        setShowHint(true);
+      }
       return;
     }
-    if (!deferredPrompt) return;
-    track('mobile_banner_install_clicked');
-    await deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    track('mobile_banner_install_result', { outcome: choice.outcome });
-    if (choice.outcome === 'accepted') {
-      dismiss();
-    }
+    // Sem API → abre instruções manuais
+    setShowHint(true);
+    track('mobile_banner_hint_opened', { mode });
   };
 
   if (Platform.OS !== 'web') return null;
-  if (!state.visible) return null;
+  if (!visible) return null;
+
+  const ctaLabel = mode === 'native' ? 'Instalar' : 'Como instalar';
 
   return (
     <>
-      <Animated.View
-        entering={FadeInDown.duration(280)}
-        exiting={FadeOutUp.duration(180)}
+      <View
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
+          bottom: 84,
+          left: 12,
+          right: 12,
           zIndex: 9999,
           backgroundColor: '#F97316',
-          paddingTop: 14,
-          paddingBottom: 14,
+          paddingVertical: 12,
           paddingHorizontal: 14,
+          borderRadius: 16,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 12,
           shadowColor: '#000',
-          shadowOpacity: 0.15,
-          shadowRadius: 10,
+          shadowOpacity: 0.18,
+          shadowRadius: 12,
           shadowOffset: { width: 0, height: 4 },
-          elevation: 6,
+          elevation: 8,
         }}
       >
         <View
@@ -196,7 +197,7 @@ export function MobileAppBanner() {
           }}
         >
           <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#F97316' }}>
-            {state.mode === 'ios' ? 'Como' : 'Instalar'}
+            {ctaLabel}
           </Text>
         </Pressable>
         <Pressable
@@ -207,17 +208,17 @@ export function MobileAppBanner() {
         >
           <Ionicons name="close" size={20} color="#FFFFFF" />
         </Pressable>
-      </Animated.View>
+      </View>
 
-      {/* iOS hint modal */}
+      {/* Modal de instruções manuais (iOS ou Android) */}
       <Modal
-        visible={showIosHint}
+        visible={showHint}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowIosHint(false)}
+        onRequestClose={() => setShowHint(false)}
       >
         <Pressable
-          onPress={() => setShowIosHint(false)}
+          onPress={() => setShowHint(false)}
           style={{
             flex: 1,
             backgroundColor: 'rgba(26, 20, 16, 0.6)',
@@ -251,30 +252,28 @@ export function MobileAppBanner() {
                 <Text style={{ fontSize: 36 }}>🐾</Text>
               </View>
               <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#1A1410' }}>
-                Adicionar à Tela de Início
+                Adicionar à tela inicial
               </Text>
             </View>
 
             <View style={{ gap: 12 }}>
-              <Step
-                num={1}
-                text="Toque no botão Compartilhar do Safari"
-                icon="share-outline"
-              />
-              <Step
-                num={2}
-                text="Role e escolha 'Adicionar à Tela de Início'"
-                icon="add-circle-outline"
-              />
-              <Step
-                num={3}
-                text="Toque em 'Adicionar' — pronto, vira ícone na home!"
-                icon="checkmark-circle"
-              />
+              {mode === 'ios' ? (
+                <>
+                  <Step num={1} text="Toque no botão Compartilhar do Safari (quadrado com seta ↑)" icon="share-outline" />
+                  <Step num={2} text="Role e escolha 'Adicionar à Tela de Início'" icon="add-circle-outline" />
+                  <Step num={3} text="Toque em 'Adicionar' — pronto, vira ícone na home!" icon="checkmark-circle" />
+                </>
+              ) : (
+                <>
+                  <Step num={1} text="Toque no menu do navegador (os 3 pontinhos ⋮, no canto)" icon="ellipsis-vertical" />
+                  <Step num={2} text="Escolha 'Instalar app' ou 'Adicionar à tela inicial'" icon="add-circle-outline" />
+                  <Step num={3} text="Confirme — pronto, vira ícone na sua tela!" icon="checkmark-circle" />
+                </>
+              )}
             </View>
 
             <Pressable
-              onPress={() => setShowIosHint(false)}
+              onPress={() => setShowHint(false)}
               accessibilityLabel="Fechar"
               style={{
                 backgroundColor: '#F97316',
