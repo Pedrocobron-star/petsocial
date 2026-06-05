@@ -14,7 +14,6 @@ import { PostCard } from '@/components/post-card';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { RecallBanner } from '@/components/recall-banner';
 import { SponsoredPostCard } from '@/components/sponsored-post-card';
-import { StoriesRing } from '@/components/stories-ring';
 import { Button } from '@/components/ui/button';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PawRefreshControl, PawRefreshOverlay } from '@/components/ui/paw-refresh-control';
@@ -156,7 +155,6 @@ export default function FeedScreen() {
           contentContainerStyle={{ paddingTop: 0, paddingBottom: 24, flexGrow: 1 }}
           ListHeaderComponent={
             <>
-              <StoriesRing />
               <RecallBanner />
               <HealthRemindersBanner />
             </>
