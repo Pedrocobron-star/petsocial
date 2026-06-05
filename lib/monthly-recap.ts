@@ -36,14 +36,17 @@ export interface MonthlyRecap {
   isEmpty: boolean;
 }
 
-const KIND_META: Record<HealthEventKind | 'document', { label: string; emoji: string; color: string; bg: string }> = {
-  vaccine: { label: 'Vacinas', emoji: '💉', color: '#9A3412', bg: '#FFEDD5' },
-  parasite: { label: 'Vermífugo & pulga', emoji: '💊', color: '#166534', bg: '#DCFCE7' },
-  vet_visit: { label: 'Consultas', emoji: '🩺', color: '#1E40AF', bg: '#DBEAFE' },
-  weight: { label: 'Pesagens', emoji: '⚖️', color: '#9D174D', bg: '#FCE7F3' },
-  medication_started: { label: 'Remédios', emoji: '🧪', color: '#3730A3', bg: '#EEF2FF' },
-  symptom: { label: 'Sintomas', emoji: '📝', color: '#92400E', bg: '#FEF3C7' },
-  document: { label: 'Documentos', emoji: '📂', color: '#5B21B6', bg: '#EDE9FE' },
+const KIND_META: Record<
+  HealthEventKind | 'document',
+  { label: string; singular: string; emoji: string; color: string; bg: string }
+> = {
+  vaccine: { label: 'Vacinas', singular: 'Vacina', emoji: '💉', color: '#9A3412', bg: '#FFEDD5' },
+  parasite: { label: 'Vermífugo & pulga', singular: 'Vermífugo & pulga', emoji: '💊', color: '#166534', bg: '#DCFCE7' },
+  vet_visit: { label: 'Consultas', singular: 'Consulta', emoji: '🩺', color: '#1E40AF', bg: '#DBEAFE' },
+  weight: { label: 'Pesagens', singular: 'Pesagem', emoji: '⚖️', color: '#9D174D', bg: '#FCE7F3' },
+  medication_started: { label: 'Remédios', singular: 'Remédio', emoji: '🧪', color: '#3730A3', bg: '#EEF2FF' },
+  symptom: { label: 'Sintomas', singular: 'Sintoma', emoji: '📝', color: '#92400E', bg: '#FEF3C7' },
+  document: { label: 'Documentos', singular: 'Documento', emoji: '📂', color: '#5B21B6', bg: '#EDE9FE' },
 };
 
 export function monthLabel(year: number, month: number): string {
@@ -98,7 +101,7 @@ export function buildMonthlyRecap(
     .filter((k) => (counts[k] ?? 0) > 0)
     .map((k) => ({
       key: k,
-      label: KIND_META[k].label,
+      label: counts[k] === 1 ? KIND_META[k].singular : KIND_META[k].label,
       emoji: KIND_META[k].emoji,
       color: KIND_META[k].color,
       bg: KIND_META[k].bg,

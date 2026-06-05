@@ -93,10 +93,11 @@ export default function HealthCalendarScreen() {
                 fontFamily: FONTS.bodyBold,
                 fontSize: 16,
                 color: theme.text,
-                textTransform: 'capitalize',
               }}
             >
-              {format(cursor, "MMMM 'de' yyyy", { locale: ptBR })}
+              {format(cursor, "MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, (c) =>
+                c.toUpperCase(),
+              )}
             </Text>
             {!isSameMonth(cursor, new Date()) ? (
               <Pressable onPress={() => setCursor(new Date())} hitSlop={6}>

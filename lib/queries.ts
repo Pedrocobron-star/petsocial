@@ -2845,8 +2845,14 @@ export async function fetchHealthEventsRange(
     }
   }
   if (results[1].status === 'fulfilled' && results[1].value.data) {
+    const kindLabel: Record<string, string> = {
+      internal: 'Vermífugo',
+      external: 'Antipulgas',
+      heartworm: 'Anti-heartworm',
+      combined: 'Combinado',
+    };
     for (const p of results[1].value.data as { id: string; product_name: string; applied_at: string; kind: string }[]) {
-      events.push({ kind: 'parasite', date: p.applied_at, title: `Parasitas: ${p.product_name}`, detail: p.kind, source_id: p.id });
+      events.push({ kind: 'parasite', date: p.applied_at, title: `Parasitas: ${p.product_name}`, detail: kindLabel[p.kind] ?? null, source_id: p.id });
     }
   }
   if (results[2].status === 'fulfilled' && results[2].value.data) {
