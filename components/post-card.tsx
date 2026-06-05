@@ -17,7 +17,7 @@ import Animated, {
 import { FONTS } from '@/lib/fonts';
 import { formatCount, formatRelativeShort } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { FEED_CARD_MARGIN, MAX_FEED_WIDTH } from '@/lib/layout';
+import { MAX_FEED_WIDTH } from '@/lib/layout';
 import {
   deletePost,
   fetchSavedPostIds,
@@ -46,13 +46,29 @@ import { MediaCarousel } from './media-carousel';
 import { PetAvatar } from './pet-avatar';
 import { PostActionsSheet } from './post-actions-sheet';
 import { PremiumBadge } from './premium-badge';
-import { ReactionPill } from './reaction-pill';
 import { ReportModal } from './report-modal';
 import { RichText } from './rich-text';
 
 const SCREEN_W = Dimensions.get('window').width;
-const CARD_RADIUS = 22;
-const MEDIA_INNER_PADDING = 6; // Espaço entre borda do card e a foto
+
+/** Botão de ação do post — ícone simples, estilo Instagram (sem pílula colorida). */
+function IconAction({
+  name,
+  size = 26,
+  color,
+  onPress,
+}: {
+  name: keyof typeof Ionicons.glyphMap;
+  size?: number;
+  color: string;
+  onPress?: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} hitSlop={8} style={{ paddingHorizontal: 6, paddingVertical: 4 }}>
+      <Ionicons name={name} size={size} color={color} />
+    </Pressable>
+  );
+}
 
 export function PostCard({ post }: { post: PostWithDetails }) {
   const { activePet } = useActivePet();
@@ -176,8 +192,9 @@ export function PostCard({ post }: { post: PostWithDetails }) {
     if (becomingSaved) toast.success('Salvo!', 'Em "Posts salvos" no seu perfil');
   };
 
-  const cardWidth = Math.min(SCREEN_W - FEED_CARD_MARGIN * 2, MAX_FEED_WIDTH);
-  const mediaWidth = cardWidth - MEDIA_INNER_PADDING * 2;
+  // Edge-to-edge no mobile (estilo Instagram); cap no MAX_FEED_WIDTH no desktop
+  const cardWidth = Math.min(SCREEN_W, MAX_FEED_WIDTH);
+  const mediaWidth = cardWidth;
 
   const captionTooLong = post.caption && post.caption.length > 140;
   const captionToShow =
@@ -185,37 +202,17 @@ export function PostCard({ post }: { post: PostWithDetails }) {
 
   return (
     <Animated.View
-      entering={FadeInDown.duration(360).easing(Easing.out(Easing.cubic))}
+      entering={FadeInDown.duration(320).easing(Easing.out(Easing.cubic))}
       style={{
         width: cardWidth,
         alignSelf: 'center',
-        marginBottom: 16,
+        marginBottom: 6,
+        paddingBottom: 8,
         backgroundColor: theme.surface,
-        borderRadius: CARD_RADIUS,
-        overflow: 'hidden',
-        shadowColor: '#7C2D12',
-        shadowOpacity: 0.04,
-        shadowRadius: 20,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 2,
-        borderWidth: 1,
-        borderColor: theme.borderLight,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.borderLight,
       }}
     >
-      {/* Paw print decorativo no canto superior direito (marca d'água do Pet Social) */}
-      <View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          top: 18,
-          right: 56,
-          opacity: 0.04,
-          zIndex: 0,
-        }}
-      >
-        <Text style={{ fontSize: 80 }}>🐾</Text>
-      </View>
-
       {/* Badge de repost — aparece acima do header quando o post é um repost */}
       {post.reposted_from ? (
         <View
@@ -223,12 +220,11 @@ export function PostCard({ post }: { post: PostWithDetails }) {
             flexDirection: 'row',
             alignItems: 'center',
             gap: 6,
-            paddingHorizontal: 16,
-            paddingTop: 10,
-            paddingBottom: 0,
+            paddingHorizontal: 12,
+            paddingTop: 8,
           }}
         >
-          <Ionicons name="repeat" size={14} color={theme.brand} />
+          <Ionicons name="repeat" size={13} color={theme.brand} />
           <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.brand }}>
             {post.pet.name} repostou
           </Text>
@@ -240,77 +236,43 @@ export function PostCard({ post }: { post: PostWithDetails }) {
         </View>
       ) : null}
 
-      {/* Header */}
+      {/* Header estilo Instagram: avatar + nome + tempo, menu à direita */}
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          paddingHorizontal: 16,
-          paddingTop: 14,
-          paddingBottom: 10,
-          gap: 10,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          gap: 9,
         }}
       >
         <Link href={{ pathname: '/pet/[id]', params: { id: post.pet.id } }} asChild>
-          <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 11, flex: 1 }}>
+          <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 9, flex: 1 }}>
             <PetAvatar
               pet={post.pet}
-              size={44}
+              size={36}
               animation={petOneShot ?? animationForPersonality(post.pet.personality_type)}
               triggerKey={petAnimTrigger}
               showMascot
             />
             <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Text
-                  style={{
-                    fontFamily: FONTS.display,
-                    fontSize: 16,
-                    color: theme.text,
-                    letterSpacing: -0.3,
-                    lineHeight: 20,
-                    flexShrink: 1,
-                  }}
+                  style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text, flexShrink: 1 }}
                   numberOfLines={1}
                 >
                   {post.pet.name}
                 </Text>
-                {/* Selo dourado de Pet Pro — dono é assinante */}
-                {post.owner_is_pro ? <PremiumBadge size={13} /> : null}
+                {post.owner_is_pro ? <PremiumBadge size={12} /> : null}
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 1 }}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 3,
-                    paddingHorizontal: 7,
-                    paddingVertical: 2,
-                    borderRadius: 999,
-                    backgroundColor: theme.brandLight,
-                  }}
-                >
-                  <Text style={{ fontSize: 10 }}>{speciesEmoji(post.pet.species)}</Text>
-                  {post.pet.breed ? (
-                    <Text
-                      style={{
-                        fontFamily: FONTS.bodyBold,
-                        fontSize: 10,
-                        color: theme.brandDark,
-                      }}
-                      numberOfLines={1}
-                    >
-                      {post.pet.breed}
-                    </Text>
-                  ) : null}
-                </View>
-                <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim }}>
-                  · {formatRelativeShort(post.created_at)}
-                  {post.updated_at && new Date(post.updated_at).getTime() - new Date(post.created_at).getTime() > 60_000
-                    ? ' · editado'
-                    : ''}
-                </Text>
-              </View>
+              <Text
+                numberOfLines={1}
+                style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim, marginTop: 1 }}
+              >
+                {speciesEmoji(post.pet.species)}
+                {post.pet.breed ? ' ' + post.pet.breed : ''} · {formatRelativeShort(post.created_at)}
+                {wasEdited ? ' · editado' : ''}
+              </Text>
             </View>
           </Pressable>
         </Link>
@@ -320,123 +282,141 @@ export function PostCard({ post }: { post: PostWithDetails }) {
             haptic.light();
             setActionsOpen(true);
           }}
+          style={{ width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <Ionicons name="ellipsis-horizontal" size={20} color={theme.text} />
+        </Pressable>
+      </View>
+
+      {/* Mídia edge-to-edge (estilo Instagram) */}
+      <Pressable
+        onPress={handleDoubleTap}
+        onLongPress={() => {
+          haptic.medium();
+          setActionsOpen(true);
+        }}
+        style={{ position: 'relative', backgroundColor: theme.name === 'dark' ? '#000' : '#F5F3F0' }}
+      >
+        {/* Quando é repost: mostra mídia do post ORIGINAL. */}
+        <MediaCarousel
+          media={post.reposted_from && post.original_post ? post.original_post.media : post.media}
+          width={mediaWidth}
+        />
+        <HeartBurst visible={heartBurstVisible} onComplete={() => setHeartBurstVisible(false)} />
+        <Pressable
+          onPress={(e) => {
+            e.stopPropagation?.();
+            haptic.light();
+            setImageViewerOpen(true);
+          }}
+          hitSlop={6}
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            width: 30,
+            height: 30,
+            borderRadius: 15,
+            backgroundColor: 'rgba(0,0,0,0.5)',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Ionicons name="ellipsis-horizontal" size={18} color={theme.textDim} />
+          <Ionicons name="expand-outline" size={15} color="#fff" />
         </Pressable>
+      </Pressable>
+
+      {/* Ações — ícones simples (curtir / comentar / enviar / salvar) */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 8,
+          paddingTop: 7,
+          paddingBottom: 2,
+        }}
+      >
+        <View style={{ position: 'relative' }}>
+          <FloatPlusOne visible={plusOneVisible} onDone={() => setPlusOneVisible(false)} />
+          <Animated.View style={heartStyle}>
+            <IconAction
+              name={liked ? 'heart' : 'heart-outline'}
+              size={27}
+              color={liked ? '#EF4444' : theme.text}
+              onPress={handleLike}
+            />
+          </Animated.View>
+        </View>
+        <Link href={{ pathname: '/post/[id]', params: { id: post.id } }} asChild>
+          <Pressable hitSlop={8} style={{ paddingHorizontal: 6, paddingVertical: 4 }}>
+            <Ionicons name="chatbubble-outline" size={24} color={theme.text} />
+          </Pressable>
+        </Link>
+        <IconAction name="paper-plane-outline" size={23} color={theme.text} onPress={onShareTap} />
+        <View style={{ flex: 1 }} />
+        <IconAction
+          name={isSaved ? 'bookmark' : 'bookmark-outline'}
+          size={23}
+          color={isSaved ? theme.brand : theme.text}
+          onPress={onSaveTap}
+        />
       </View>
 
-      {/* Mídia centralizada com radius interno */}
-      <View style={{ paddingHorizontal: MEDIA_INNER_PADDING, paddingBottom: MEDIA_INNER_PADDING }}>
-        <Pressable
-          onPress={handleDoubleTap}
-          onLongPress={() => {
-            haptic.medium();
-            setActionsOpen(true);
-          }}
+      {/* Curtidas */}
+      {likesCount > 0 ? (
+        <Text
           style={{
-            position: 'relative',
-            borderRadius: 16,
-            overflow: 'hidden',
-            backgroundColor: '#F5F3F0',
+            fontFamily: FONTS.bodyBold,
+            fontSize: 13,
+            color: theme.text,
+            paddingHorizontal: 12,
+            marginTop: 1,
           }}
         >
-          {/* Quando é repost: mostra mídia do post ORIGINAL.
-              Quando é post normal: mídia própria. */}
-          <MediaCarousel
-            media={post.reposted_from && post.original_post ? post.original_post.media : post.media}
-            width={mediaWidth}
-          />
-          <HeartBurst visible={heartBurstVisible} onComplete={() => setHeartBurstVisible(false)} />
+          {formatCount(likesCount)} {likesCount === 1 ? 'curtida' : 'curtidas'}
+        </Text>
+      ) : null}
 
-          {/* Botão expand fullscreen no canto */}
-          <Pressable
-            onPress={(e) => {
-              e.stopPropagation?.();
-              haptic.light();
-              setImageViewerOpen(true);
-            }}
-            hitSlop={6}
-            style={{
-              position: 'absolute',
-              top: 12,
-              left: 12,
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: 'rgba(0,0,0,0.55)',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons name="expand-outline" size={16} color="#fff" />
-          </Pressable>
-        </Pressable>
-      </View>
-
-      {/* Caption do reposter (se for repost) ou caption normal */}
+      {/* Legenda: nome em negrito + texto */}
       {post.caption ? (
-        <View style={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 12 }}>
-          <Text
-            style={{
-              fontFamily: FONTS.body,
-              fontSize: 14,
-              lineHeight: 20,
-              color: theme.text,
-            }}
-          >
+        <View style={{ paddingHorizontal: 12, paddingTop: 3 }}>
+          <Text style={{ fontFamily: FONTS.body, fontSize: 13.5, lineHeight: 19, color: theme.text }}>
+            <Text style={{ fontFamily: FONTS.bodyBold }}>{post.pet.name} </Text>
             <RichText
               text={captionToShow!}
-              baseStyle={{
-                fontFamily: FONTS.body,
-                fontSize: 14,
-                lineHeight: 20,
-                color: theme.text,
-              }}
+              baseStyle={{ fontFamily: FONTS.body, fontSize: 13.5, lineHeight: 19, color: theme.text }}
             />
             {captionTooLong && !captionExpanded ? (
               <Text
                 onPress={() => setCaptionExpanded(true)}
-                style={{
-                  fontFamily: FONTS.bodyBold,
-                  fontSize: 13,
-                  color: theme.brand,
-                }}
+                style={{ fontFamily: FONTS.body, fontSize: 13.5, color: theme.textDim }}
               >
-                {' '}ver mais
+                {' '}mais
               </Text>
             ) : null}
           </Text>
         </View>
       ) : null}
 
-      {/* Caption ORIGINAL do post — só quando é repost. Aparece como citação. */}
+      {/* Citação do post original — só quando é repost */}
       {post.reposted_from && post.original_post?.caption ? (
         <View
           style={{
-            marginHorizontal: 14,
-            marginBottom: 12,
-            paddingHorizontal: 14,
-            paddingVertical: 10,
-            borderLeftWidth: 3,
+            marginHorizontal: 12,
+            marginTop: 6,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderLeftWidth: 2,
             borderLeftColor: theme.brand,
             backgroundColor: theme.brandSurface,
-            borderRadius: 8,
+            borderRadius: 6,
           }}
         >
-          <Text
-            style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.brandDark, marginBottom: 4 }}
-          >
-            {post.original_post.pet.name} escreveu:
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.brandDark, marginBottom: 2 }}>
+            {post.original_post.pet.name}
           </Text>
           <Text
-            style={{ fontFamily: FONTS.body, fontSize: 13, lineHeight: 19, color: theme.text }}
+            style={{ fontFamily: FONTS.body, fontSize: 12.5, lineHeight: 18, color: theme.text }}
             numberOfLines={3}
           >
             {post.original_post.caption}
@@ -450,38 +430,18 @@ export function PostCard({ post }: { post: PostWithDetails }) {
           style={{
             flexDirection: 'row',
             flexWrap: 'wrap',
-            gap: 6,
-            paddingHorizontal: 18,
-            paddingBottom: 12,
+            gap: 5,
+            paddingHorizontal: 12,
+            paddingTop: 6,
             alignItems: 'center',
           }}
         >
-          <Ionicons name="pricetag" size={12} color={theme.textDim} />
-          <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
-            com
-          </Text>
-          {post.pet_tags.map((tagPet, i) => (
-            <Link
-              key={tagPet.id}
-              href={{ pathname: '/pet/[id]', params: { id: tagPet.id } }}
-              asChild
-            >
-              <Pressable
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 3,
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
-                  borderRadius: 999,
-                  backgroundColor: theme.brandLight,
-                }}
-              >
-                <Text style={{ fontSize: 10 }}>{speciesEmoji(tagPet.species)}</Text>
-                <Text
-                  style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.brandDark }}
-                >
-                  {tagPet.name}
+          <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>com</Text>
+          {post.pet_tags.map((tagPet) => (
+            <Link key={tagPet.id} href={{ pathname: '/pet/[id]', params: { id: tagPet.id } }} asChild>
+              <Pressable>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.brand }}>
+                  @{tagPet.name}
                 </Text>
               </Pressable>
             </Link>
@@ -489,72 +449,18 @@ export function PostCard({ post }: { post: PostWithDetails }) {
         </View>
       ) : null}
 
-      {/* Separator decorativo: paw centralizada */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 18,
-          gap: 8,
-        }}
-      >
-        <View style={{ flex: 1, height: 1, backgroundColor: theme.borderLight }} />
-        <Text style={{ fontSize: 10, opacity: 0.5 }}>🐾</Text>
-        <View style={{ flex: 1, height: 1, backgroundColor: theme.borderLight }} />
-      </View>
-
-      {/* Reactions row — pills coloridas */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 14,
-          paddingTop: 11,
-          paddingBottom: 14,
-          gap: 7,
-        }}
-      >
-        <View style={{ position: 'relative' }}>
-          <FloatPlusOne
-            visible={plusOneVisible}
-            onDone={() => setPlusOneVisible(false)}
-          />
-          <ReactionPill
-            icon={liked ? 'heart' : 'heart-outline'}
-            count={likesCount}
-            active={liked}
-            activeBg="#EF4444"
-            inactiveBg="#FEE2E2"
-            inactiveColor="#991B1B"
-            onPress={handleLike}
-          />
-        </View>
+      {/* Ver comentários */}
+      {post.comments_count > 0 ? (
         <Link href={{ pathname: '/post/[id]', params: { id: post.id } }} asChild>
-          <View>
-            <ReactionPill
-              icon="chatbubble-outline"
-              count={post.comments_count}
-              inactiveBg="#DBEAFE"
-              inactiveColor="#1E40AF"
-            />
-          </View>
+          <Pressable style={{ paddingHorizontal: 12, paddingTop: 4 }}>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 12.5, color: theme.textDim }}>
+              {post.comments_count === 1
+                ? 'Ver 1 comentário'
+                : `Ver todos os ${post.comments_count} comentários`}
+            </Text>
+          </Pressable>
         </Link>
-        <ReactionPill
-          icon="paper-plane-outline"
-          inactiveBg="#DCFCE7"
-          inactiveColor="#166534"
-          onPress={onShareTap}
-        />
-        <View style={{ flex: 1 }} />
-        <ReactionPill
-          icon={isSaved ? 'bookmark' : 'bookmark-outline'}
-          active={isSaved}
-          activeBg="#F97316"
-          inactiveBg="#FED7AA"
-          inactiveColor="#9A3412"
-          onPress={onSaveTap}
-        />
-      </View>
+      ) : null}
 
       {/* Modals */}
       <PostActionsSheet

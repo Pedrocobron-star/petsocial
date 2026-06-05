@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { FlatList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ComposeBar } from '@/components/compose-bar';
-import { DailyChallengeCard } from '@/components/daily-challenge-card';
 import { EmptyState } from '@/components/empty-state';
 import { Fab } from '@/components/fab';
 import { FeedHeader } from '@/components/feed-header';
@@ -161,8 +159,6 @@ export default function FeedScreen() {
               <StoriesRing />
               <RecallBanner />
               <HealthRemindersBanner />
-              {activePet ? <ComposeBar pet={activePet} /> : null}
-              <DailyChallengeCard />
             </>
           }
           ListEmptyComponent={
