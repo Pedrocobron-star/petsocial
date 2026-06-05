@@ -1,8 +1,8 @@
 import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AnimatedTabIcon } from '@/components/animated-tab-icon';
-import { FONTS } from '@/lib/fonts';
 import { haptic } from '@/lib/haptics';
 import { useTranslation } from '@/lib/i18n';
 import { useActivePet } from '@/providers/active-pet-provider';
@@ -12,6 +12,7 @@ export default function TabsLayout() {
   const { pets, loading } = useActivePet();
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   if (loading) {
     return (
@@ -28,14 +29,14 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: theme.brand,
         tabBarInactiveTintColor: theme.textDim,
+        tabBarShowLabel: false,
         tabBarStyle: {
           borderTopColor: theme.border,
           backgroundColor: theme.surface,
-          height: 62,
-          paddingTop: 6,
-          paddingBottom: 8,
+          height: 48 + insets.bottom,
+          paddingTop: 4,
+          paddingBottom: insets.bottom,
         },
-        tabBarLabelStyle: { fontFamily: FONTS.bodySemibold, fontSize: 11 },
       }}
       screenListeners={{
         tabPress: () => {
