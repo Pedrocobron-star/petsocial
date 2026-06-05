@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
 
 import { EmptyState } from '@/components/empty-state';
@@ -330,7 +330,7 @@ function WeightForm({
     >
       <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}>Nova pesagem</Text>
       <Field label="Peso (kg) *" value={weight} onChange={setWeight} placeholder="ex: 8.5" />
-      <Field label="Data * (AAAA-MM-DD)" value={date} onChange={setDate} placeholder="2026-05-13" />
+      <DateField label="Data *" value={date} onChange={setDate} />
       <Field label="Notas" value={notes} onChange={setNotes} placeholder="" multiline />
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -347,6 +347,65 @@ function WeightForm({
           />
         </View>
       </View>
+    </View>
+  );
+}
+
+/** Campo de data — no web usa o date-picker nativo (sem hora); no native, texto. */
+function DateField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const { theme } = useTheme();
+  const today = new Date().toISOString().split('T')[0];
+  return (
+    <View>
+      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.textDim, marginBottom: 4 }}>
+        {label}
+      </Text>
+      {Platform.OS === 'web' ? (
+        <input
+          type="date"
+          value={value}
+          max={today}
+          onChange={(e: { target: { value: string } }) => onChange(e.target.value)}
+          style={{
+            borderWidth: 0,
+            backgroundColor: theme.borderLight,
+            borderRadius: 10,
+            paddingTop: 10,
+            paddingBottom: 10,
+            paddingLeft: 12,
+            paddingRight: 12,
+            fontFamily: FONTS.body,
+            fontSize: 14,
+            color: theme.text,
+            width: '100%',
+            boxSizing: 'border-box',
+          }}
+        />
+      ) : (
+        <TextInput
+          value={value}
+          onChangeText={onChange}
+          placeholder="2026-05-13"
+          placeholderTextColor={theme.textDim}
+          style={{
+            backgroundColor: theme.borderLight,
+            borderRadius: 10,
+            paddingHorizontal: 12,
+            paddingVertical: 10,
+            fontFamily: FONTS.body,
+            fontSize: 14,
+            color: theme.text,
+          }}
+        />
+      )}
     </View>
   );
 }

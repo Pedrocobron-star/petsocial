@@ -73,20 +73,32 @@ export default function VaccinationsScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Vaccination | null>(null);
   const [prefillName, setPrefillName] = useState<string | null>(null);
+  const [prefillNext, setPrefillNext] = useState<Date | null>(null);
 
   const openNew = () => {
     setEditing(null);
     setPrefillName(null);
+    setPrefillNext(null);
     setModalOpen(true);
   };
   const openEdit = (v: Vaccination) => {
     setEditing(v);
     setPrefillName(null);
+    setPrefillNext(null);
     setModalOpen(true);
   };
-  const openFromSuggestion = (name: string) => {
+  const openFromSuggestion = (s: VaccineSuggestion) => {
     setEditing(null);
-    setPrefillName(name);
+    setPrefillName(s.protocol.name);
+    // Próxima dose sugerida = hoje + intervalo do protocolo → auto-agenda o lembrete
+    // (paridade com o vermífugo). O usuário ainda pode ajustar no form.
+    const moreInitial = s.kind === 'initial' && s.appliedCount + 1 < s.protocol.initialDoses.length;
+    const interval = moreInitial
+      ? s.protocol.initialIntervalDays
+      : s.protocol.boosterIntervalDays;
+    const nd = new Date();
+    nd.setDate(nd.getDate() + interval);
+    setPrefillNext(nd);
     setModalOpen(true);
   };
 
@@ -218,6 +230,7 @@ export default function VaccinationsScreen() {
         petName={petQuery.data?.name ?? ''}
         existing={editing}
         prefillName={prefillName}
+        prefillNext={prefillNext}
         onSaved={() => {
           setModalOpen(false);
           qc.invalidateQueries({ queryKey: qk.vaccinations(id) });
@@ -248,7 +261,7 @@ function SuggestionsPanel({
 }: {
   suggestions: VaccineSuggestion[];
   petName: string;
-  onPick: (name: string) => void;
+  onPick: (suggestion: VaccineSuggestion) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const urgentCount = suggestions.filter(
@@ -323,7 +336,7 @@ function SuggestionsPanel({
             <SuggestionRow
               key={s.protocol.id + s.kind}
               suggestion={s}
-              onPick={() => onPick(s.protocol.name)}
+              onPick={() => onPick(s)}
             />
           ))}
         </View>
@@ -528,6 +541,7 @@ function VaccineForm({
   petName,
   existing,
   prefillName,
+  prefillNext,
   onSaved,
 }: {
   visible: boolean;
@@ -536,11 +550,12 @@ function VaccineForm({
   petName: string;
   existing: Vaccination | null;
   prefillName?: string | null;
+  prefillNext?: Date | null;
   onSaved: () => void;
 }) {
   const [name, setName] = useState(existing?.name ?? prefillName ?? '');
   const [applied, setApplied] = useState<Date | null>(toDate(existing?.applied_at) ?? new Date());
-  const [next, setNext] = useState<Date | null>(toDate(existing?.next_dose_at));
+  const [next, setNext] = useState<Date | null>(toDate(existing?.next_dose_at) ?? prefillNext ?? null);
   const [vet, setVet] = useState(existing?.vet_name ?? '');
   const [notes, setNotes] = useState(existing?.notes ?? '');
   const [submitting, setSubmitting] = useState(false);
@@ -549,10 +564,10 @@ function VaccineForm({
   useEffect(() => {
     setName(existing?.name ?? prefillName ?? '');
     setApplied(toDate(existing?.applied_at) ?? new Date());
-    setNext(toDate(existing?.next_dose_at));
+    setNext(toDate(existing?.next_dose_at) ?? prefillNext ?? null);
     setVet(existing?.vet_name ?? '');
     setNotes(existing?.notes ?? '');
-  }, [existing, prefillName, visible]);
+  }, [existing, prefillName, prefillNext, visible]);
 
   const handleSubmit = async () => {
     if (!name.trim() || !applied) {

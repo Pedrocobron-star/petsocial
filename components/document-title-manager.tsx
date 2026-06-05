@@ -36,7 +36,7 @@ const ROUTE_TITLES: { match: RegExp | string; title: string }[] = [
   { match: /^\/pet\/[^/]+\/symptoms/, title: 'Sintomas' },
   { match: /^\/pet\/[^/]+\/diet/, title: 'Dieta' },
   { match: /^\/pet\/[^/]+\/vaccinations/, title: 'Vacinas' },
-  { match: /^\/pet\/[^/]+\/medications/, title: 'Medicações' },
+  { match: /^\/pet\/[^/]+\/medications/, title: 'Remédios' },
   { match: /^\/pet\/[^/]+\/weight/, title: 'Peso' },
   { match: /^\/pet\/[^/]+\/parasites/, title: 'Parasitas' },
   { match: /^\/pet\/[^/]+\/vet-visits/, title: 'Consultas' },
