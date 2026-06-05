@@ -10,6 +10,7 @@ import { HealthScoreCard } from '@/components/health/health-score-card';
 import { HealthScoreTrend } from '@/components/health/health-score-trend';
 import { HealthShareButton } from '@/components/health/health-share-button';
 import { HealthTimeline } from '@/components/health/health-timeline';
+import { AI_ASSISTANT_ENABLED } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
 import { monthlyDietCost } from '@/lib/diet-brands';
 import {
@@ -218,14 +219,16 @@ export default function HealthHubScreen() {
             tint="#FFF7ED"
             textTint="#9A3412"
           />
-          <ShortcutCard
-            href={`/pet/${id}/ai-assistant`}
-            emoji="🤖"
-            label="Assistente IA"
-            sublabel="Dúvidas sobre saúde, vacinas e mais"
-            tint="#1A1410"
-            textTint="#FCD34D"
-          />
+          {AI_ASSISTANT_ENABLED ? (
+            <ShortcutCard
+              href={`/pet/${id}/ai-assistant`}
+              emoji="🤖"
+              label="Assistente IA"
+              sublabel="Dúvidas sobre saúde, vacinas e mais"
+              tint="#1A1410"
+              textTint="#FCD34D"
+            />
+          ) : null}
           <ShortcutCard
             href={`/places?kind=vet`}
             emoji="🩺"

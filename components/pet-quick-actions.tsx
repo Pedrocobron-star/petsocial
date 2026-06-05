@@ -3,6 +3,7 @@ import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
+import { AI_ASSISTANT_ENABLED } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
 import type { ParasiteSummary } from '@/lib/queries';
 import type { Vaccination } from '@/lib/types';
@@ -376,16 +377,6 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
                   tintText="#9D174D"
                 />
                 <QuickCard
-                  href={`/pet/${petId}/ai-assistant`}
-                  emoji="🤖"
-                  label="Assistente IA"
-                  sub="Dúvidas de saúde"
-                  tint="#DBEAFE"
-                  tintText="#1E40AF"
-                />
-              </View>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <QuickCard
                   href={`/pet/${petId}/time-capsule`}
                   emoji="📼"
                   label="Retrospectiva"
@@ -393,6 +384,8 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
                   tint="#FEF3C7"
                   tintText="#92400E"
                 />
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
                 <QuickCard
                   href={`/pet/${petId}/caretakers`}
                   emoji="🤝"
@@ -401,6 +394,16 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
                   tint="#DCFCE7"
                   tintText="#166534"
                 />
+                {AI_ASSISTANT_ENABLED ? (
+                  <QuickCard
+                    href={`/pet/${petId}/ai-assistant`}
+                    emoji="🤖"
+                    label="Assistente IA"
+                    sub="Dúvidas de saúde"
+                    tint="#DBEAFE"
+                    tintText="#1E40AF"
+                  />
+                ) : null}
               </View>
             </>
           ) : null}
