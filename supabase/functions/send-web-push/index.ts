@@ -30,14 +30,26 @@ const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:pedrocobron@gmail
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
+// CORS — necessário pra o app (outro domínio) chamar via fetch/supabase.functions.invoke
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+
 serve(async (req) => {
+  // Preflight do navegador
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
   try {
     const { user_id, user_ids, title, body, url, tag } = await req.json();
     const ids: string[] = user_ids ?? (user_id ? [user_id] : []);
     if (!ids.length || !title) {
       return new Response(JSON.stringify({ error: 'user_id(s) e title obrigatórios' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
 
@@ -68,12 +80,12 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ sent, removed, total: subs?.length ?? 0 }), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
     });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e?.message ?? e) }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
     });
   }
 });
