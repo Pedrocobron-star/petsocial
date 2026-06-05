@@ -39,9 +39,12 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
 
+        {/* Web App Manifest — installability da PWA (faz o beforeinstallprompt disparar) */}
+        <link rel="manifest" href="/manifest.json" />
+
         {/* Apple touch icon (PWA install em iOS) */}
-        <link rel="apple-touch-icon" href="/assets/assets/images/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/assets/assets/images/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
         {/* Default OG tags (override em cada rota via MetaTags) */}
         <meta property="og:type" content="website" />
@@ -75,6 +78,23 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* iOS scroll bounce fix do Expo */}
         <ScrollViewStyleReset />
+
+        {/* Captura o evento de instalação da PWA o mais cedo possível (antes do React montar),
+            pra o banner conseguir oferecer o "1 toque = instala" nativo. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('beforeinstallprompt', function (e) {
+                e.preventDefault();
+                window.__deferredInstallPrompt = e;
+                window.dispatchEvent(new Event('pwa-installable'));
+              });
+              window.addEventListener('appinstalled', function () {
+                window.__deferredInstallPrompt = null;
+              });
+            `,
+          }}
+        />
 
         {/* Service worker registration (offline-first) */}
         <script

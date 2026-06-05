@@ -10,16 +10,16 @@
  * Bump CACHE_VERSION ao mudar assets — força refresh do cache.
  */
 
-const CACHE_VERSION = 'pet-social-v4';
+const CACHE_VERSION = 'pet-social-v5';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
 const STATIC_ASSETS = [
   '/',
   '/offline.html',
-  '/assets/assets/images/icon-192.png',
-  '/assets/assets/images/icon-512.png',
-  '/assets/assets/images/favicon.png',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
 ];
 
 // ----- INSTALL -----
@@ -106,8 +106,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Pet Social 🐾';
   const options = {
     body: data.body || '',
-    icon: data.icon || '/assets/assets/images/icon-192.png',
-    badge: '/assets/assets/images/icon-192.png',
+    icon: data.icon || '/icon-192.png',
+    badge: '/icon-192.png',
     data: { url: data.url || '/' },
     tag: data.tag,
     renotify: !!data.tag,

@@ -60,19 +60,35 @@ export function MobileAppBanner() {
     if (!isMobile) return;
     const isIos = /iphone|ipad|ipod/i.test(ua);
 
-    // Chrome/Edge/Brave/Samsung… → instalação nativa (preferida)
-    const onBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    const win = window as typeof window & { __deferredInstallPrompt?: BeforeInstallPromptEvent };
+
+    const goNative = (e: BeforeInstallPromptEvent) => {
+      setDeferredPrompt(e);
       setMode('native');
       setVisible(true);
       shownRef.current = true;
       track('mobile_banner_shown', { mode: 'native' });
     };
+
+    // 1) Evento JÁ capturado cedo pelo script do +html.tsx → instalação nativa na hora
+    if (win.__deferredInstallPrompt) {
+      goNative(win.__deferredInstallPrompt);
+    }
+
+    // 2) Capturado depois (script do head dispara 'pwa-installable')
+    const onInstallable = () => {
+      if (win.__deferredInstallPrompt) goNative(win.__deferredInstallPrompt);
+    };
+    window.addEventListener('pwa-installable', onInstallable);
+
+    // 3) Listener direto (fallback caso o script do head não exista, ex: dev)
+    const onBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      goNative(e as BeforeInstallPromptEvent);
+    };
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
 
-    // Fallback: depois de 2,5s, se o evento nativo não veio, mostra mesmo assim
-    // com instruções manuais (iOS ou Android).
+    // 4) Fallback manual: depois de 2,5s, se o nativo não veio, mostra instruções
     const tid = setTimeout(() => {
       if (shownRef.current) return;
       setMode(isIos ? 'ios' : 'android');
@@ -83,6 +99,7 @@ export function MobileAppBanner() {
 
     return () => {
       clearTimeout(tid);
+      window.removeEventListener('pwa-installable', onInstallable);
       window.removeEventListener('beforeinstallprompt', onBeforeInstall);
     };
   }, []);
