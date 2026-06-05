@@ -166,7 +166,7 @@ export function PopularPetCard({ pet, rank }: Props) {
                 letterSpacing: 0.6,
               }}
             >
-              seguidores
+              {pet.followers_count === 1 ? 'seguidor' : 'seguidores'}
             </Text>
           </View>
         ) : (

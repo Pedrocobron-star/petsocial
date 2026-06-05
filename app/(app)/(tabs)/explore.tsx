@@ -148,7 +148,7 @@ export default function ExploreScreen() {
             </View>
           </CenteredColumn>
         )}
-        contentContainerStyle={{ paddingVertical: 8, paddingBottom: 32, flexGrow: 1 }}
+        contentContainerStyle={{ paddingVertical: 8, paddingBottom: 120, flexGrow: 1 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

@@ -156,7 +156,7 @@ export default function PetDocumentsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <Stack.Screen options={{ title: pet ? `Documentos · ${pet.name}` : 'Documentos' }} />
+      <Stack.Screen options={{ title: pet ? `Exames & Laudos · ${pet.name}` : 'Exames & Laudos' }} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         <CenteredColumn maxWidth={540}>
           {/* Nota de privacidade */}

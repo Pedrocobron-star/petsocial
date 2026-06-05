@@ -154,19 +154,38 @@ export function HealthScoreCard({ petName, summary, parasiteSummary }: Props) {
     return { score, items };
   }, [summary, parasiteSummary]);
 
+  // Quantas das dimensões essenciais de prevenção têm registro.
+  // Sem NENHUMA (vacina, vermífugo, consulta), o pet não pode aparecer como
+  // "100% cuidado": o cadastro está incompleto e o score seria enganoso —
+  // num app de saúde isso passa falsa segurança.
+  const essentialsRegistered = items.filter(
+    (i) =>
+      (i.label === 'Vacinas' || i.label === 'Vermífugo/Pulga' || i.label === 'Consultas') &&
+      i.status !== 'na',
+  ).length;
+  const incomplete = essentialsRegistered === 0;
+
   // Cores e copy baseados no score
   const tone: 'good' | 'mid' | 'bad' = score >= 80 ? 'good' : score >= 50 ? 'mid' : 'bad';
-  const palette = {
-    good: { bg: '#DCFCE7', fg: '#166534', accent: '#16A34A', label: 'Em dia' },
-    mid: { bg: '#FEF3C7', fg: '#92400E', accent: '#F59E0B', label: 'Atenção' },
-    bad: { bg: '#FEE2E2', fg: '#991B1B', accent: '#DC2626', label: 'Precisa cuidar' },
-  }[tone];
+  const palette = incomplete
+    ? { bg: '#E0F2FE', fg: '#075985', accent: '#0284C7', label: 'Comece aqui' }
+    : {
+        good: { bg: '#DCFCE7', fg: '#166534', accent: '#16A34A', label: 'Em dia' },
+        mid: { bg: '#FEF3C7', fg: '#92400E', accent: '#F59E0B', label: 'Atenção' },
+        bad: { bg: '#FEE2E2', fg: '#991B1B', accent: '#DC2626', label: 'Precisa cuidar' },
+      }[tone];
 
-  const headline = (() => {
-    if (tone === 'good') return `${petName} está super cuidado! 🌟`;
-    if (tone === 'mid') return `${petName} está bem, falta pouca coisa`;
-    return `${petName} precisa de atenção`;
-  })();
+  const headline = incomplete
+    ? `Vamos cuidar da saúde do ${petName}? 🐾`
+    : tone === 'good'
+      ? `${petName} está super cuidado! 🌟`
+      : tone === 'mid'
+        ? `${petName} está bem, falta pouca coisa`
+        : `${petName} precisa de atenção`;
+
+  // % da barra: quando incompleto, mostra progresso do cadastro essencial
+  // (0–3 dimensões) em vez de um score inflado.
+  const displayPct = incomplete ? Math.round((essentialsRegistered / 3) * 100) : score;
 
   return (
     <View
@@ -194,12 +213,47 @@ export function HealthScoreCard({ petName, summary, parasiteSummary }: Props) {
           <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: palette.fg, marginTop: 2 }}>
             {headline}
           </Text>
+          {incomplete ? (
+            <Text
+              style={{
+                fontFamily: FONTS.body,
+                fontSize: 12,
+                lineHeight: 17,
+                color: palette.fg,
+                opacity: 0.8,
+                marginTop: 4,
+              }}
+            >
+              Registre vacinas, vermífugo e a 1ª consulta pra acompanhar a saúde de verdade.
+            </Text>
+          ) : null}
         </View>
         <View style={{ alignItems: 'center' }}>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 36, color: palette.accent }}>
-            {score}
-            <Text style={{ fontSize: 18, color: palette.fg, opacity: 0.7 }}>%</Text>
-          </Text>
+          {incomplete ? (
+            <>
+              <Text style={{ fontFamily: FONTS.display, fontSize: 30, color: palette.accent }}>
+                {essentialsRegistered}
+                <Text style={{ fontSize: 16, color: palette.fg, opacity: 0.6 }}>/3</Text>
+              </Text>
+              <Text
+                style={{
+                  fontFamily: FONTS.bodyBold,
+                  fontSize: 8,
+                  letterSpacing: 0.6,
+                  color: palette.fg,
+                  opacity: 0.7,
+                  textTransform: 'uppercase',
+                }}
+              >
+                essenciais
+              </Text>
+            </>
+          ) : (
+            <Text style={{ fontFamily: FONTS.display, fontSize: 36, color: palette.accent }}>
+              {score}
+              <Text style={{ fontSize: 18, color: palette.fg, opacity: 0.7 }}>%</Text>
+            </Text>
+          )}
         </View>
       </View>
 
@@ -214,7 +268,7 @@ export function HealthScoreCard({ petName, summary, parasiteSummary }: Props) {
       >
         <View
           style={{
-            width: `${score}%`,
+            width: `${displayPct}%`,
             height: '100%',
             backgroundColor: palette.accent,
             borderRadius: 4,

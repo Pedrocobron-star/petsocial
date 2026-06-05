@@ -157,7 +157,7 @@ export default function TermsPage() {
           7 dias do pagamento (LGPD não exige).
         </LegalListItem>
         <LegalListItem>
-          Recursos Pro hoje: histórico Bidu Score completo (free = 3 meses), IA ilimitada, PDF sem
+          Recursos Pro hoje: histórico Score de Saúde completo (free = 3 meses), IA ilimitada, PDF sem
           marca d&apos;água, avatar Pro (cenários + charms), badge no perfil.
         </LegalListItem>
       </LegalSection>

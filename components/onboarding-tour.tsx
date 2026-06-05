@@ -79,7 +79,7 @@ export function OnboardingTour() {
       emoji: '⭐',
       title: 'Pet Pro quando quiser',
       description:
-        'O essencial é grátis pra sempre. Pro libera histórico Bidu Score completo, IA ilimitada, PDFs sem marca d\'água e mais — quando fizer sentido pra você.',
+        'O essencial é grátis pra sempre. Pro libera histórico Score de Saúde completo, IA ilimitada, PDFs sem marca d\'água e mais — quando fizer sentido pra você.',
     },
   ];
 

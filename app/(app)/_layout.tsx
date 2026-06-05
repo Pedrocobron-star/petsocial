@@ -67,7 +67,7 @@ export default function AppLayout() {
         <Stack.Screen name="pet/[id]/symptoms" options={{ headerShown: true, title: 'Sintomas' }} />
         <Stack.Screen name="pet/[id]/diet" options={{ headerShown: true, title: 'Dieta' }} />
         <Stack.Screen name="pet/[id]/weight" options={{ headerShown: true }} />
-        <Stack.Screen name="pet/[id]/documents/index" options={{ headerShown: true, title: 'Documentos' }} />
+        <Stack.Screen name="pet/[id]/documents/index" options={{ headerShown: true, title: 'Exames & Laudos' }} />
         <Stack.Screen name="pet/[id]/expenses" options={{ headerShown: true, title: 'Gastos' }} />
         <Stack.Screen name="pet/[id]/birthday" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="pet/[id]/quiz" options={{ headerShown: true, title: 'Quiz', animation: 'slide_from_bottom' }} />

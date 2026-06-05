@@ -36,7 +36,7 @@ export default function PrivacyPage() {
           automaticamente no logout.
         </LegalListItem>
         <LegalListItem>
-          Snapshot mensal do Bidu Score (score numérico + componentes) pra mostrar evolução.
+          Snapshot mensal do Score de Saúde (score numérico + componentes) pra mostrar evolução.
         </LegalListItem>
         <LegalListItem>
           Dados técnicos do app (versão, plataforma) pra diagnosticar bugs via tabela app_errors.
@@ -66,7 +66,7 @@ export default function PrivacyPage() {
           processar mutações.
         </LegalListItem>
         <LegalListItem>
-          Calcular o Bidu Score e detectar alertas de saúde proativos (sem diagnosticar).
+          Calcular o Score de Saúde e detectar alertas de saúde proativos (sem diagnosticar).
         </LegalListItem>
         <LegalListItem>
           Gerar respostas do assistente IA — envio ao modelo OpenAI/Anthropic com contexto do pet

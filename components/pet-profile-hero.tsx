@@ -320,11 +320,11 @@ export function PetProfileHero({
           }}
         >
           <View style={{ flex: 1 }}>
-            <StatPill label="publicações" value={stats.posts_count} />
+            <StatPill label="publicações" singular="publicação" value={stats.posts_count} />
           </View>
           <Link href={{ pathname: '/pet/[id]/followers', params: { id: pet.id } }} asChild>
             <PressScale style={{ flex: 1 }} scale={0.95}>
-              <StatPill label="seguidores" value={stats.followers_count} />
+              <StatPill label="seguidores" singular="seguidor" value={stats.followers_count} />
             </PressScale>
           </Link>
           <Link href={{ pathname: '/pet/[id]/following', params: { id: pet.id } }} asChild>
@@ -401,7 +401,15 @@ export function PetProfileHero({
   );
 }
 
-function StatPill({ label, value }: { label: string; value: number }) {
+function StatPill({
+  label,
+  singular,
+  value,
+}: {
+  label: string;
+  singular?: string;
+  value: number;
+}) {
   const { theme } = useTheme();
   return (
     <View
@@ -432,7 +440,7 @@ function StatPill({ label, value }: { label: string; value: number }) {
           marginTop: -2,
         }}
       >
-        {label}
+        {value === 1 && singular ? singular : label}
       </Text>
     </View>
   );

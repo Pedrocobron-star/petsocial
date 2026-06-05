@@ -21,7 +21,7 @@
  * Patrocinadores são a principal fonte de receita do Pet Social (mais que
  * Pet Pro, que sozinho não cobre custos de infra). Por isso Pro NÃO remove
  * anúncios — só remove os outros limites (posts/dia, pets, marca d'água, AI
- * rate limit, histórico de Bidu Score). Anúncios continuam exibidos pra todos.
+ * rate limit, histórico de Score de Saúde). Anúncios continuam exibidos pra todos.
  *
  * Se um dia quisermos um tier mais alto ("Pet Pro+") que remove ads, basta
  * filtrar `sponsored_posts` pela subscription do user antes de chamar

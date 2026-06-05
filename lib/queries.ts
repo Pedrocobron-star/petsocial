@@ -1282,15 +1282,25 @@ export async function fetchSuggestedPets(
   );
   exclude.add(viewerPetId);
 
+  // Dono do viewer — pra não sugerir os outros pets da própria pessoa
+  const { data: viewerPet } = await supabase
+    .from('pets')
+    .select('owner_id')
+    .eq('id', viewerPetId)
+    .maybeSingle();
+  const viewerOwnerId = (viewerPet as { owner_id?: string } | null)?.owner_id ?? null;
+
   // Busca todos os pets recentes (mais que limit pra filtrar)
   const { data: pets, error: pErr } = await supabase
     .from('pets')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(limit * 3);
+    .limit(limit * 4);
   if (pErr) throw pErr;
 
-  const candidates = (pets ?? []).filter((p) => !exclude.has(p.id)) as Pet[];
+  const candidates = (pets ?? []).filter(
+    (p) => !exclude.has(p.id) && (!viewerOwnerId || (p as Pet).owner_id !== viewerOwnerId),
+  ) as Pet[];
   if (candidates.length === 0) return [];
 
   // Stats pra ordenar
@@ -2870,7 +2880,7 @@ export async function fetchHealthEventsRange(
   return events;
 }
 
-// -------- Pet Health Snapshots (histórico do Bidu Score) --------
+// -------- Pet Health Snapshots (histórico do Score de Saúde) --------
 
 export interface PetHealthSnapshot {
   id: string;

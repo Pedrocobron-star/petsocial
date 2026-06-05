@@ -49,7 +49,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Hero — banner + avatar + nome + stats + editar */}
         <TutorProfileHero
           profile={profile}

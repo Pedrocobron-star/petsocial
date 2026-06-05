@@ -74,11 +74,21 @@ export default function HealthHubScreen() {
   const activeSymptoms = activeSymptomsQuery.data ?? [];
   const snapshots = snapshotsQuery.data ?? [];
   const computedScore = summary ? computeHealthScore(summary, parasiteSummary) : null;
+  // Cadastro de saúde incompleto: nenhuma das 3 dimensões essenciais
+  // (vacina, vermífugo, consulta) tem registro. Aí não faz sentido mostrar
+  // "evolução" — não há histórico real pra acompanhar ainda.
+  const healthIncomplete =
+    computedScore != null &&
+    computedScore.components.filter(
+      (c) =>
+        (c.key === 'vaccines' || c.key === 'parasites' || c.key === 'vet_visits') &&
+        c.status !== 'na',
+    ).length === 0;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <Stack.Screen options={{ title: pet ? `Saúde — ${pet.name}` : 'Saúde' }} />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 110 }}>
         {!summary || !pet ? (
           <HealthListSkeleton withHeader count={2} />
         ) : null}
@@ -91,7 +101,7 @@ export default function HealthHubScreen() {
           />
         ) : null}
 
-        {pet && computedScore ? (
+        {pet && computedScore && !healthIncomplete ? (
           <HealthScoreTrend
             petId={id}
             currentScore={computedScore.score}

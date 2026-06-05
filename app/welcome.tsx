@@ -732,7 +732,7 @@ function Faq() {
     },
     {
       q: 'Quanto custa?',
-      a: 'Saúde, comunidade, carteirinha digital, lembretes de vacina — tudo isso é grátis pra sempre. O Pet Pro (R$ 9,90/mês ou R$ 99/ano) desbloqueia mais pets, histórico infinito do Bidu Score, AI assistant ilimitado e PDF do prontuário sem marca d\'água.',
+      a: 'Saúde, comunidade, carteirinha digital, lembretes de vacina — tudo isso é grátis pra sempre. O Pet Pro (R$ 9,90/mês ou R$ 99/ano) desbloqueia mais pets, histórico infinito do Score de Saúde, AI assistant ilimitado e PDF do prontuário sem marca d\'água.',
     },
     {
       q: 'Funciona offline?',

@@ -20,7 +20,7 @@ interface Props {
 }
 
 /**
- * Card de tendência do Bidu Score — comparativo com mês anterior + mini-sparkline
+ * Card de tendência do Score de Saúde — comparativo com mês anterior + mini-sparkline
  * dos últimos 6 meses.
  *
  * Effect colateral: faz upsert do snapshot do mês corrente toda vez que
@@ -197,7 +197,7 @@ export function HealthScoreTrend({
           intent="score-history"
           emoji="📈"
           title="Histórico completo no Pet Pro"
-          description="Veja o Bidu Score de meses anteriores e acompanhe a evolução ao longo de todo o ano. No plano free você vê os últimos 3 meses."
+          description="Veja o Score de Saúde de meses anteriores e acompanhe a evolução ao longo de todo o ano. No plano free você vê os últimos 3 meses."
           compact
           style={{ marginTop: 4 }}
         />

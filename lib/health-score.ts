@@ -1,5 +1,5 @@
 /**
- * Cálculo do Bidu Score — pontuação 0-100 baseada em 5 dimensões da saúde.
+ * Cálculo do Score de Saúde — pontuação 0-100 baseada em 5 dimensões da saúde.
  *
  * Extraído de health-score-card.tsx pra ser reutilizável: o card original
  * usa essa função, e o snapshot mensal (pet_health_snapshots) usa a mesma
