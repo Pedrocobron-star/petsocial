@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { FONTS } from '@/lib/fonts';
+import { useTheme } from '@/providers/theme-provider';
 
 interface Option<T extends string> {
   value: T;
@@ -25,7 +26,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerClassName="gap-2 px-4 py-2"
+      contentContainerClassName="gap-2 px-4 py-1.5"
     >
       {options.map((opt) => (
         <SegmentItem
@@ -40,6 +41,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
 }
 
 function SegmentItem({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const { theme } = useTheme();
   const progress = useSharedValue(active ? 1 : 0);
 
   // Atualiza animação quando active muda
@@ -49,15 +51,19 @@ function SegmentItem({ label, active, onPress }: { label: string; active: boolea
     progress.value = withTiming(0, { duration: 220, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.Never });
   }
 
+  const activeBg = theme.brand;
+  const inactiveBg = theme.borderLight;
+  const inactiveText = theme.textMuted;
+
   const bgStyle = useAnimatedStyle(() => {
     return {
-      backgroundColor: progress.value > 0.5 ? '#F97316' : '#F5F5F5',
+      backgroundColor: progress.value > 0.5 ? activeBg : inactiveBg,
       transform: [{ scale: 0.96 + progress.value * 0.04 }],
     };
   });
 
   const textStyle = useAnimatedStyle(() => ({
-    color: progress.value > 0.5 ? '#fff' : '#404040',
+    color: progress.value > 0.5 ? '#fff' : inactiveText,
   }));
 
   return (
@@ -67,8 +73,8 @@ function SegmentItem({ label, active, onPress }: { label: string; active: boolea
           bgStyle,
           {
             borderRadius: 999,
-            paddingHorizontal: 16,
-            paddingVertical: 9,
+            paddingHorizontal: 14,
+            paddingVertical: 7,
           },
         ]}
       >
@@ -77,7 +83,7 @@ function SegmentItem({ label, active, onPress }: { label: string; active: boolea
             textStyle,
             {
               fontFamily: FONTS.bodyBold,
-              fontSize: 13,
+              fontSize: 12.5,
             },
           ]}
         >

@@ -66,6 +66,13 @@ export default function Root({ children }: PropsWithChildren) {
           content="Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu cachorro, gato, coelho e mais."
         />
 
+        {/* Impede o navegador mobile de "inflar" as fontes (causa o 'tudo muito grande' no celular) */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `html,body{-webkit-text-size-adjust:100%;text-size-adjust:100%;}`,
+          }}
+        />
+
         {/* iOS scroll bounce fix do Expo */}
         <ScrollViewStyleReset />
 

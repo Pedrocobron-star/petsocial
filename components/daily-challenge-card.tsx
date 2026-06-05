@@ -19,55 +19,53 @@ export function DailyChallengeCard() {
         style={{
           width,
           alignSelf: 'center',
-          marginVertical: 8,
+          marginVertical: 6,
           backgroundColor: theme.brandSurface,
-          borderRadius: 18,
-          padding: 14,
+          borderRadius: 16,
+          padding: 10,
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 12,
+          gap: 10,
           borderWidth: 1,
           borderColor: theme.borderLight,
         }}
       >
         <View
           style={{
-            width: 52,
-            height: 52,
-            borderRadius: 14,
+            width: 40,
+            height: 40,
+            borderRadius: 12,
             backgroundColor: theme.surface,
             alignItems: 'center',
             justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.06,
-            shadowRadius: 4,
-            elevation: 1,
           }}
         >
-          <Text style={{ fontSize: 26 }}>{challenge.emoji}</Text>
+          <Text style={{ fontSize: 21 }}>{challenge.emoji}</Text>
         </View>
         <View style={{ flex: 1 }}>
           <Text
             style={{
               fontFamily: FONTS.bodyBold,
-              fontSize: 10,
-              letterSpacing: 1.2,
+              fontSize: 9.5,
+              letterSpacing: 1.1,
               color: theme.brand,
               textTransform: 'uppercase',
-              marginBottom: 2,
+              marginBottom: 1,
             }}
           >
             Desafio de hoje
           </Text>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 16, color: theme.text }}>
+          <Text numberOfLines={1} style={{ fontFamily: FONTS.display, fontSize: 14.5, color: theme.text }}>
             {challenge.title}
           </Text>
-          <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim, marginTop: 2 }}>
+          <Text
+            numberOfLines={1}
+            style={{ fontFamily: FONTS.body, fontSize: 11.5, color: theme.textDim, marginTop: 1 }}
+          >
             {challenge.hint}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color={theme.textDim} />
+        <Ionicons name="chevron-forward" size={18} color={theme.textDim} />
       </Pressable>
     </Link>
   );

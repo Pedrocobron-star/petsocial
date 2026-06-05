@@ -15,7 +15,7 @@ interface Props {
 
 /**
  * "Compartilha algo com o Mozart..." — barra fake do compose, igual ao Threads/Facebook.
- * Convida o user a postar sem precisar ir até o tab Postar.
+ * Convida o user a postar sem precisar ir até o tab Postar. Compacta (1 linha) pra caber no mobile.
  */
 export function ComposeBar({ pet }: Props) {
   const { theme } = useTheme();
@@ -30,22 +30,23 @@ export function ComposeBar({ pet }: Props) {
           alignSelf: 'center',
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 10,
-          marginVertical: 10,
-          paddingHorizontal: 12,
-          paddingVertical: 10,
+          gap: 8,
+          marginVertical: 7,
+          paddingHorizontal: 10,
+          paddingVertical: 7,
           backgroundColor: theme.surface,
           borderRadius: 999,
           borderWidth: 1,
           borderColor: theme.borderLight,
         }}
       >
-        <PetAvatar pet={pet} size={36} animation="bob" />
+        <PetAvatar pet={pet} size={30} animation="bob" />
         <Text
+          numberOfLines={1}
           style={{
             flex: 1,
             fontFamily: FONTS.body,
-            fontSize: 13.5,
+            fontSize: 13,
             color: theme.textDim,
           }}
         >
@@ -53,15 +54,15 @@ export function ComposeBar({ pet }: Props) {
         </Text>
         <View
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
+            width: 30,
+            height: 30,
+            borderRadius: 15,
             backgroundColor: theme.brandLight,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Ionicons name="camera" size={18} color={theme.brand} />
+          <Ionicons name="camera" size={16} color={theme.brand} />
         </View>
       </Pressable>
     </Link>
