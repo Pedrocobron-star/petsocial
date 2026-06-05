@@ -2005,6 +2005,13 @@ export async function fetchHealthSummary(petId: string): Promise<HealthSummary> 
       })()
     : null;
 
+  // Total de vacinas registradas — pro score reconhecer o registro mesmo quando
+  // a "próxima dose" (opcional) não foi preenchida.
+  const { count: vaccinationsCount } = await supabase
+    .from('vaccinations')
+    .select('id', { count: 'exact', head: true })
+    .eq('pet_id', petId);
+
   // Medicamentos ativos
   const { count: activeMedCount } = await supabase
     .from('medications')
@@ -2068,6 +2075,7 @@ export async function fetchHealthSummary(petId: string): Promise<HealthSummary> 
 
   return {
     next_vaccine,
+    vaccinations_count: vaccinationsCount ?? 0,
     active_medications_count: activeMedCount ?? 0,
     due_medications_today: dueToday,
     last_vet_visit: (lastVisit as VetVisit | null) ?? null,

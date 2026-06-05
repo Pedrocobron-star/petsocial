@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -24,6 +24,7 @@ interface Props {
  */
 export function MyPetsSection({ pets, activePetId, onSelectPet }: Props) {
   const { theme } = useTheme();
+  const router = useRouter();
 
   return (
     <CenteredColumn maxWidth={540}>
@@ -155,7 +156,12 @@ export function MyPetsSection({ pets, activePetId, onSelectPet }: Props) {
                     {!active ? (
                       <Pressable
                         onPress={(e) => {
-                          (e as { stopPropagation?: () => void }).stopPropagation?.();
+                          const ev = e as {
+                            stopPropagation?: () => void;
+                            preventDefault?: () => void;
+                          };
+                          ev.preventDefault?.();
+                          ev.stopPropagation?.();
                           onSelectPet(pet.id);
                         }}
                         hitSlop={6}
@@ -177,28 +183,30 @@ export function MyPetsSection({ pets, activePetId, onSelectPet }: Props) {
                       </Pressable>
                     ) : null}
 
-                    {/* Editar — ícone pequeno mais discreto */}
-                    <Link
-                      href={{ pathname: '/pet/[id]/edit', params: { id: pet.id } }}
-                      asChild
+                    {/* Editar — Pressable (não Link) pra evitar <a> dentro de <a>
+                        no web (o card já é um Link). */}
+                    <Pressable
+                      hitSlop={10}
+                      onPress={(e) => {
+                        const ev = e as {
+                          stopPropagation?: () => void;
+                          preventDefault?: () => void;
+                        };
+                        ev.preventDefault?.();
+                        ev.stopPropagation?.();
+                        router.push({ pathname: '/pet/[id]/edit', params: { id: pet.id } });
+                      }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 8,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      accessibilityLabel={`Editar ${pet.name}`}
                     >
-                      <Pressable
-                        hitSlop={10}
-                        onPress={(e) => {
-                          (e as { stopPropagation?: () => void }).stopPropagation?.();
-                        }}
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 8,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                        accessibilityLabel={`Editar ${pet.name}`}
-                      >
-                        <Ionicons name="pencil" size={14} color={theme.textDim} />
-                      </Pressable>
-                    </Link>
+                      <Ionicons name="pencil" size={14} color={theme.textDim} />
+                    </Pressable>
                   </Pressable>
                 </Link>
               </Animated.View>

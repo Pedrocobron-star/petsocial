@@ -76,6 +76,8 @@ export function computeHealthScore(
     } else {
       components.push({ key: 'vaccines', label: 'Vacinas', status: 'ok', detail: 'Em dia' });
     }
+  } else if (summary.vaccinations_count > 0) {
+    components.push({ key: 'vaccines', label: 'Vacinas', status: 'ok', detail: 'Em dia' });
   } else {
     components.push({ key: 'vaccines', label: 'Vacinas', status: 'na', detail: 'Sem registro' });
   }
@@ -178,12 +180,20 @@ export function computeHealthScore(
     components.push({ key: 'weight', label: 'Peso', status: 'na', detail: 'Sem registro' });
   }
 
+  // Essenciais sem registro PENALIZAM (contam 0) em vez de serem ignoradas —
+  // assim o score reflete cobertura real e cada registro novo o faz subir
+  // (vacina, vermífugo, consulta). Não-essenciais 'na' (peso) seguem ignoradas.
+  // Pet 100% vazio cai no estado "comece aqui" (a UI nem mostra o %).
+  const ESSENTIAL = new Set<ScoreComponent['key']>(['vaccines', 'parasites', 'vet_visits']);
   let totalWeight = 0;
   let weightedSum = 0;
   for (const c of components) {
     const w = WEIGHTS[c.key];
-    const v = STATUS_VALUE[c.status];
-    if (v < 0) continue;
+    let v = STATUS_VALUE[c.status];
+    if (v < 0) {
+      if (!ESSENTIAL.has(c.key)) continue;
+      v = 0;
+    }
     totalWeight += w;
     weightedSum += w * v;
   }

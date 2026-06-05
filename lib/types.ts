@@ -714,6 +714,8 @@ export interface PetSymptom {
 
 export interface HealthSummary {
   next_vaccine: { name: string; due_at: string; days_until: number } | null;
+  /** Total de vacinas já registradas (pro score reconhecer o registro). */
+  vaccinations_count: number;
   active_medications_count: number;
   due_medications_today: number;
   last_vet_visit: VetVisit | null;

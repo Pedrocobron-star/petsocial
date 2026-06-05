@@ -61,6 +61,9 @@ export function HealthScoreCard({ petName, summary, parasiteSummary }: Props) {
           detail: 'Em dia',
         });
       }
+    } else if (summary.vaccinations_count > 0) {
+      // Tem vacina registrada (sem próxima dose marcada) → reconhece o registro.
+      items.push({ label: 'Vacinas', emoji: '💉', status: 'ok', detail: 'Em dia' });
     } else {
       items.push({ label: 'Vacinas', emoji: '💉', status: 'na', detail: 'Sem registro' });
     }
@@ -138,15 +141,21 @@ export function HealthScoreCard({ petName, summary, parasiteSummary }: Props) {
       items.push({ label: 'Peso', emoji: '⚖️', status: 'na', detail: 'Sem registro' });
     }
 
-    // Score ponderado — só considera dimensões com dados
+    // Score ponderado. Essenciais (vacina/vermífugo/consulta) sem registro
+    // PENALIZAM (contam 0) — assim cada registro novo faz o score subir.
+    // Não-essenciais 'na' (peso) seguem ignoradas.
     const weights = { Vacinas: 30, 'Vermífugo/Pulga': 25, Remédios: 20, Consultas: 15, Peso: 10 };
     const statusValue = { ok: 100, warn: 50, bad: 0, na: -1 };
+    const ESSENTIAL_LABELS = new Set(['Vacinas', 'Vermífugo/Pulga', 'Consultas']);
     let totalWeight = 0;
     let weightedSum = 0;
     for (const item of items) {
       const w = weights[item.label as keyof typeof weights] ?? 0;
-      const v = statusValue[item.status];
-      if (v < 0) continue; // ignora 'na'
+      let v = statusValue[item.status];
+      if (v < 0) {
+        if (!ESSENTIAL_LABELS.has(item.label)) continue;
+        v = 0;
+      }
       totalWeight += w;
       weightedSum += w * v;
     }

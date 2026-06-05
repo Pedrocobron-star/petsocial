@@ -1,4 +1,6 @@
 import '../global.css';
+// Shim do Alert.alert pro web (RN Web não suporta) — conserta confirmações/erros.
+import '@/lib/web-alert';
 
 import {
   Fredoka_500Medium,
@@ -23,6 +25,7 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { PetAnimationsStyle } from '@/components/avatar/pet-animations-style';
+import { ConfirmHost } from '@/components/confirm-host';
 import { DocumentTitleManager } from '@/components/document-title-manager';
 import { MobileAppBanner } from '@/components/mobile-app-banner';
 import { I18nProvider } from '@/lib/i18n';
@@ -77,6 +80,8 @@ export default function RootLayout() {
                       <DocumentTitleManager />
                       {/* Banner pra instalar como PWA quando user em mobile */}
                       <MobileAppBanner />
+                      {/* Modal de confirmação estilizado (web) — usado pelo shim de Alert */}
+                      <ConfirmHost />
                       <Stack screenOptions={{ headerShown: false }}>
                         <Stack.Screen name="index" />
                         <Stack.Screen name="welcome" />

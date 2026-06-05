@@ -159,7 +159,10 @@ export default function PetProfileScreen() {
     ]);
   };
 
-  const isOwn = activePet?.id === id;
+  // Dono = a CONTA é dona do pet (não "é o pet ativo"). Antes usava
+  // activePet?.id === id, então ver um pet PRÓPRIO não-ativo mostrava
+  // "+ Seguir/Mensagem" em vez de "Editar" (bug pra quem tem vários pets).
+  const isOwn = !!pet && pet.owner_id === myUserId;
 
   const onShare = async () => {
     if (!pet) return;
