@@ -38,7 +38,7 @@ export default function SignInScreen() {
     setLoading(true);
     try {
       await signIn(parsed.data.email, parsed.data.password);
-      router.replace('/(app)/(tabs)');
+      router.replace('/(app)/phone');
     } catch (e) {
       toast.error(t('auth.signIn.error'), e instanceof Error ? e.message : t('common.retry'));
     } finally {

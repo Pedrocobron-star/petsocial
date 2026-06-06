@@ -31,7 +31,7 @@ export default function ResetPasswordScreen() {
       const { error: err } = await supabase.auth.updateUser({ password });
       if (err) throw err;
       toast.success('Senha atualizada!', 'Você já tá logado com a nova senha.');
-      router.replace('/(app)/(tabs)');
+      router.replace('/(app)/phone');
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Tente novamente.';
       setError(msg);

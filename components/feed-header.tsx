@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
@@ -18,6 +18,7 @@ interface Props {
  */
 export function FeedHeader({ unreadMessages, unreadNotifications }: Props) {
   const { theme } = useTheme();
+  const router = useRouter();
 
   return (
     <View
@@ -32,7 +33,13 @@ export function FeedHeader({ unreadMessages, unreadNotifications }: Props) {
         borderBottomColor: theme.borderLight,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+      <Pressable
+        onPress={() => router.replace('/(app)/phone' as never)}
+        accessibilityRole="button"
+        accessibilityLabel="Voltar pro celular do pet"
+        hitSlop={6}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}
+      >
         <View
           style={{
             width: 26,
@@ -43,7 +50,7 @@ export function FeedHeader({ unreadMessages, unreadNotifications }: Props) {
             justifyContent: 'center',
           }}
         >
-          <Text style={{ fontSize: 15 }}>🐾</Text>
+          <Text style={{ fontSize: 15 }}>🏠</Text>
         </View>
         <Text
           style={{
@@ -55,7 +62,7 @@ export function FeedHeader({ unreadMessages, unreadNotifications }: Props) {
         >
           Pet Social
         </Text>
-      </View>
+      </Pressable>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <Link href={'/(app)/messages' as never} asChild>

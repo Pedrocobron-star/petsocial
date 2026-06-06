@@ -15,5 +15,5 @@ export default function IndexRedirect() {
   }
 
   if (!session) return <Redirect href="/welcome" />;
-  return <Redirect href="/(app)/(tabs)" />;
+  return <Redirect href="/(app)/phone" />;
 }

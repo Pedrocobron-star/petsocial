@@ -20,7 +20,7 @@ export function HeaderHomeLogo() {
 
   return (
     <Pressable
-      onPress={() => router.replace('/(app)/(tabs)' as never)}
+      onPress={() => router.replace('/(app)/phone' as never)}
       hitSlop={10}
       accessibilityRole="button"
       accessibilityLabel="Ir pra tela principal"
@@ -49,7 +49,7 @@ export function HeaderHomeIcon() {
 
   return (
     <Pressable
-      onPress={() => router.replace('/(app)/(tabs)' as never)}
+      onPress={() => router.replace('/(app)/phone' as never)}
       hitSlop={10}
       accessibilityRole="button"
       accessibilityLabel="Ir pra tela principal"
@@ -75,7 +75,7 @@ export function HeaderBackAndHome() {
           if (router.canGoBack()) {
             router.back();
           } else {
-            router.replace('/(app)/(tabs)' as never);
+            router.replace('/(app)/phone' as never);
           }
         }}
         hitSlop={10}

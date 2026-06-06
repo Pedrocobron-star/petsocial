@@ -104,8 +104,8 @@ export default function OnboardingScreen() {
                 });
                 if (error) throw error;
                 await qc.invalidateQueries({ queryKey: qk.myPets(userId) });
-                toast.success(`Bem-vindo, ${data.name}! 🐾`, 'Bora postar a primeira foto?');
-                router.replace('/(app)/(tabs)');
+                toast.success(`Bem-vindo, ${data.name}! 🐾`, 'Esse é o celular do seu pet 🐾📱');
+                router.replace('/(app)/phone');
               } catch (e) {
                 toast.error('Erro ao salvar', e instanceof Error ? e.message : 'Tente de novo');
                 throw e;

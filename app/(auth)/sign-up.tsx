@@ -49,7 +49,7 @@ export default function SignUpScreen() {
     setLoading(true);
     try {
       await signUp(parsed.data.email, parsed.data.password, parsed.data.display_name);
-      router.replace('/(app)/(tabs)');
+      router.replace('/(app)/phone');
     } catch (e) {
       toast.error('Erro ao criar conta', e instanceof Error ? e.message : 'Tente novamente.');
     } finally {
