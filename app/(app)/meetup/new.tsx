@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
@@ -12,6 +12,8 @@ import { Screen } from '@/components/ui/screen';
 import { TextArea } from '@/components/ui/text-area';
 import { MEETUP_CATEGORIES } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
+import { placeKindMeta } from '@/lib/places-meta';
+import { fetchPlaces } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import type { MeetupCategory } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
@@ -23,10 +25,18 @@ export default function NewMeetupScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [locationName, setLocationName] = useState('');
+  const [placeId, setPlaceId] = useState<string | null>(null);
+  const [placeSearch, setPlaceSearch] = useState('');
   const [startsAt, setStartsAt] = useState<Date | null>(null);
   const [category, setCategory] = useState<MeetupCategory>('social');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  const placesQuery = useQuery({
+    queryKey: ['places-pick', placeSearch],
+    queryFn: () => fetchPlaces({ search: placeSearch.trim() }),
+    enabled: placeSearch.trim().length >= 2,
+  });
 
   if (!activePet) return null;
 
@@ -53,6 +63,7 @@ export default function NewMeetupScreen() {
           location_name: locationName.trim(),
           starts_at: startsAt!.toISOString(),
           category,
+          ...(placeId ? { place_id: placeId } : {}),
         })
         .select('id')
         .single();
@@ -147,6 +158,79 @@ export default function NewMeetupScreen() {
             onChangeText={setLocationName}
             error={errors.location_name}
           />
+
+          {/* Vincular a um lugar pet-friendly do guia (opcional) */}
+          {placeId ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                backgroundColor: '#DCFCE7',
+                borderRadius: 10,
+                padding: 10,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#15803D', flex: 1 }}>
+                📍 Vinculado a um lugar do guia
+              </Text>
+              <Pressable onPress={() => setPlaceId(null)} hitSlop={6}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#15803D' }}>
+                  trocar
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View>
+              <Input
+                label="📍 É num lugar do guia? (opcional)"
+                placeholder="Buscar parque, restaurante, café..."
+                value={placeSearch}
+                onChangeText={setPlaceSearch}
+              />
+              {placeSearch.trim().length >= 2 && (placesQuery.data?.length ?? 0) > 0 ? (
+                <View style={{ gap: 6, marginTop: 6 }}>
+                  {placesQuery.data!.slice(0, 5).map((p) => {
+                    const m = placeKindMeta(p.kind);
+                    return (
+                      <Pressable
+                        key={p.id}
+                        onPress={() => {
+                          setPlaceId(p.id);
+                          setLocationName(`${p.name}${p.city ? ' — ' + p.city : ''}`);
+                          setPlaceSearch('');
+                        }}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 8,
+                          padding: 8,
+                          borderRadius: 8,
+                          backgroundColor: '#F5F5F4',
+                        }}
+                      >
+                        <Text style={{ fontSize: 18 }}>{m.emoji}</Text>
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            numberOfLines={1}
+                            style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#1A1410' }}
+                          >
+                            {p.name}
+                          </Text>
+                          <Text
+                            numberOfLines={1}
+                            style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}
+                          >
+                            {m.label} · {p.address}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ) : null}
+            </View>
+          )}
           <DateTimePickerInput
             label="Quando"
             value={startsAt}

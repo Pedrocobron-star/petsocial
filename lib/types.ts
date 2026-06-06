@@ -466,6 +466,8 @@ export interface Meetup {
   title: string;
   description: string | null;
   location_name: string;
+  /** Lugar pet-friendly vinculado (guia de Lugares). Null = local livre. */
+  place_id: string | null;
   latitude: number | null;
   longitude: number | null;
   starts_at: string;

@@ -71,12 +71,23 @@ export default function MeetupsScreen() {
         }}
       >
         <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>Rolês</Text>
-        <Link href="/(app)/meetup/new" asChild>
-          <Pressable className="flex-row items-center gap-1 rounded-full bg-brand px-3 py-1.5">
-            <Ionicons name="add" size={18} color="#fff" />
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#fff' }}>Criar</Text>
-          </Pressable>
-        </Link>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Link href="/(app)/agenda" asChild>
+            <Pressable
+              hitSlop={6}
+              accessibilityLabel="Minha agenda"
+              style={{ backgroundColor: theme.borderLight, padding: 8, borderRadius: 999 }}
+            >
+              <Ionicons name="bookmark-outline" size={18} color={theme.text} />
+            </Pressable>
+          </Link>
+          <Link href="/(app)/meetup/new" asChild>
+            <Pressable className="flex-row items-center gap-1 rounded-full bg-brand px-3 py-1.5">
+              <Ionicons name="add" size={18} color="#fff" />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#fff' }}>Criar</Text>
+            </Pressable>
+          </Link>
+        </View>
       </View>
 
       <PlacesPromo />

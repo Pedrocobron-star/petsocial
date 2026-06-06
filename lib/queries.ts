@@ -2294,6 +2294,52 @@ export async function fetchPlace(id: string): Promise<PlaceWithStats | null> {
   };
 }
 
+// -------- Lugares salvos (favoritos) → agenda/roteiro pet --------
+
+export async function fetchSavedPlaceIds(userId: string): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from('place_favorites')
+    .select('place_id')
+    .eq('user_id', userId);
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => (r as { place_id: string }).place_id));
+}
+
+export async function toggleSavePlace(userId: string, placeId: string, currentlySaved: boolean) {
+  if (currentlySaved) {
+    const { error } = await supabase
+      .from('place_favorites')
+      .delete()
+      .match({ user_id: userId, place_id: placeId });
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from('place_favorites')
+      .insert({ user_id: userId, place_id: placeId });
+    if (error) throw error;
+  }
+}
+
+export async function fetchSavedPlaces(userId: string): Promise<PlaceWithStats[]> {
+  const { data: favs, error } = await supabase
+    .from('place_favorites')
+    .select('place_id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  const ids = (favs ?? []).map((r) => (r as { place_id: string }).place_id);
+  if (ids.length === 0) return [];
+  const { data: places } = await supabase.from('places').select('*').in('id', ids);
+  if (!places) return [];
+  const { data: stats } = await supabase.from('place_stats').select('*').in('place_id', ids);
+  const statsMap = new Map(stats?.map((s) => [s.place_id, s]) ?? []);
+  return (places as Place[]).map((p) => ({
+    ...p,
+    avg_rating: Number(statsMap.get(p.id)?.avg_rating ?? 0),
+    review_count: statsMap.get(p.id)?.review_count ?? 0,
+  }));
+}
+
 export async function createPlace(input: {
   added_by_user_id: string;
   name: string;

@@ -105,6 +105,7 @@ export default function AppLayout() {
         <Stack.Screen name="places/index" options={{ headerShown: true, title: 'Pet Map' }} />
         <Stack.Screen name="places/new" options={{ presentation: 'modal', headerShown: true }} />
         <Stack.Screen name="places/[id]" options={{ headerShown: true }} />
+        <Stack.Screen name="agenda" options={{ headerShown: true, title: 'Minha agenda' }} />
         <Stack.Screen name="pro" options={{ headerShown: true, title: 'Pet Pro' }} />
         <Stack.Screen name="offers" options={{ headerShown: true, title: 'Vantagens' }} />
         <Stack.Screen name="adoption/index" options={{ headerShown: true, title: 'Adoção' }} />

@@ -14,7 +14,9 @@ import {
   deletePlaceReview,
   fetchPlace,
   fetchPlaceReviews,
+  fetchSavedPlaceIds,
   qk,
+  toggleSavePlace,
   upsertPlaceReview,
 } from '@/lib/queries';
 import type { PlaceReviewWithProfile } from '@/lib/types';
@@ -55,6 +57,25 @@ export default function PlaceDetailScreen() {
       qc.invalidateQueries({ queryKey: ['places'] });
       toast.success('Review removida');
     },
+  });
+
+  // Salvar lugar (favorito) → vai pra "Minha agenda"
+  const userId = session?.user.id;
+  const savedQuery = useQuery({
+    queryKey: ['saved-place-ids', userId],
+    queryFn: () => fetchSavedPlaceIds(userId!),
+    enabled: !!userId,
+    retry: false,
+  });
+  const isSaved = savedQuery.data?.has(id) ?? false;
+  const saveMut = useMutation({
+    mutationFn: () => toggleSavePlace(userId!, id, isSaved),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['saved-place-ids'] });
+      qc.invalidateQueries({ queryKey: ['saved-places'] });
+      toast.success(isSaved ? 'Removido dos salvos' : 'Lugar salvo!', isSaved ? '' : 'Tá na sua agenda 🐾');
+    },
+    onError: () => toast.error('Erro', 'Não foi possível salvar.'),
   });
 
   // Distribuição de rating (5★, 4★, ..., 1★)
@@ -116,9 +137,23 @@ export default function PlaceDetailScreen() {
         options={{
           title: place.name,
           headerRight: () => (
-            <Pressable hitSlop={10} onPress={handleShare} style={{ paddingHorizontal: 8 }}>
-              <Ionicons name="share-outline" size={22} color={theme.brand} />
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Pressable
+                hitSlop={10}
+                onPress={() => userId && saveMut.mutate()}
+                style={{ paddingHorizontal: 8 }}
+                accessibilityLabel={isSaved ? 'Remover dos salvos' : 'Salvar lugar'}
+              >
+                <Ionicons
+                  name={isSaved ? 'bookmark' : 'bookmark-outline'}
+                  size={22}
+                  color={theme.brand}
+                />
+              </Pressable>
+              <Pressable hitSlop={10} onPress={handleShare} style={{ paddingHorizontal: 8 }}>
+                <Ionicons name="share-outline" size={22} color={theme.brand} />
+              </Pressable>
+            </View>
           ),
         }}
       />
