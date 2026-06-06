@@ -82,3 +82,16 @@ alter table public.place_favorites enable row level security;
 drop policy if exists "place_favorites own" on public.place_favorites;
 create policy "place_favorites own" on public.place_favorites for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ----------------------------------------------------------------------------
+-- 5) Espécie a que o lugar atende: 'all' (todos) / 'dog' / 'cat' / 'other'
+-- ----------------------------------------------------------------------------
+alter table public.places
+  add column if not exists species text not null default 'all';
+alter table public.places drop constraint if exists places_species_check;
+alter table public.places add constraint places_species_check
+  check (species in ('all', 'dog', 'cat', 'other'));
+-- Tagueia alguns exemplos pra dar variedade ao filtro (idempotente; resto = 'all')
+update public.places set species = 'dog'
+  where name in ('Praia da Baleia (área pet)', 'Praia do Tombo (faixa pet)', 'Creche Cãopanheiros')
+    and species = 'all';

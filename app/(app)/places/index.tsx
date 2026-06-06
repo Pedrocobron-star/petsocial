@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { PLACE_KIND_META, placeKindMeta } from '@/lib/places-meta';
 import { fetchPlaces, qk } from '@/lib/queries';
-import type { PlaceKind, PlaceWithStats } from '@/lib/types';
+import type { PlaceKind, PlaceSpecies, PlaceWithStats } from '@/lib/types';
 import { useTheme } from '@/providers/theme-provider';
 
 const KIND_FILTERS: { value: PlaceKind | 'all'; label: string; emoji: string }[] = [
@@ -25,6 +25,13 @@ const KIND_FILTERS: { value: PlaceKind | 'all'; label: string; emoji: string }[]
   { value: 'event', label: PLACE_KIND_META.event.label, emoji: PLACE_KIND_META.event.emoji },
   { value: 'beach', label: PLACE_KIND_META.beach.label, emoji: PLACE_KIND_META.beach.emoji },
   { value: 'training', label: PLACE_KIND_META.training.label, emoji: PLACE_KIND_META.training.emoji },
+];
+
+const SPECIES_FILTERS: { value: PlaceSpecies; label: string; emoji: string }[] = [
+  { value: 'all', label: 'Pra todos', emoji: '🐾' },
+  { value: 'dog', label: 'Cães', emoji: '🐶' },
+  { value: 'cat', label: 'Gatos', emoji: '🐱' },
+  { value: 'other', label: 'Outras', emoji: '🐰' },
 ];
 
 type SortKey = 'top' | 'recent' | 'most_reviewed';
@@ -43,6 +50,7 @@ export default function PlacesScreen() {
   const [kind, setKind] = useState<PlaceKind | 'all'>(initialKind);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('top');
+  const [species, setSpecies] = useState<PlaceSpecies>('all');
 
   // Se o query param mudar via deep link, sincroniza
   useEffect(() => {
@@ -74,8 +82,13 @@ export default function PlacesScreen() {
       // recent
       return (a.created_at < b.created_at ? 1 : -1);
     });
-    return sorted;
-  }, [query.data, sort]);
+    // Filtro por espécie (client-side): 'all' do lugar aparece em qualquer filtro
+    if (species === 'all') return sorted;
+    return sorted.filter((p) => {
+      const sp = p.species ?? 'all';
+      return sp === 'all' || sp === species;
+    });
+  }, [query.data, sort, species]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -162,6 +175,41 @@ export default function PlacesScreen() {
             );
           })}
         </ScrollView>
+
+        {/* Filtro por espécie — pra quem é o lugar */}
+        <View style={{ flexDirection: 'row', gap: 6, paddingTop: 8 }}>
+          {SPECIES_FILTERS.map((s) => {
+            const active = species === s.value;
+            return (
+              <Pressable
+                key={s.value}
+                onPress={() => setSpecies(s.value)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingHorizontal: 11,
+                  paddingVertical: 6,
+                  borderRadius: 999,
+                  borderWidth: 1.5,
+                  borderColor: active ? theme.brand : theme.border,
+                  backgroundColor: active ? theme.brandSurface : 'transparent',
+                }}
+              >
+                <Text style={{ fontSize: 12 }}>{s.emoji}</Text>
+                <Text
+                  style={{
+                    fontFamily: FONTS.bodyBold,
+                    fontSize: 11.5,
+                    color: active ? theme.brandDark : theme.textMuted,
+                  }}
+                >
+                  {s.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
         {/* Sort options — só quando há resultados pra ordenar */}
         {places.length > 1 ? (

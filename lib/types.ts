@@ -774,10 +774,14 @@ export type PlaceKind =
   | 'beach'
   | 'other';
 
+export type PlaceSpecies = 'all' | 'dog' | 'cat' | 'other';
+
 export interface Place {
   id: string;
   name: string;
   kind: PlaceKind;
+  /** Espécie que o lugar atende. 'all' = pra todos. (default 'all' no banco) */
+  species?: PlaceSpecies;
   description: string | null;
   address: string;
   city: string | null;
