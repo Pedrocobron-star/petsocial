@@ -758,7 +758,19 @@ export interface Report {
 // Places (Pet Shops & Vets)
 // ====================
 
-export type PlaceKind = 'vet' | 'pet_shop' | 'hotel' | 'daycare' | 'park' | 'grooming' | 'training' | 'other';
+export type PlaceKind =
+  | 'vet'
+  | 'pet_shop'
+  | 'hotel'
+  | 'daycare'
+  | 'park'
+  | 'grooming'
+  | 'training'
+  | 'restaurant'
+  | 'cafe'
+  | 'event'
+  | 'beach'
+  | 'other';
 
 export interface Place {
   id: string;

@@ -18,6 +18,10 @@ const KINDS: { value: PlaceKind; label: string; emoji: string }[] = [
   { value: 'hotel', label: 'Hotel', emoji: '🏨' },
   { value: 'daycare', label: 'Creche', emoji: '🐕' },
   { value: 'park', label: 'Parque', emoji: '🌳' },
+  { value: 'restaurant', label: 'Restaurante', emoji: '🍽️' },
+  { value: 'cafe', label: 'Café', emoji: '☕' },
+  { value: 'event', label: 'Evento', emoji: '🎉' },
+  { value: 'beach', label: 'Praia', emoji: '🏖️' },
   { value: 'training', label: 'Adestrador', emoji: '🎓' },
   { value: 'other', label: 'Outro', emoji: '📍' },
 ];

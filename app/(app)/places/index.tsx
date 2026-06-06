@@ -20,6 +20,10 @@ const KIND_FILTERS: { value: PlaceKind | 'all'; label: string; emoji: string }[]
   { value: 'hotel', label: PLACE_KIND_META.hotel.label, emoji: PLACE_KIND_META.hotel.emoji },
   { value: 'daycare', label: PLACE_KIND_META.daycare.label, emoji: PLACE_KIND_META.daycare.emoji },
   { value: 'park', label: PLACE_KIND_META.park.label, emoji: PLACE_KIND_META.park.emoji },
+  { value: 'restaurant', label: PLACE_KIND_META.restaurant.label, emoji: PLACE_KIND_META.restaurant.emoji },
+  { value: 'cafe', label: PLACE_KIND_META.cafe.label, emoji: PLACE_KIND_META.cafe.emoji },
+  { value: 'event', label: PLACE_KIND_META.event.label, emoji: PLACE_KIND_META.event.emoji },
+  { value: 'beach', label: PLACE_KIND_META.beach.label, emoji: PLACE_KIND_META.beach.emoji },
   { value: 'training', label: PLACE_KIND_META.training.label, emoji: PLACE_KIND_META.training.emoji },
 ];
 
