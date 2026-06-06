@@ -44,7 +44,7 @@ begin
   -- Conteúdo social próprio do user
   delete from public.lost_reports where reporter_user_id = uid;
   delete from public.place_reviews where user_id = uid;
-  delete from public.memorial_messages where user_id = uid;
+  delete from public.memorial_messages where author_user_id = uid;
 
   -- Mensagens em conversas (mantém a conversa pro outro lado se houver)
   delete from public.messages where sender_id = uid;

@@ -1713,7 +1713,8 @@ export async function fetchUnreadMessageCount(userId: string): Promise<number> {
         .from('messages')
         .select('id', { count: 'exact', head: true })
         .eq('conversation_id', p.conversation_id)
-        .gt('created_at', p.last_read_at)
+        // Fallback p/ conversas nunca abertas: gt(created_at, null) não casa nada → escondia não-lidas
+        .gt('created_at', p.last_read_at ?? '1970-01-01T00:00:00Z')
         .neq('sender_id', userId);
       return count ?? 0;
     }),

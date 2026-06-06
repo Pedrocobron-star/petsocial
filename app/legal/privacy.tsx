@@ -126,11 +126,11 @@ export default function PrivacyPage() {
           perfil, Pet &gt; Editar).
         </LegalListItem>
         <LegalListItem>
-          <strong>Portabilidade</strong>: botão "Exportar meus dados" em Conta baixa JSON completo
+          <strong>Portabilidade</strong>: botão &quot;Exportar meus dados&quot; em Conta baixa JSON completo
           (perfil, pets, posts, sintomas, vacinas, etc).
         </LegalListItem>
         <LegalListItem>
-          <strong>Eliminação</strong>: botão "Excluir minha conta" apaga permanente — sem volta.
+          <strong>Eliminação</strong>: botão &quot;Excluir minha conta&quot; apaga permanente — sem volta.
           Inclui registros de saúde, posts, comentários, mensagens. 24h pra propagação completa.
         </LegalListItem>
         <LegalListItem>

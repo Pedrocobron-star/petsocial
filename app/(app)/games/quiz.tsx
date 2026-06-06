@@ -110,7 +110,7 @@ export default function PetQuizScreen() {
               <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#FBBF24' }}>{score} pts</Text>
             </View>
             <View style={{ height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
-              <View style={{ width: `${((index) / questions.length) * 100}%`, height: 6, backgroundColor: '#FBBF24' }} />
+              <View style={{ width: `${((index + 1) / questions.length) * 100}%`, height: 6, backgroundColor: '#FBBF24' }} />
             </View>
 
             <Card>

@@ -397,5 +397,18 @@ function PlaceCard({ place }: { place: PlaceWithStats }) {
 
 function isValidPlaceKind(value: string | undefined): value is PlaceKind {
   if (!value) return false;
-  return ['vet', 'pet_shop', 'grooming', 'hotel', 'daycare', 'park', 'training', 'other'].includes(value);
+  return [
+    'vet',
+    'pet_shop',
+    'grooming',
+    'hotel',
+    'daycare',
+    'park',
+    'training',
+    'restaurant',
+    'cafe',
+    'event',
+    'beach',
+    'other',
+  ].includes(value);
 }

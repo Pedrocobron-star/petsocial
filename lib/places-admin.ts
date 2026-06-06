@@ -29,8 +29,9 @@ export async function adminListPlaces(search?: string): Promise<Place[]> {
 }
 
 export async function adminFetchPlace(id: string): Promise<Place> {
-  const { data, error } = await supabase.from('places').select('*').eq('id', id).single();
+  const { data, error } = await supabase.from('places').select('*').eq('id', id).maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error('Lugar não encontrado');
   return data as Place;
 }
 

@@ -200,7 +200,7 @@ begin
   delete from public.posts where pet_id in (select id from public.pets where owner_id = uid);
   delete from public.lost_reports where reporter_user_id = uid;
   delete from public.place_reviews where user_id = uid;
-  delete from public.memorial_messages where user_id = uid;
+  delete from public.memorial_messages where author_user_id = uid;
   delete from public.messages where sender_id = uid;
   delete from public.conversation_participants where user_id = uid;
   delete from public.reports where reporter_user_id = uid;

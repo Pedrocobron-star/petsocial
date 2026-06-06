@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { meetupCategoryEmoji, meetupCategoryLabel } from '@/lib/constants';
@@ -25,6 +25,12 @@ export function MeetupCard({ meetup }: { meetup: MeetupWithDetails }) {
   // RSVP otimista direto do card (estilo Scruff/eventos: "Vou" sem abrir o detalhe)
   const [going, setGoing] = useState(meetup.my_rsvp_status === 'going');
   const [count, setCount] = useState(meetup.rsvps_count);
+
+  // Re-sincroniza com o servidor quando a query revalida (corrige estado otimista grudado)
+  useEffect(() => {
+    setGoing(meetup.my_rsvp_status === 'going');
+    setCount(meetup.rsvps_count);
+  }, [meetup.my_rsvp_status, meetup.rsvps_count]);
 
   const rsvpMutation = useMutation({
     mutationFn: (next: boolean) =>

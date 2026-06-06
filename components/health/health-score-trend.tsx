@@ -35,8 +35,12 @@ export function HealthScoreTrend({
   const { theme } = useTheme();
   const isPro = useIsPro();
   const thisMonth = currentMonthKey();
+  // Dep estável POR VALOR: o objeto currentComponents muda de identidade a cada
+  // render do hub de saúde, o que disparava um upsert no banco a CADA render
+  // (write-loop). Serializando, o effect só dispara quando o conteúdo muda de fato.
+  const componentsKey = JSON.stringify(currentComponents);
 
-  // Upsert do snapshot atual — best-effort, sem await
+  // Upsert do snapshot atual — best-effort, sem await. Dispara só quando score/componentes mudam.
   useEffect(() => {
     if (!petId || currentScore < 0) return;
     upsertHealthSnapshot({
@@ -45,7 +49,8 @@ export function HealthScoreTrend({
       score: currentScore,
       components: currentComponents,
     }).catch(() => undefined);
-  }, [petId, thisMonth, currentScore, currentComponents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [petId, thisMonth, currentScore, componentsKey]);
 
   // Combina snapshots históricos + score atual (que pode ainda não estar salvo)
   const series = useMemo(() => {

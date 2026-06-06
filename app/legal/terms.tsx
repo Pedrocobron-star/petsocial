@@ -191,7 +191,7 @@ export default function TermsPage() {
           Indisponibilidade momentânea de notificações push em razão de Apple/Google/falha de rede.
         </LegalListItem>
         <LegalListItem>
-          Conteúdo postado por outros usuários (use o botão "Reportar" pra moderação).
+          Conteúdo postado por outros usuários (use o botão &quot;Reportar&quot; pra moderação).
         </LegalListItem>
       </LegalSection>
 

@@ -275,7 +275,7 @@ function WebPushToggle({ userId }: { userId?: string }) {
         </Text>
         <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#78350F', lineHeight: 17 }}>
           Seu navegador não suporta notificações push (ou está em aba privada). Instale o Pet Social
-          como app (banner "Instalar") pra ativar.
+          como app (banner &quot;Instalar&quot;) pra ativar.
         </Text>
       </View>
     );

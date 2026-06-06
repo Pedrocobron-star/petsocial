@@ -97,6 +97,13 @@ export function PostCard({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [commentsCount, setCommentsCount] = useState(post.comments_count);
+
+  // Re-sincroniza estado otimista quando o feed revalida (evita like/contador grudado)
+  useEffect(() => {
+    setLiked(post.liked_by_me);
+    setLikesCount(post.likes_count);
+    setCommentsCount(post.comments_count);
+  }, [post.liked_by_me, post.likes_count, post.comments_count]);
   const [postingComment, setPostingComment] = useState(false);
   const isPro = useIsPro();
   // Autor do post = dono do pet do post. Pode editar/apagar.
@@ -170,6 +177,7 @@ export function PostCard({
     } catch {
       setLiked(liked);
       setLikesCount(post.likes_count);
+      toast.error('Erro ao curtir', 'Tenta de novo.');
       return;
     }
     qc.invalidateQueries({ queryKey: ['feed'] });
