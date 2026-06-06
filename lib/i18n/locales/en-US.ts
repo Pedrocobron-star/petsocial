@@ -29,7 +29,7 @@ export const enUS: TranslationKeys = {
     feed: 'Feed',
     explore: 'Discover',
     create: 'Post',
-    meetups: 'Meetups',
+    meetups: 'Outings',
     profile: 'Profile',
   },
   welcome: {

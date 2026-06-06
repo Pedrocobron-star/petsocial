@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
@@ -12,7 +14,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { FONTS } from '@/lib/fonts';
 import { PLACE_KIND_META } from '@/lib/places-meta';
 import { fetchMeetups, qk, type MeetupFilter } from '@/lib/queries';
-import type { PlaceKind } from '@/lib/types';
+import type { MeetupWithDetails, PlaceKind } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useTheme } from '@/providers/theme-provider';
 
@@ -36,6 +38,16 @@ export default function MeetupsScreen() {
     enabled: !!activePet,
   });
 
+  // "Bombando" — eventos com mais confirmados (curadoria automática por RSVP)
+  const featuredQuery = useQuery({
+    queryKey: qk.meetups('upcoming'),
+    queryFn: () => fetchMeetups(activePet!.id, 'upcoming'),
+    enabled: !!activePet,
+  });
+  const featured = [...(featuredQuery.data ?? [])]
+    .sort((a, b) => b.rsvps_count - a.rsvps_count)
+    .slice(0, 6);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await qc.invalidateQueries({ queryKey: qk.meetups(filter) });
@@ -58,7 +70,7 @@ export default function MeetupsScreen() {
           paddingVertical: 12,
         }}
       >
-        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>Encontros</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>Rolês</Text>
         <Link href="/(app)/meetup/new" asChild>
           <Pressable className="flex-row items-center gap-1 rounded-full bg-brand px-3 py-1.5">
             <Ionicons name="add" size={18} color="#fff" />
@@ -68,6 +80,8 @@ export default function MeetupsScreen() {
       </View>
 
       <PlacesPromo />
+
+      {featured.length >= 3 ? <FeaturedStrip events={featured} /> : null}
 
       <View style={{ borderBottomWidth: 1, borderBottomColor: theme.border, backgroundColor: theme.surface }}>
         <SegmentedControl options={FILTERS} value={filter} onChange={setFilter} />
@@ -96,6 +110,79 @@ export default function MeetupsScreen() {
         }
       />
     </SafeAreaView>
+  );
+}
+
+/** Faixa "Bombando" — eventos com mais confirmados, pra descobrir o que tá rolando. */
+function FeaturedStrip({ events }: { events: MeetupWithDetails[] }) {
+  const { theme } = useTheme();
+  return (
+    <View
+      style={{
+        backgroundColor: theme.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.border,
+        paddingTop: 12,
+        paddingBottom: 12,
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: FONTS.bodyBold,
+          fontSize: 15,
+          color: theme.text,
+          paddingHorizontal: 16,
+          marginBottom: 10,
+        }}
+      >
+        🔥 Bombando
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 10, paddingHorizontal: 16 }}
+      >
+        {events.map((m) => {
+          const d = new Date(m.starts_at);
+          return (
+            <Link key={m.id} href={{ pathname: '/meetup/[id]', params: { id: m.id } }} asChild>
+              <Pressable
+                style={{
+                  width: 190,
+                  borderRadius: 14,
+                  backgroundColor: theme.card,
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: theme.borderLight,
+                }}
+              >
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#C2410C' }}>
+                  {format(d, "dd 'de' MMM • HH:mm", { locale: ptBR })}
+                </Text>
+                <Text
+                  numberOfLines={2}
+                  style={{
+                    fontFamily: FONTS.bodyBold,
+                    fontSize: 14,
+                    color: theme.text,
+                    marginTop: 4,
+                    lineHeight: 18,
+                  }}
+                >
+                  {m.title}
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 }}>
+                  <Ionicons name="paw" size={12} color={theme.textDim} />
+                  <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: theme.textMuted }}>
+                    {m.rsvps_count} {m.rsvps_count === 1 ? 'confirmado' : 'confirmados'}
+                  </Text>
+                </View>
+              </Pressable>
+            </Link>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }
 

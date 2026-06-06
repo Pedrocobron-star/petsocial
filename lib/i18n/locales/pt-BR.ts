@@ -35,7 +35,7 @@ export const ptBR = {
     feed: 'Feed',
     explore: 'Descobrir',
     create: 'Postar',
-    meetups: 'Encontros',
+    meetups: 'Rolês',
     profile: 'Perfil',
   },
   welcome: {
