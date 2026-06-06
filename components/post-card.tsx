@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Dimensions, Pressable, Text, View , Alert } from 'react-native';
+import { Dimensions, Pressable, Text, TextInput, View , Alert } from 'react-native';
 import Animated, {
   Easing,
   FadeInDown,
@@ -19,6 +19,7 @@ import { formatCount, formatRelativeShort } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { MAX_FEED_WIDTH } from '@/lib/layout';
 import {
+  addComment,
   deletePost,
   fetchSavedPostIds,
   qk,
@@ -94,6 +95,9 @@ export function PostCard({
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [commentsCount, setCommentsCount] = useState(post.comments_count);
+  const [postingComment, setPostingComment] = useState(false);
   const isPro = useIsPro();
   // Autor do post = dono do pet do post. Pode editar/apagar.
   const isAuthor = !!userId && post.pet.owner_id === userId;
@@ -169,6 +173,25 @@ export function PostCard({
       return;
     }
     qc.invalidateQueries({ queryKey: ['feed'] });
+  };
+
+  const submitComment = async () => {
+    const text = commentText.trim();
+    if (!text || !activePet || postingComment) return;
+    setPostingComment(true);
+    setCommentText('');
+    setCommentsCount((c) => c + 1);
+    haptic.light();
+    try {
+      await addComment(post.id, activePet.id, text);
+      qc.invalidateQueries({ queryKey: ['feed'] });
+    } catch {
+      setCommentsCount((c) => Math.max(0, c - 1));
+      setCommentText(text);
+      toast.error('Erro ao comentar', 'Tenta de novo.');
+    } finally {
+      setPostingComment(false);
+    }
   };
 
   const handleDoubleTap = () => {
@@ -465,16 +488,54 @@ export function PostCard({
       ) : null}
 
       {/* Ver comentários */}
-      {post.comments_count > 0 ? (
+      {commentsCount > 0 ? (
         <Link href={{ pathname: '/post/[id]', params: { id: post.id } }} asChild>
           <Pressable style={{ paddingHorizontal: 12, paddingTop: 4 }}>
             <Text style={{ fontFamily: FONTS.body, fontSize: 12.5, color: theme.textDim }}>
-              {post.comments_count === 1
+              {commentsCount === 1
                 ? 'Ver 1 comentário'
-                : `Ver todos os ${post.comments_count} comentários`}
+                : `Ver todos os ${commentsCount} comentários`}
             </Text>
           </Pressable>
         </Link>
+      ) : null}
+
+      {/* Comentar inline (estilo Instagram) — sem sair do feed */}
+      {activePet ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            paddingHorizontal: 12,
+            paddingTop: 8,
+          }}
+        >
+          <PetAvatar pet={activePet} size={26} />
+          <TextInput
+            value={commentText}
+            onChangeText={setCommentText}
+            placeholder="Adicionar comentário…"
+            placeholderTextColor={theme.textDim}
+            editable={!postingComment}
+            returnKeyType="send"
+            onSubmitEditing={submitComment}
+            style={{
+              flex: 1,
+              fontFamily: FONTS.body,
+              fontSize: 13,
+              color: theme.text,
+              paddingVertical: 2,
+            }}
+          />
+          {commentText.trim() ? (
+            <Pressable onPress={submitComment} hitSlop={8} disabled={postingComment}>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.brand }}>
+                Publicar
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
 
       {/* Modals */}

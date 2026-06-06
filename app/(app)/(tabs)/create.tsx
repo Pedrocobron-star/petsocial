@@ -35,6 +35,9 @@ import { useIsPro } from '@/providers/subscription-provider';
 import { useToast } from '@/providers/toast-provider';
 
 const MAX_MEDIA = 10;
+// Teto de tamanho por vídeo — protege o armazenamento de forma universal (web/Android/iOS).
+// Um 4K de ~60s passa de 250 MB; um 1080p fica bem abaixo, então o limite separa "4K pesado".
+const MAX_VIDEO_MB = 100;
 const DRAFT_KEY_PREFIX = 'petsocial:post-draft:';
 
 interface PickedMedia {
@@ -121,10 +124,36 @@ export default function CreatePostScreen() {
       selectionLimit: remaining,
     });
     if (result.canceled) return;
-    const picked: PickedMedia[] = result.assets.map((a) => ({
-      uri: a.uri,
-      type: a.type === 'video' ? 'video' : 'image',
-    }));
+    const remainingSlots = MAX_MEDIA - media.length;
+    const picked: PickedMedia[] = [];
+    let tooBig = 0;
+    for (const a of result.assets) {
+      if (picked.length >= remainingSlots) break;
+      const type: MediaType = a.type === 'video' ? 'video' : 'image';
+      if (type === 'video') {
+        // Mede o tamanho (fileSize no nativo; .size do blob no web — só metadado, sem ler bytes)
+        let bytes = a.fileSize ?? 0;
+        if (!bytes) {
+          try {
+            bytes = (await fetch(a.uri).then((r) => r.blob())).size;
+          } catch {
+            bytes = 0;
+          }
+        }
+        if (bytes && bytes > MAX_VIDEO_MB * 1024 * 1024) {
+          tooBig++;
+          continue;
+        }
+      }
+      picked.push({ uri: a.uri, type });
+    }
+    if (tooBig > 0) {
+      toast.info(
+        'Vídeo muito pesado',
+        `Limite de ${MAX_VIDEO_MB} MB por vídeo. Use um clipe mais curto ou em menor resolução (evite 4K).`,
+      );
+    }
+    if (picked.length === 0) return;
     setMedia((cur) => [...cur, ...picked].slice(0, MAX_MEDIA));
   };
 
