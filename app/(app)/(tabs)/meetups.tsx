@@ -12,9 +12,8 @@ import { MeetupCard } from '@/components/meetup-card';
 import { Button } from '@/components/ui/button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { FONTS } from '@/lib/fonts';
-import { PLACE_KIND_META } from '@/lib/places-meta';
 import { fetchMeetups, qk, type MeetupFilter } from '@/lib/queries';
-import type { MeetupWithDetails, PlaceKind } from '@/lib/types';
+import type { MeetupWithDetails } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useTheme } from '@/providers/theme-provider';
 
@@ -70,7 +69,12 @@ export default function MeetupsScreen() {
           paddingVertical: 12,
         }}
       >
-        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>Rolês</Text>
+        <View>
+          <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>Rolês</Text>
+          <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: theme.textDim, marginTop: -2 }}>
+            Encontros e eventos pra ir com seu pet 🗓️
+          </Text>
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Link href="/(app)/agenda" asChild>
             <Pressable
@@ -89,8 +93,6 @@ export default function MeetupsScreen() {
           </Link>
         </View>
       </View>
-
-      <PlacesPromo />
 
       {featured.length >= 3 ? <FeaturedStrip events={featured} /> : null}
 
@@ -188,78 +190,6 @@ function FeaturedStrip({ events }: { events: MeetupWithDetails[] }) {
                     {m.rsvps_count} {m.rsvps_count === 1 ? 'confirmado' : 'confirmados'}
                   </Text>
                 </View>
-              </Pressable>
-            </Link>
-          );
-        })}
-      </ScrollView>
-    </View>
-  );
-}
-
-/** Atalho pro guia de lugares pet-friendly — resolve "onde levar meu pet?". */
-function PlacesPromo() {
-  const { theme } = useTheme();
-  const cats: PlaceKind[] = ['park', 'restaurant', 'cafe', 'hotel', 'beach', 'pet_shop', 'event', 'vet'];
-  return (
-    <View
-      style={{
-        backgroundColor: theme.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-        paddingTop: 12,
-        paddingBottom: 12,
-      }}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: 16,
-          marginBottom: 10,
-        }}
-      >
-        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}>
-          📍 Lugares pet-friendly
-        </Text>
-        <Link href="/(app)/places" asChild>
-          <Pressable hitSlop={6}>
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: theme.brand }}>
-              Ver todos →
-            </Text>
-          </Pressable>
-        </Link>
-      </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 14, paddingHorizontal: 16 }}
-      >
-        {cats.map((k) => {
-          const m = PLACE_KIND_META[k];
-          return (
-            <Link key={k} href={{ pathname: '/(app)/places', params: { kind: k } }} asChild>
-              <Pressable style={{ alignItems: 'center', width: 64 }}>
-                <View
-                  style={{
-                    width: 54,
-                    height: 54,
-                    borderRadius: 27,
-                    backgroundColor: m.bg,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 5,
-                  }}
-                >
-                  <Text style={{ fontSize: 26 }}>{m.emoji}</Text>
-                </View>
-                <Text
-                  numberOfLines={1}
-                  style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim, textAlign: 'center' }}
-                >
-                  {m.label}
-                </Text>
               </Pressable>
             </Link>
           );

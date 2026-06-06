@@ -212,6 +212,14 @@ export default function AdminScreen() {
             color="#92400E"
             bg="#FEF3C7"
           />
+          <NavCard
+            href="/(app)/admin/places"
+            icon="location"
+            label="Lugares"
+            sub="Guia pet-friendly"
+            color="#0E7490"
+            bg="#CFFAFE"
+          />
         </View>
 
         {/* Loading */}

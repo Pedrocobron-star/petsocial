@@ -88,6 +88,7 @@ export default function AppLayout() {
         <Stack.Screen name="pet/[id]/agenda-photos" options={{ headerShown: true, title: 'Fotos da agenda' }} />
         <Stack.Screen name="pet/[id]/agenda-costs" options={{ headerShown: true, title: 'Custos' }} />
         <Stack.Screen name="pet/[id]/parasites" options={{ headerShown: true, title: 'Parasitas' }} />
+        <Stack.Screen name="pet/[id]/game" options={{ headerShown: true, title: 'Joguinho', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="post/[id]" options={{ headerShown: true, title: 'Post' }} />
         <Stack.Screen name="meetup/new" options={{ presentation: 'modal', title: 'Novo encontro' }} />
         <Stack.Screen name="meetup/[id]/index" options={{ headerShown: true, title: 'Encontro' }} />
@@ -138,6 +139,9 @@ export default function AppLayout() {
           <Stack.Screen name="admin/offers/index" options={{ headerShown: true, title: 'Ofertas' }} />
           <Stack.Screen name="admin/offers/new" options={{ headerShown: true, title: 'Nova oferta', presentation: 'modal' }} />
           <Stack.Screen name="admin/offers/[id]" options={{ headerShown: true, title: 'Editar oferta' }} />
+          <Stack.Screen name="admin/places/index" options={{ headerShown: true, title: 'Lugares' }} />
+          <Stack.Screen name="admin/places/new" options={{ headerShown: true, title: 'Novo lugar', presentation: 'modal' }} />
+          <Stack.Screen name="admin/places/[id]" options={{ headerShown: true, title: 'Editar lugar' }} />
         </Stack>
         </RealtimeProvider>
       </ActivePetProvider>
