@@ -83,6 +83,7 @@ export default function FeedScreen() {
     await Promise.all([
       qc.invalidateQueries({ queryKey: ['feed'] }),
       userId ? qc.invalidateQueries({ queryKey: qk.unreadCount(userId) }) : Promise.resolve(),
+      userId ? qc.invalidateQueries({ queryKey: qk.unreadMessages(userId) }) : Promise.resolve(),
     ]);
     setRefreshing(false);
   };

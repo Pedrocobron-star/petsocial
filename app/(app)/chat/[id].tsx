@@ -29,11 +29,13 @@ import {
 import type { Message } from '@/lib/types';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
+import { useToast } from '@/providers/toast-provider';
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useSession();
   const { theme } = useTheme();
+  const toast = useToast();
   const qc = useQueryClient();
   const listRef = useRef<FlatList<Message>>(null);
   const [draft, setDraft] = useState('');
@@ -71,8 +73,11 @@ export default function ChatScreen() {
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
       return { prev };
     },
-    onError: (_err, _content, ctx) => {
+    onError: (_err, content, ctx) => {
       if (ctx?.prev) qc.setQueryData(qk.messages(id!), ctx.prev);
+      // restaura o texto (se o campo ainda estiver vazio) pra não perder a mensagem
+      setDraft((d) => (d.trim() ? d : content));
+      toast.error('Mensagem não enviada', 'Toque pra tentar de novo.');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.messages(id!) });
@@ -84,7 +89,11 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!id || !userId) return;
     markConversationRead(id, userId)
-      .then(() => qc.invalidateQueries({ queryKey: qk.unreadMessages(userId) }))
+      .then(() => {
+        qc.invalidateQueries({ queryKey: qk.unreadMessages(userId) });
+        // também atualiza a LISTA de conversas pra tirar o destaque de não-lida
+        qc.invalidateQueries({ queryKey: qk.conversations(userId) });
+      })
       .catch(() => {});
   }, [id, userId, messagesQuery.data?.length, qc]);
 

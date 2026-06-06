@@ -28,6 +28,8 @@ const FILTERS: { value: FilterKind; label: string }[] = [
   { value: 'like', label: 'Curtidas' },
   { value: 'comment', label: 'Comentários' },
   { value: 'follow', label: 'Seguidores' },
+  { value: 'mention', label: 'Menções' },
+  { value: 'pet_tagged', label: 'Marcações' },
 ];
 
 type Section = 'today' | 'yesterday' | 'this_week' | 'older';

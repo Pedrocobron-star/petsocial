@@ -200,7 +200,13 @@ export default function PetProfileScreen() {
           isOwn={isOwn}
           isFollowing={!!followingQuery.data}
           onFollow={() => followMutation.mutate()}
-          onMessage={() => openDmMutation.mutate()}
+          onMessage={() => {
+            if (blockedQuery.data) {
+              toast.info('Tutor bloqueado', 'Desbloqueie pra enviar mensagem.');
+              return;
+            }
+            openDmMutation.mutate();
+          }}
           followLoading={followMutation.isPending}
           messageLoading={openDmMutation.isPending}
         />

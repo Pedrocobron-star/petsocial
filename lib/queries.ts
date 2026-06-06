@@ -1601,20 +1601,34 @@ export async function fetchConversations(userId: string): Promise<ConversationSu
     profileMap = new Map((profiles ?? []).map((p) => [p.id, p as Profile]));
   }
 
-  // 3) Última mensagem de cada conversa (em paralelo)
-  const convIds = convs.map((c) => c.id);
-  const lastMsgs = await Promise.all(
-    convIds.map(async (convId) => {
-      const { data: msgs } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', convId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      return { convId, msg: (msgs?.[0] as Message | undefined) ?? null };
+  // 3) Última mensagem + contagem REAL de não-lidas de cada conversa (em paralelo).
+  // Antes contava só a última msg (travava em 1 e escondia não-lidas anteriores).
+  const convMeta = await Promise.all(
+    convs.map(async (c) => {
+      const meP = c.participants.find((p) => p.user_id === userId);
+      const lastReadAt = meP?.last_read_at ?? '1970-01-01T00:00:00Z';
+      const [lastRes, unreadRes] = await Promise.all([
+        supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', c.id)
+          .order('created_at', { ascending: false })
+          .limit(1),
+        supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('conversation_id', c.id)
+          .neq('sender_id', userId)
+          .gt('created_at', lastReadAt),
+      ]);
+      return {
+        convId: c.id,
+        msg: (lastRes.data?.[0] as Message | undefined) ?? null,
+        unread: unreadRes.count ?? 0,
+      };
     }),
   );
-  const lastMsgMap = new Map(lastMsgs.map((x) => [x.convId, x.msg]));
+  const metaMap = new Map(convMeta.map((x) => [x.convId, x]));
 
   return convs
     .map<ConversationSummary | null>((c) => {
@@ -1623,12 +1637,9 @@ export async function fetchConversations(userId: string): Promise<ConversationSu
       if (!me || !other) return null;
       const otherProfile = profileMap.get(other.user_id);
       if (!otherProfile) return null;
-      const lastMsg = lastMsgMap.get(c.id) ?? null;
-      // Conta mensagens não lidas (do outro, depois do meu last_read_at)
-      const unread =
-        lastMsg && lastMsg.sender_id !== userId && new Date(lastMsg.created_at) > new Date(me.last_read_at)
-          ? 1
-          : 0;
+      const meta = metaMap.get(c.id);
+      const lastMsg = meta?.msg ?? null;
+      const unread = meta?.unread ?? 0;
       return {
         id: c.id,
         last_message_at: c.last_message_at,
