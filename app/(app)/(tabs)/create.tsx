@@ -572,5 +572,40 @@ function VideoThumb({ uri }: { uri: string }) {
   const player = useVideoPlayer(uri, (p) => {
     p.muted = true;
   });
-  return <VideoView player={player} style={{ width: 112, height: 112 }} contentFit="cover" />;
+  return (
+    <View style={{ width: 112, height: 112 }}>
+      <VideoView
+        player={player}
+        style={{ width: 112, height: 112 }}
+        contentFit="cover"
+        nativeControls={false}
+      />
+      {/* Selo de "vídeo" pra diferenciar de foto na seleção */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <View
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 15,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name="play" size={16} color="#fff" />
+        </View>
+      </View>
+    </View>
+  );
 }

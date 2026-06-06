@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
-import { useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { FlatList, View, type ViewToken } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/empty-state';
@@ -48,6 +48,7 @@ export default function FeedScreen() {
   const qc = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FeedFilter>('all');
+  const [activeKey, setActiveKey] = useState<string | null>(null);
   const userId = session?.user.id;
 
   const feedQuery = useQuery({
@@ -95,6 +96,19 @@ export default function FeedScreen() {
     sponsoredQuery.data ?? [],
     5,
   );
+
+  // Viewability: só o post visível dá autoplay no vídeo (estilo Instagram).
+  // Refs estáveis — FlatList não aceita trocar esses callbacks em runtime.
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const first = viewableItems.find((v) => v.isViewable);
+      if (first?.key) setActiveKey(first.key);
+    },
+  ).current;
+  // Fallback: enquanto a viewability não dispara, o 1º post orgânico é o ativo.
+  const effectiveActiveKey =
+    activeKey ?? feedItems.find((it) => it.kind !== 'sponsored')?.key ?? null;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -148,9 +162,12 @@ export default function FeedScreen() {
             item.kind === 'sponsored' ? (
               <SponsoredPostCard post={item.data} />
             ) : (
-              <PostCard post={item.data} />
+              <PostCard post={item.data} isActive={item.key === effectiveActiveKey} />
             )
           }
+          extraData={effectiveActiveKey}
+          viewabilityConfig={viewabilityConfig}
+          onViewableItemsChanged={onViewableItemsChanged}
           refreshControl={<PawRefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={{ paddingTop: 0, paddingBottom: 24, flexGrow: 1 }}
           ListHeaderComponent={

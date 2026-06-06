@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image, type ImageLoadEventData } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -12,6 +13,7 @@ import {
   View,
 } from 'react-native';
 
+import { formatVideoTime, toggleVideoMuted, useVideoMuted } from '@/lib/video-mute';
 import type { PostMedia } from '@/lib/types';
 
 interface Props {
@@ -22,6 +24,8 @@ interface Props {
   minAspect?: number;
   /** Aspect ratio máximo (mais portrait). Default 1.3. */
   maxAspect?: number;
+  /** Post visível no feed → vídeo dá autoplay. Default true (telas de 1 post). */
+  isActive?: boolean;
 }
 
 export function MediaCarousel({
@@ -30,6 +34,7 @@ export function MediaCarousel({
   showIndicators = true,
   minAspect = 0.8,
   maxAspect = 1.3,
+  isActive = true,
 }: Props) {
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList<PostMedia>>(null);
@@ -49,7 +54,13 @@ export function MediaCarousel({
   if (validMedia.length === 1) {
     return (
       <View style={{ width, height }}>
-        <MediaItem media={validMedia[0]} width={width} height={height} onAspect={setAspect} />
+        <MediaItem
+          media={validMedia[0]}
+          width={width}
+          height={height}
+          onAspect={setAspect}
+          active={isActive}
+        />
       </View>
     );
   }
@@ -78,12 +89,14 @@ export function MediaCarousel({
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumEnd}
+        extraData={index}
         renderItem={({ item, index: i }) => (
           <MediaItem
             media={item}
             width={width}
             height={height}
             onAspect={i === 0 ? setAspect : undefined}
+            active={isActive && i === index}
           />
         )}
         getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
@@ -193,14 +206,16 @@ function MediaItem({
   width,
   height,
   onAspect,
+  active = true,
 }: {
   media: PostMedia;
   width: number;
   height: number;
   onAspect?: (a: number) => void;
+  active?: boolean;
 }) {
   if (media.media_type === 'video') {
-    return <VideoItem uri={media.url} width={width} height={height} />;
+    return <VideoItem uri={media.url} width={width} height={height} active={active} />;
   }
   return (
     <View style={{ width, height, backgroundColor: '#F5F3F0' }}>
@@ -220,10 +235,152 @@ function MediaItem({
   );
 }
 
-function VideoItem({ uri, width, height }: { uri: string; width: number; height: number }) {
+function VideoItem({
+  uri,
+  width,
+  height,
+  active,
+}: {
+  uri: string;
+  width: number;
+  height: number;
+  active: boolean;
+}) {
+  const muted = useVideoMuted();
+  const [ready, setReady] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [progress, setProgress] = useState(0);
+
   const player = useVideoPlayer(uri, (p) => {
     p.loop = true;
     p.muted = true;
+    p.timeUpdateEventInterval = 0.25;
   });
-  return <VideoView player={player} style={{ width, height }} contentFit="cover" nativeControls />;
+
+  // Sincroniza com o mute GLOBAL (toca em um, todos respeitam)
+  useEffect(() => {
+    player.muted = muted;
+  }, [muted, player]);
+
+  // Autoplay só quando o post está visível no feed; pausa fora de vista (estilo Instagram)
+  useEffect(() => {
+    if (active) {
+      player.play();
+    } else {
+      player.pause();
+      player.currentTime = 0;
+    }
+  }, [active, player]);
+
+  // Status (carregando → pronto) + duração total
+  useEffect(() => {
+    const sub = player.addListener('statusChange', ({ status }) => {
+      const isReady = status === 'readyToPlay';
+      setReady(isReady);
+      if (isReady && player.duration) setDuration(player.duration);
+    });
+    return () => sub.remove();
+  }, [player]);
+
+  // Progresso pra barrinha
+  useEffect(() => {
+    const sub = player.addListener('timeUpdate', ({ currentTime }) => {
+      const dur = player.duration || 0;
+      setProgress(dur > 0 ? Math.min(1, currentTime / dur) : 0);
+    });
+    return () => sub.remove();
+  }, [player]);
+
+  return (
+    <View style={{ width, height, backgroundColor: '#000' }}>
+      <VideoView
+        player={player}
+        style={{ width, height }}
+        contentFit="cover"
+        nativeControls={false}
+      />
+
+      {/* Loading spinner enquanto o vídeo carrega */}
+      {!ready ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <ActivityIndicator color="#fff" />
+        </View>
+      ) : null}
+
+      {/* Duração (canto superior esquerdo) */}
+      {ready && duration > 0 ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            paddingHorizontal: 8,
+            paddingVertical: 3,
+            borderRadius: 999,
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+          }}
+        >
+          <Ionicons name="play" size={9} color="#fff" />
+          <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>
+            {formatVideoTime(duration)}
+          </Text>
+        </View>
+      ) : null}
+
+      {/* Botão de som (canto inferior direito) — IG-style, mute global */}
+      <Pressable
+        onPress={(e) => {
+          (e as unknown as { stopPropagation?: () => void }).stopPropagation?.();
+          toggleVideoMuted();
+        }}
+        hitSlop={8}
+        style={{
+          position: 'absolute',
+          bottom: 12,
+          right: 12,
+          width: 30,
+          height: 30,
+          borderRadius: 15,
+          backgroundColor: 'rgba(0,0,0,0.55)',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        accessibilityLabel={muted ? 'Ativar som' : 'Desativar som'}
+      >
+        <Ionicons name={muted ? 'volume-mute' : 'volume-high'} size={16} color="#fff" />
+      </Pressable>
+
+      {/* Barra de progresso (rodapé) */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 2.5,
+          backgroundColor: 'rgba(255,255,255,0.25)',
+        }}
+      >
+        <View
+          style={{ width: `${progress * 100}%`, height: '100%', backgroundColor: '#fff' }}
+        />
+      </View>
+    </View>
+  );
 }

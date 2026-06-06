@@ -70,7 +70,14 @@ function IconAction({
   );
 }
 
-export function PostCard({ post }: { post: PostWithDetails }) {
+export function PostCard({
+  post,
+  isActive = true,
+}: {
+  post: PostWithDetails;
+  /** Post visível no feed → vídeo dá autoplay (estilo Instagram). Default true. */
+  isActive?: boolean;
+}) {
   const { activePet } = useActivePet();
   const { session } = useSession();
   const { theme } = useTheme();
@@ -195,6 +202,11 @@ export function PostCard({ post }: { post: PostWithDetails }) {
   // Edge-to-edge no mobile (estilo Instagram); cap no MAX_FEED_WIDTH no desktop
   const cardWidth = Math.min(SCREEN_W, MAX_FEED_WIDTH);
   const mediaWidth = cardWidth;
+  // Mídia exibida (em repost, a do post original). O botão "expandir" (ImageViewer)
+  // só faz sentido pra imagem — vídeo já tem player próprio com seus controles.
+  const displayMedia =
+    post.reposted_from && post.original_post ? post.original_post.media : post.media;
+  const firstImage = displayMedia?.find((m) => m.media_type === 'image');
 
   const captionTooLong = post.caption && post.caption.length > 140;
   const captionToShow =
@@ -301,29 +313,32 @@ export function PostCard({ post }: { post: PostWithDetails }) {
         <MediaCarousel
           media={post.reposted_from && post.original_post ? post.original_post.media : post.media}
           width={mediaWidth}
+          isActive={isActive}
         />
         <HeartBurst visible={heartBurstVisible} onComplete={() => setHeartBurstVisible(false)} />
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation?.();
-            haptic.light();
-            setImageViewerOpen(true);
-          }}
-          hitSlop={6}
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            width: 30,
-            height: 30,
-            borderRadius: 15,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Ionicons name="expand-outline" size={15} color="#fff" />
-        </Pressable>
+        {firstImage ? (
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation?.();
+              haptic.light();
+              setImageViewerOpen(true);
+            }}
+            hitSlop={6}
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              width: 30,
+              height: 30,
+              borderRadius: 15,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="expand-outline" size={15} color="#fff" />
+          </Pressable>
+        ) : null}
       </Pressable>
 
       {/* Ações — ícones simples (curtir / comentar / enviar / salvar) */}
@@ -597,11 +612,11 @@ export function PostCard({ post }: { post: PostWithDetails }) {
         currentCaption={post.caption}
         onClose={() => setHistoryOpen(false)}
       />
-      {post.media[0] ? (
+      {firstImage ? (
         <ImageViewer
           visible={imageViewerOpen}
           onClose={() => setImageViewerOpen(false)}
-          url={post.media[0].url}
+          url={firstImage.url}
         />
       ) : null}
     </Animated.View>
