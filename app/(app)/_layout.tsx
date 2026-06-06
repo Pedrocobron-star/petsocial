@@ -9,6 +9,12 @@ import { ActivePetProvider } from '@/providers/active-pet-provider';
 import { RealtimeProvider } from '@/providers/realtime-provider';
 import { useSession } from '@/providers/session-provider';
 
+// O "celular do pet" (/phone) é a tela base do app — assim o "voltar" de
+// qualquer função volta pro celular, não pro feed.
+export const unstable_settings = {
+  initialRouteName: 'phone',
+};
+
 export default function AppLayout() {
   const { session, loading } = useSession();
 
