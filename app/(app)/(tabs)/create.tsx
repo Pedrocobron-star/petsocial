@@ -114,6 +114,9 @@ export default function CreatePostScreen() {
       mediaTypes: ['images', 'videos'],
       quality: 0.85,
       videoMaxDuration: 60,
+      // Cap de 1080p (não 4K) pra não pesar no armazenamento. iOS transcoda no export;
+      // Android/Web sobem o original (expo-image-picker não transcoda lá).
+      videoExportPreset: ImagePicker.VideoExportPreset.H264_1920x1080,
       allowsMultipleSelection: true,
       selectionLimit: remaining,
     });

@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 
-import { formatVideoTime, toggleVideoMuted, useVideoMuted } from '@/lib/video-mute';
+import { formatVideoTime, setVideoMuted, toggleVideoMuted, useVideoMuted } from '@/lib/video-mute';
 import type { PostMedia } from '@/lib/types';
 
 interface Props {
@@ -38,7 +38,8 @@ export function MediaCarousel({
 }: Props) {
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList<PostMedia>>(null);
-  const [aspect, setAspect] = useState(1);
+  // Vídeo no feed = 4:5 retrato (1080×1350, igual Instagram). Imagem detecta o aspect no onLoad.
+  const [aspect, setAspect] = useState(() => (media[0]?.media_type === 'video' ? 0.8 : 1));
 
   // Filtra medias com URL inválida (placeholder de dev sem imagem real)
   const validMedia = useMemo(
@@ -247,6 +248,8 @@ function VideoItem({
   active: boolean;
 }) {
   const muted = useVideoMuted();
+  const viewRef = useRef<VideoView>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [ready, setReady] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -262,15 +265,16 @@ function VideoItem({
     player.muted = muted;
   }, [muted, player]);
 
-  // Autoplay só quando o post está visível no feed; pausa fora de vista (estilo Instagram)
+  // Autoplay só quando o post está visível no feed; pausa fora de vista (estilo Instagram).
+  // Em tela cheia continua tocando mesmo se a viewability marcar inativo.
   useEffect(() => {
-    if (active) {
+    if (active || isFullscreen) {
       player.play();
     } else {
       player.pause();
       player.currentTime = 0;
     }
-  }, [active, player]);
+  }, [active, isFullscreen, player]);
 
   // Status (carregando → pronto) + duração total
   useEffect(() => {
@@ -294,10 +298,17 @@ function VideoItem({
   return (
     <View style={{ width, height, backgroundColor: '#000' }}>
       <VideoView
+        ref={viewRef}
         player={player}
         style={{ width, height }}
         contentFit="cover"
-        nativeControls={false}
+        nativeControls={isFullscreen}
+        allowsFullscreen
+        onFullscreenEnter={() => setIsFullscreen(true)}
+        onFullscreenExit={() => {
+          setIsFullscreen(false);
+          setVideoMuted(true);
+        }}
       />
 
       {/* Loading spinner enquanto o vídeo carrega */}
@@ -341,6 +352,30 @@ function VideoItem({
           </Text>
         </View>
       ) : null}
+
+      {/* Tela cheia (canto superior direito) — o vídeo ocupa a tela toda */}
+      <Pressable
+        onPress={(e) => {
+          (e as unknown as { stopPropagation?: () => void }).stopPropagation?.();
+          setVideoMuted(false);
+          viewRef.current?.enterFullscreen();
+        }}
+        hitSlop={8}
+        style={{
+          position: 'absolute',
+          top: 12,
+          right: 12,
+          width: 30,
+          height: 30,
+          borderRadius: 15,
+          backgroundColor: 'rgba(0,0,0,0.55)',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        accessibilityLabel="Tela cheia"
+      >
+        <Ionicons name="expand" size={15} color="#fff" />
+      </Pressable>
 
       {/* Botão de som (canto inferior direito) — IG-style, mute global */}
       <Pressable
