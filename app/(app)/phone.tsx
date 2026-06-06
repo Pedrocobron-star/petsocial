@@ -490,7 +490,7 @@ export default function PetPhoneScreen() {
       { label: 'Lugares', emoji: '📍', bg: '#FB7185', href: '/(app)/places' },
       { label: 'Agenda', emoji: '🗓️', bg: '#2DD4BF', href: '/(app)/agenda' },
       { label: 'Conquistas', emoji: '🏆', bg: '#F59E0B', href: '/(app)/achievements' },
-      { label: 'Joguinho', emoji: '🎮', bg: '#8B5CF6', href: `/(app)/pet/${pid}/game` },
+      { label: 'Jogos', emoji: '🎮', bg: '#8B5CF6', href: '/(app)/games' },
       { label: 'Atividade', emoji: '🔔', bg: '#F87171', href: '/(app)/notifications' },
       { label: 'Achados', emoji: '🦴', bg: '#FCD34D', href: '/(app)/lost-found' },
       { label: 'Pet Pro', emoji: '⭐', bg: '#FBBF24', href: '/(app)/pro' },

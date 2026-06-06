@@ -88,7 +88,6 @@ export default function AppLayout() {
         <Stack.Screen name="pet/[id]/agenda-photos" options={{ headerShown: true, title: 'Fotos da agenda' }} />
         <Stack.Screen name="pet/[id]/agenda-costs" options={{ headerShown: true, title: 'Custos' }} />
         <Stack.Screen name="pet/[id]/parasites" options={{ headerShown: true, title: 'Parasitas' }} />
-        <Stack.Screen name="pet/[id]/game" options={{ headerShown: true, title: 'Joguinho', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="post/[id]" options={{ headerShown: true, title: 'Post' }} />
         <Stack.Screen name="meetup/new" options={{ presentation: 'modal', title: 'Novo encontro' }} />
         <Stack.Screen name="meetup/[id]/index" options={{ headerShown: true, title: 'Encontro' }} />
@@ -114,6 +113,9 @@ export default function AppLayout() {
         <Stack.Screen name="places/[id]" options={{ headerShown: true }} />
         <Stack.Screen name="agenda" options={{ headerShown: true, title: 'Minha agenda' }} />
         <Stack.Screen name="phone" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="games/index" options={{ headerShown: true }} />
+        <Stack.Screen name="games/treats" options={{ headerShown: true, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="games/quiz" options={{ headerShown: true, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="pro" options={{ headerShown: true, title: 'Pet Pro' }} />
         <Stack.Screen name="offers" options={{ headerShown: true, title: 'Vantagens' }} />
         <Stack.Screen name="adoption/index" options={{ headerShown: true, title: 'Adoção' }} />
