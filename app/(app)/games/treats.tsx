@@ -4,11 +4,12 @@ import { Stack } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { PetAvatar } from '@/components/pet-avatar';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
-import { submitGameScore } from '@/lib/games';
+import { DIFF_META, submitGameScore, type GameDifficulty } from '@/lib/games';
 import { haptic } from '@/lib/haptics';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
@@ -16,8 +17,29 @@ import { useSession } from '@/providers/session-provider';
 const BG = '#140E22';
 const ROUND_SECONDS = 30;
 const TICK_MS = 100;
-const ITEM_TTL = 1300;
 const ITEM_SIZE = 58;
+const DIFF_KEY = 'petsocial:game-diff:treats';
+
+/**
+ * Parâmetros por tier de dificuldade. Médio (2) reproduz exatamente a
+ * experiência original hardcoded (spawn 820→460, TTL 1300, bad 0.16, gold 0.11
+ * acumulado sobre bad, penalidade −3). Só os parâmetros mudam por tier — a
+ * mecânica do jogo é idêntica nos três.
+ */
+interface TreatsTier {
+  spawnStart: number; // intervalo de spawn no início da rodada (ms)
+  spawnEnd: number; // intervalo de spawn no fim da rodada (ms)
+  itemTtl: number; // tempo do item na tela / TTL (ms)
+  badProb: number; // probabilidade da abelha (bad)
+  goldProb: number; // probabilidade da dourada (gold)
+  badPenalty: number; // penalidade ao tocar a abelha (negativo)
+}
+
+const TREATS_TUNING: Record<GameDifficulty, TreatsTier> = {
+  1: { spawnStart: 950, spawnEnd: 600, itemTtl: 1600, badProb: 0.1, goldProb: 0.22, badPenalty: -2 },
+  2: { spawnStart: 820, spawnEnd: 460, itemTtl: 1300, badProb: 0.16, goldProb: 0.11, badPenalty: -3 },
+  3: { spawnStart: 680, spawnEnd: 320, itemTtl: 1000, badProb: 0.24, goldProb: 0.12, badPenalty: -4 },
+};
 
 const TREAT_BY_SPECIES: Record<string, string> = {
   dog: '🦴',
@@ -51,9 +73,10 @@ interface Popup {
   color: string;
 }
 
-function spawnInterval(elapsedMs: number): number {
+function spawnInterval(elapsedMs: number, difficulty: GameDifficulty): number {
+  const { spawnStart, spawnEnd } = TREATS_TUNING[difficulty];
   const t = Math.min(1, elapsedMs / (ROUND_SECONDS * 1000));
-  return Math.round(820 - t * 360);
+  return Math.round(spawnStart - t * (spawnStart - spawnEnd));
 }
 
 export default function TreatsGameScreen() {
@@ -64,6 +87,7 @@ export default function TreatsGameScreen() {
   const treat = (activePet && TREAT_BY_SPECIES[activePet.species]) || '🍪';
 
   const [phase, setPhase] = useState<Phase>('idle');
+  const [difficulty, setDifficulty] = useState<GameDifficulty>(2);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
@@ -73,6 +97,7 @@ export default function TreatsGameScreen() {
   const [area, setArea] = useState({ w: 0, h: 0 });
 
   const phaseRef = useRef<Phase>('idle');
+  const difficultyRef = useRef<GameDifficulty>(2);
   const elapsedRef = useRef(0);
   const lastSpawnRef = useRef(0);
   const idRef = useRef(0);
@@ -86,6 +111,7 @@ export default function TreatsGameScreen() {
   treatRef.current = treat;
   areaRef.current = area;
   bestRef.current = best;
+  difficultyRef.current = difficulty;
 
   const petId = activePet?.id ?? null;
   const bestKey = userId ? `petsocial:game-best:${userId}` : null;
@@ -98,6 +124,21 @@ export default function TreatsGameScreen() {
       })
       .catch(() => {});
   }, [bestKey]);
+
+  // dificuldade escolhida persiste por jogo (default = 2 / Médio = experiência original)
+  useEffect(() => {
+    AsyncStorage.getItem(DIFF_KEY)
+      .then((v) => {
+        const n = v ? parseInt(v, 10) : NaN;
+        if (n === 1 || n === 2 || n === 3) setDifficulty(n);
+      })
+      .catch(() => {});
+  }, []);
+
+  const changeDifficulty = (d: GameDifficulty) => {
+    setDifficulty(d);
+    AsyncStorage.setItem(DIFF_KEY, String(d)).catch(() => {});
+  };
 
   const addPopup = (x: number, y: number, text: string, color: string) => {
     const id = popupIdRef.current++;
@@ -129,10 +170,11 @@ export default function TreatsGameScreen() {
 
       // spawn
       const a = areaRef.current;
-      if (a.w > 60 && a.h > 60 && elapsed - lastSpawnRef.current >= spawnInterval(elapsed)) {
+      const tier = TREATS_TUNING[difficultyRef.current];
+      if (a.w > 60 && a.h > 60 && elapsed - lastSpawnRef.current >= spawnInterval(elapsed, difficultyRef.current)) {
         lastSpawnRef.current = elapsed;
         const r = Math.random();
-        const kind: Kind = r < 0.16 ? 'bad' : r < 0.27 ? 'gold' : 'treat';
+        const kind: Kind = r < tier.badProb ? 'bad' : r < tier.badProb + tier.goldProb ? 'gold' : 'treat';
         const emoji = kind === 'bad' ? BAD_EMOJI : kind === 'gold' ? GOLD_EMOJI : treatRef.current;
         itemsRef.current = [
           ...itemsRef.current,
@@ -142,7 +184,7 @@ export default function TreatsGameScreen() {
             y: Math.random() * (a.h - ITEM_SIZE),
             kind,
             emoji,
-            expiresAt: elapsed + ITEM_TTL,
+            expiresAt: elapsed + tier.itemTtl,
           },
         ];
       }
@@ -159,7 +201,7 @@ export default function TreatsGameScreen() {
           if (bestKey) AsyncStorage.setItem(bestKey, String(finalScore)).catch(() => {});
         }
         if (userId && finalScore > 0) {
-          submitGameScore({ game: 'treats', score: finalScore, petId, userId })
+          submitGameScore({ game: 'treats', score: finalScore, petId, userId, difficulty: difficultyRef.current })
             .then(() => {
               qc.invalidateQueries({ queryKey: ['game-leaderboard', 'treats'] });
               qc.invalidateQueries({ queryKey: ['game-my-rank', 'treats'] });
@@ -173,6 +215,7 @@ export default function TreatsGameScreen() {
   }, [bestKey, userId, petId]);
 
   const start = () => {
+    difficultyRef.current = difficulty; // trava a dificuldade escolhida pra rodada
     elapsedRef.current = 0;
     lastSpawnRef.current = 0;
     scoreRef.current = 0;
@@ -195,9 +238,10 @@ export default function TreatsGameScreen() {
     if (item.kind === 'bad') {
       comboRef.current = 0;
       setCombo(0);
-      scoreRef.current = Math.max(0, scoreRef.current - 3);
+      const penalty = TREATS_TUNING[difficultyRef.current].badPenalty;
+      scoreRef.current = Math.max(0, scoreRef.current + penalty);
       setScore(scoreRef.current);
-      addPopup(item.x, item.y, '-3', '#F87171');
+      addPopup(item.x, item.y, String(penalty), '#F87171');
     } else {
       comboRef.current += 1;
       setCombo(comboRef.current);
@@ -298,8 +342,13 @@ export default function TreatsGameScreen() {
                     Pega o Petisco
                   </Text>
                   <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 19 }}>
-                    Toque nos {treat} pra {activePet?.name ?? 'seu pet'} comer. Encadeie pra fazer 🔥 combo, pegue a {GOLD_EMOJI} dourada (vale mais) e fuja da abelha {BAD_EMOJI} (−3). {ROUND_SECONDS}s!
+                    Toque nos {treat} pra {activePet?.name ?? 'seu pet'} comer. Encadeie pra fazer 🔥 combo, pegue a {GOLD_EMOJI} dourada (vale mais) e fuja da abelha {BAD_EMOJI} ({TREATS_TUNING[difficulty].badPenalty}). {ROUND_SECONDS}s!
                   </Text>
+                  <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
+                    Dificuldade {DIFF_META[difficulty].emoji} {DIFF_META[difficulty].label} · score ×{DIFF_META[difficulty].mult}
+                  </Text>
+                  {/* só renderiza na tela idle/over — durante a partida o picker some, então nunca fica editável jogando */}
+                  <GameDifficultyPicker value={difficulty} onChange={changeDifficulty} disabled={false} />
                   <Button title="Jogar" onPress={start} fullWidth />
                 </>
               )}

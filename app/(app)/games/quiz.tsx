@@ -1,20 +1,29 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { haptic } from '@/lib/haptics';
-import { submitGameScore } from '@/lib/games';
+import { submitGameScore, type GameDifficulty } from '@/lib/games';
 import { pickQuizQuestions, type QuizQuestion } from '@/lib/pet-quiz';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 
 const BG = '#140E22';
-const N = 10;
+const DIFF_KEY = 'petsocial:game-diff:quiz';
+
+/** Parâmetros por tier. Médio(2) reproduz a experiência original hardcoded. */
+const DIFF_PARAMS: Record<GameDifficulty, { questions: number; bonusWindow: number; bonusMax: number }> = {
+  1: { questions: 8, bonusWindow: 8, bonusMax: 6 },
+  2: { questions: 10, bonusWindow: 6, bonusMax: 6 },
+  3: { questions: 12, bonusWindow: 4, bonusMax: 8 },
+};
 
 type Phase = 'idle' | 'playing' | 'over';
 
@@ -25,14 +34,34 @@ export default function PetQuizScreen() {
   const userId = session?.user.id;
 
   const [phase, setPhase] = useState<Phase>('idle');
+  const [difficulty, setDifficulty] = useState<GameDifficulty>(2);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const startRef = useRef(0);
+  const paramsRef = useRef(DIFF_PARAMS[2]);
+
+  // carrega o tier salvo no mount
+  useEffect(() => {
+    AsyncStorage.getItem(DIFF_KEY)
+      .then((v) => {
+        const n = v ? parseInt(v, 10) : NaN;
+        if (n === 1 || n === 2 || n === 3) setDifficulty(n);
+      })
+      .catch(() => {});
+  }, []);
+
+  const onChangeDifficulty = (d: GameDifficulty) => {
+    setDifficulty(d);
+    AsyncStorage.setItem(DIFF_KEY, String(d)).catch(() => {});
+  };
+
+  const params = DIFF_PARAMS[difficulty];
 
   const start = () => {
-    setQuestions(pickQuizQuestions(N));
+    paramsRef.current = DIFF_PARAMS[difficulty];
+    setQuestions(pickQuizQuestions(paramsRef.current.questions));
     setIndex(0);
     setScore(0);
     setPicked(null);
@@ -47,7 +76,8 @@ export default function PetQuizScreen() {
     const correct = i === questions[index].answer;
     if (correct) {
       const secs = (Date.now() - startRef.current) / 1000;
-      const bonus = Math.max(0, Math.round(6 - secs));
+      const { bonusWindow, bonusMax } = paramsRef.current;
+      const bonus = Math.min(bonusMax, Math.max(0, Math.round(bonusWindow - secs)));
       setScore((s) => s + 10 + bonus);
       haptic.light();
     } else {
@@ -60,7 +90,7 @@ export default function PetQuizScreen() {
       setPhase('over');
       const finalScore = score; // já acumulado
       if (userId && finalScore > 0) {
-        submitGameScore({ game: 'quiz', score: finalScore, petId: activePet?.id ?? null, userId })
+        submitGameScore({ game: 'quiz', score: finalScore, petId: activePet?.id ?? null, userId, difficulty })
           .then(() => {
             qc.invalidateQueries({ queryKey: ['game-leaderboard', 'quiz'] });
             qc.invalidateQueries({ queryKey: ['game-my-rank', 'quiz'] });
@@ -94,8 +124,10 @@ export default function PetQuizScreen() {
               <Text style={{ fontSize: 48, textAlign: 'center' }}>🧠</Text>
               <Text style={{ fontFamily: FONTS.display, fontSize: 24, color: '#fff', textAlign: 'center' }}>Quiz Pet</Text>
               <Text style={{ fontFamily: FONTS.body, fontSize: 13.5, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 20 }}>
-                {N} perguntas de conhecimentos gerais sobre cães, gatos e companhia. Acerte rápido pra ganhar bônus de tempo e subir no ranking! 🏆
+                {params.questions} perguntas de conhecimentos gerais sobre cães, gatos e companhia. Acerte rápido pra ganhar bônus de tempo e subir no ranking! 🏆
               </Text>
+              {/* só aparece na tela idle; nunca durante a partida */}
+              <GameDifficultyPicker value={difficulty} onChange={onChangeDifficulty} disabled={false} />
               <Button title="Começar" onPress={start} fullWidth />
             </Card>
             <SectionTitle>🏆 Ranking · Quiz Pet</SectionTitle>
@@ -177,10 +209,10 @@ export default function PetQuizScreen() {
         {phase === 'over' ? (
           <>
             <Card>
-              <Text style={{ fontSize: 48, textAlign: 'center' }}>{score >= N * 12 ? '🏆' : score >= N * 8 ? '🎉' : '🐾'}</Text>
+              <Text style={{ fontSize: 48, textAlign: 'center' }}>{score >= params.questions * 12 ? '🏆' : score >= params.questions * 8 ? '🎉' : '🐾'}</Text>
               <Text style={{ fontFamily: FONTS.display, fontSize: 30, color: '#FBBF24', textAlign: 'center' }}>{score} pts</Text>
               <Text style={{ fontFamily: FONTS.body, fontSize: 13.5, color: 'rgba(255,255,255,0.75)', textAlign: 'center' }}>
-                {score >= N * 12 ? 'Fera dos pets! 🧠✨' : score >= N * 8 ? 'Muito bem! Bora pro topo do ranking.' : 'Joga de novo pra subir no ranking!'}
+                {score >= params.questions * 12 ? 'Fera dos pets! 🧠✨' : score >= params.questions * 8 ? 'Muito bem! Bora pro topo do ranking.' : 'Joga de novo pra subir no ranking!'}
               </Text>
               <Button title="Jogar de novo" onPress={start} fullWidth />
             </Card>

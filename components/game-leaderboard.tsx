@@ -4,8 +4,10 @@ import { ActivityIndicator, Text, View } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
 import {
+  DIFF_META,
   fetchLeaderboard,
   qkGames,
+  type GameDifficulty,
   type GameKey,
   type GamePeriod,
   type LeaderboardEntry,
@@ -63,6 +65,9 @@ export function GameLeaderboard({
 }
 
 function Row({ entry, rank, me }: { entry: LeaderboardEntry; rank: number; me: boolean }) {
+  const d: GameDifficulty | null =
+    entry.difficulty === 1 || entry.difficulty === 2 || entry.difficulty === 3 ? entry.difficulty : null;
+  const meta = d ? DIFF_META[d] : null;
   return (
     <View
       style={{
@@ -111,7 +116,14 @@ function Row({ entry, rank, me }: { entry: LeaderboardEntry; rank: number; me: b
           </Text>
         ) : null}
       </View>
-      <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#FBBF24' }}>{entry.score}</Text>
+      <View style={{ alignItems: 'flex-end' }}>
+        {meta ? (
+          <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>
+            {meta.emoji}
+          </Text>
+        ) : null}
+        <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#FBBF24' }}>{entry.score}</Text>
+      </View>
     </View>
   );
 }
