@@ -193,6 +193,8 @@ export function PostCard({
     try {
       await addComment(post.id, activePet.id, text);
       qc.invalidateQueries({ queryKey: ['feed'] });
+      qc.invalidateQueries({ queryKey: qk.comments(post.id) });
+      qc.invalidateQueries({ queryKey: qk.post(post.id) });
     } catch {
       setCommentsCount((c) => Math.max(0, c - 1));
       setCommentText(text);

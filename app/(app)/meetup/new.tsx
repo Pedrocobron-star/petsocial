@@ -70,9 +70,10 @@ export default function NewMeetupScreen() {
       if (error) throw error;
       const id = (data as { id: string }).id;
 
-      await supabase
+      const { error: rsvpError } = await supabase
         .from('meetup_rsvps')
         .insert({ meetup_id: id, pet_id: activePet.id, status: 'going' });
+      if (rsvpError) throw rsvpError;
 
       await qc.invalidateQueries({ queryKey: ['meetups'] });
       router.replace({ pathname: '/meetup/[id]', params: { id } });

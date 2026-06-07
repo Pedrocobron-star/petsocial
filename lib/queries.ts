@@ -337,7 +337,9 @@ export async function toggleLike(postId: string, petId: string, currentlyLiked: 
     const { error } = await supabase.from('likes').delete().match({ post_id: postId, pet_id: petId });
     if (error) throw error;
   } else {
-    const { error } = await supabase.from('likes').insert({ post_id: postId, pet_id: petId });
+    const { error } = await supabase
+      .from('likes')
+      .upsert({ post_id: postId, pet_id: petId }, { onConflict: 'post_id,pet_id', ignoreDuplicates: true });
     if (error) throw error;
   }
 }
@@ -722,7 +724,10 @@ export async function toggleFollow(followerPetId: string, followedPetId: string,
   } else {
     const { error } = await supabase
       .from('follows')
-      .insert({ follower_pet_id: followerPetId, followed_pet_id: followedPetId });
+      .upsert(
+        { follower_pet_id: followerPetId, followed_pet_id: followedPetId },
+        { onConflict: 'follower_pet_id,followed_pet_id', ignoreDuplicates: true },
+      );
     if (error) throw error;
   }
 }

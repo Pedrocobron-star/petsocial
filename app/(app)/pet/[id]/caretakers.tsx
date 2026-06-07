@@ -490,12 +490,17 @@ function InviteModal({
   };
 
   const close = () => {
+    // Se um convite já foi criado no banco, fechar pelo backdrop/X precisa
+    // atualizar a lista (onSaved invalida a query); senão o convite pendente
+    // some da UI e o tutor pode re-convidar duplicado.
+    const wasCreated = createdInvite !== null;
     setEmail('');
     setNickname('');
     setRole('caregiver');
     setCreatedInvite(null);
     setError(null);
-    onClose();
+    if (wasCreated) onSaved();
+    else onClose();
   };
 
   const done = () => {

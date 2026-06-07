@@ -111,6 +111,7 @@ export default function EditPetScreen() {
             });
             await qc.invalidateQueries({ queryKey: qk.pet(pet.id) });
             await qc.invalidateQueries({ queryKey: qk.myPets(userId) });
+            await qc.invalidateQueries({ queryKey: ['pet-by-token'] });
             toast.success(`${data.name} atualizado!`);
             router.back();
           } catch (e) {

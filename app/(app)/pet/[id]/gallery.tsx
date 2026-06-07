@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -57,6 +57,16 @@ export default function PetGalleryScreen() {
   const startIndex = Math.min(Math.max(parseInt(start ?? '0', 10) || 0, 0), Math.max(0, items.length - 1));
   const [index, setIndex] = useState(startIndex);
   const listRef = useRef<FlatList<GalleryItem>>(null);
+
+  // Sincroniza o índice (contador do header + link "Ver post") com startIndex
+  // uma única vez quando os itens carregam — sem atropelar os swipes do usuário.
+  const didInit = useRef(false);
+  useEffect(() => {
+    if (!didInit.current && items.length > 0) {
+      didInit.current = true;
+      setIndex(startIndex);
+    }
+  }, [items.length, startIndex]);
 
   const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const next = Math.round(e.nativeEvent.contentOffset.x / width);

@@ -7,6 +7,7 @@
  */
 
 import { supabase } from './supabase';
+import { deleteFromBucket } from './storage';
 
 export type AdoptionSpecies = 'dog' | 'cat' | 'other';
 export type AdoptionSex = 'male' | 'female' | 'unknown';
@@ -73,7 +74,7 @@ export async function fetchAdoptionListings(filters?: AdoptionFilters): Promise<
   if (filters?.uf) q = q.eq('uf', filters.uf);
 
   const { data, error } = await q;
-  if (error) return [];
+  if (error) throw error;
   const rows = (data ?? []) as AdoptionListing[];
   // Disponíveis primeiro
   const rank = (s: AdoptionStatus) => (s === 'available' ? 0 : s === 'paused' ? 1 : 2);
@@ -165,8 +166,19 @@ export async function setAdoptionStatus(id: string, status: AdoptionStatus): Pro
 }
 
 export async function deleteAdoptionListing(id: string): Promise<void> {
+  // Pega as URLs das fotos antes de apagar a linha (pra limpar o storage depois).
+  const { data: row } = await supabase
+    .from('adoption_listings')
+    .select('image_urls')
+    .eq('id', id)
+    .maybeSingle();
+
   const { error } = await supabase.from('adoption_listings').delete().eq('id', id);
   if (error) throw error;
+
+  // Best-effort: remove as fotos órfãs do bucket público `posts`.
+  const urls = (row?.image_urls ?? []) as string[];
+  await Promise.all(urls.map((u) => deleteFromBucket('posts', u)));
 }
 
 /** Monta o resumo de chips (espécie · sexo · porte · idade). */
