@@ -12,6 +12,7 @@ import { AffiliateProducts } from '@/components/news/affiliate-products';
 import { SponsoredPostCard } from '@/components/sponsored-post-card';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { FONTS } from '@/lib/fonts';
+import { resetMetaTags, setMetaTags } from '@/lib/meta-tags';
 import { fetchArticleBySlug, incrementArticleView, qkNews } from '@/lib/news';
 import { sharePost } from '@/lib/share';
 import { fetchActiveSponsoredPosts } from '@/lib/sponsored';
@@ -50,6 +51,18 @@ export default function NewsArticleScreen() {
       viewedRef.current = article.id;
       void incrementArticleView(article.id);
     }
+  }, [article]);
+
+  // Meta tags ricas pra compartilhamento (preview com capa/título no WhatsApp,
+  // Twitter, etc.). Reseta ao sair pra não vazar pra outras telas.
+  useEffect(() => {
+    if (!article) return;
+    setMetaTags({
+      title: `${article.title} · Pet Social`,
+      description: article.dek ?? undefined,
+      image: article.cover_url ?? undefined,
+    });
+    return () => resetMetaTags('Notícias');
   }, [article]);
 
   const paragraphs = useMemo(() => splitBody(article?.body ?? ''), [article?.body]);
