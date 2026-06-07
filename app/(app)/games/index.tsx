@@ -46,6 +46,15 @@ const GAMES: GameDef[] = [
     c1: '#7C3AED',
     c2: '#2563EB',
   },
+  {
+    key: 'caminho',
+    href: '/(app)/games/caminho',
+    emoji: '🐕',
+    title: 'Caminho do Au-Au',
+    desc: 'Monte o caminho com setas e leve o pet até o petisco. Puzzle de lógica!',
+    c1: '#0EA5E9',
+    c2: '#22C55E',
+  },
 ];
 
 export default function GamesHubScreen() {
