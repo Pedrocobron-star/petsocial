@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { Link, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   KeyboardAvoidingView,
@@ -39,6 +40,7 @@ import {
 import { postUrl, sharePost } from '@/lib/share';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
+import { useTheme } from '@/providers/theme-provider';
 
 const SCREEN_W = Dimensions.get('window').width;
 
@@ -48,6 +50,7 @@ export default function PostDetailScreen() {
   const { activePet } = useActivePet();
   const { session } = useSession();
   const qc = useQueryClient();
+  const { theme } = useTheme();
   const [draft, setDraft] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState('');
@@ -156,7 +159,47 @@ export default function PostDetailScreen() {
   });
 
   const post = postQuery.data;
-  if (!post) return null;
+
+  if (!activePet || postQuery.isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.bg }}>
+        <Stack.Screen options={{ title: 'Post' }} />
+        <ActivityIndicator size="large" color={theme.brand} />
+      </View>
+    );
+  }
+  if (postQuery.isError || !post) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 24,
+          gap: 10,
+          backgroundColor: theme.bg,
+        }}
+      >
+        <Stack.Screen options={{ title: 'Post não encontrado' }} />
+        <Text style={{ fontSize: 52 }}>🐾</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: theme.text, textAlign: 'center' }}>
+          Post não encontrado
+        </Text>
+        <Text
+          style={{
+            fontFamily: FONTS.body,
+            fontSize: 13,
+            color: theme.textDim,
+            textAlign: 'center',
+            lineHeight: 19,
+          }}
+        >
+          Esse post pode ter sido removido ou o link está quebrado.
+        </Text>
+        <Button title="Voltar" onPress={() => router.back()} />
+      </View>
+    );
+  }
 
   const isOwner = post.pet.owner_id === session?.user.id;
 

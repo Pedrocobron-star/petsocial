@@ -13,6 +13,22 @@
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sw.js", "destination": "/sw.js" },
     { "source": "/offline.html", "destination": "/offline.html" },
+
+    { "source": "/id/:token", "destination": "/id/[token].html" },
+    { "source": "/endorse/:token", "destination": "/endorse/[token].html" },
+    { "source": "/invite/:token", "destination": "/invite/[token].html" },
+    { "source": "/post/:id", "destination": "/post/[id].html" },
+    { "source": "/tag/:name", "destination": "/tag/[name].html" },
+    { "source": "/adoption/:id", "destination": "/adoption/[id].html" },
+    { "source": "/places/:id", "destination": "/places/[id].html" },
+    { "source": "/chat/:id", "destination": "/chat/[id].html" },
+    { "source": "/lost-found/:id", "destination": "/lost-found/[id].html" },
+    { "source": "/meetup/:id/:sub", "destination": "/meetup/[id]/:sub.html" },
+    { "source": "/meetup/:id", "destination": "/meetup/[id].html" },
+    { "source": "/pet/:id/:sub", "destination": "/pet/[id]/:sub.html" },
+    { "source": "/pet/:id", "destination": "/pet/[id].html" },
+    { "source": "/admin/:section/:id", "destination": "/admin/:section/[id].html" },
+
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

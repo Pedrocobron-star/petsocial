@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Alert, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, {
   Easing,
   ReduceMotion,
@@ -27,12 +27,14 @@ import {
   resolveLostReport,
 } from '@/lib/queries';
 import { useSession } from '@/providers/session-provider';
+import { useTheme } from '@/providers/theme-provider';
 
 export default function LostReportDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const qc = useQueryClient();
   const { session } = useSession();
+  const { theme } = useTheme();
 
   const query = useQuery({
     queryKey: qk.lostReport(id),
@@ -59,7 +61,47 @@ export default function LostReportDetailScreen() {
   });
 
   const r = query.data;
-  if (!r) return null;
+
+  if (query.isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.bg }}>
+        <Stack.Screen options={{ title: 'Carregando…' }} />
+        <ActivityIndicator size="large" color={theme.brand} />
+      </View>
+    );
+  }
+  if (query.isError || !r) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 24,
+          gap: 10,
+          backgroundColor: theme.bg,
+        }}
+      >
+        <Stack.Screen options={{ title: 'Não encontrado' }} />
+        <Text style={{ fontSize: 52 }}>🐾</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: theme.text, textAlign: 'center' }}>
+          Reporte não encontrado
+        </Text>
+        <Text
+          style={{
+            fontFamily: FONTS.body,
+            fontSize: 13,
+            color: theme.textDim,
+            textAlign: 'center',
+            lineHeight: 19,
+          }}
+        >
+          Esse anúncio pode ter sido resolvido, removido, ou o link está quebrado.
+        </Text>
+        <Button title="Voltar" onPress={() => router.back()} />
+      </View>
+    );
+  }
 
   const isOwner = session?.user.id === r.reporter_user_id;
   // photo_url do reporte tem prioridade (foto recente); senão usa avatar do pet vinculado.
