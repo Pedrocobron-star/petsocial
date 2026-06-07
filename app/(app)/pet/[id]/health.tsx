@@ -30,9 +30,18 @@ import {
   type ParasiteSummary,
 } from '@/lib/queries';
 import type { PetSymptom } from '@/lib/types';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useTheme } from '@/providers/theme-provider';
 
 export default function HealthHubScreen() {
+  return (
+    <AppThemeProvider app="health">
+      <HealthHubInner />
+    </AppThemeProvider>
+  );
+}
+
+function HealthHubInner() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
 
@@ -292,7 +301,7 @@ function SectionTitle({ title }: { title: string }) {
         fontSize: 11,
         letterSpacing: 1.2,
         textTransform: 'uppercase',
-        color: theme.brand,
+        color: theme.accent.color,
         marginTop: 8,
         marginBottom: 4,
       }}
@@ -351,6 +360,7 @@ function AlertsPreview({
   alerts: HealthAlert[];
   parasiteSummary: ParasiteSummary | undefined;
 }) {
+  const { theme } = useTheme();
   // Adiciona alertas de parasitas inline (parasiteSummary tem dados resumidos
   // que o computeHealthAlerts não recebe nessa preview pra evitar query extra)
   const parasiteAlerts: HealthAlert[] = [];
@@ -402,7 +412,7 @@ function AlertsPreview({
         <SectionTitle title={`Lembretes (${combined.length})`} />
         <Link href={`/pet/${petId}/health-alerts` as never} asChild>
           <Pressable hitSlop={6}>
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#F97316', marginTop: 8 }}>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.accent.color, marginTop: 8 }}>
               Ver todos →
             </Text>
           </Pressable>

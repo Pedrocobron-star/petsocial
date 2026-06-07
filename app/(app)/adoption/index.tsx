@@ -16,9 +16,18 @@ import {
   type AdoptionSpecies,
 } from '@/lib/adoption';
 import { FONTS } from '@/lib/fonts';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useTheme } from '@/providers/theme-provider';
 
 export default function AdoptionFeedScreen() {
+  return (
+    <AppThemeProvider app="adoption">
+      <AdoptionFeedInner />
+    </AppThemeProvider>
+  );
+}
+
+function AdoptionFeedInner() {
   const { theme } = useTheme();
   const router = useRouter();
   const [species, setSpecies] = useState<AdoptionSpecies | 'all'>('all');
@@ -43,8 +52,8 @@ export default function AdoptionFeedScreen() {
               hitSlop={8}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8 }}
             >
-              <Ionicons name="add-circle" size={20} color={theme.brand} />
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.brand }}>Anunciar</Text>
+              <Ionicons name="add-circle" size={20} color={theme.accent.color} />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.accent.color }}>Anunciar</Text>
             </Pressable>
           ),
         }}
@@ -54,20 +63,22 @@ export default function AdoptionFeedScreen() {
           {/* Header */}
           <View
             style={{
-              backgroundColor: '#FEF2F2',
+              backgroundColor: theme.accent.surface,
               borderRadius: 18,
               padding: 16,
               marginBottom: 14,
               borderWidth: 1,
-              borderColor: '#FECACA',
+              borderColor: theme.accent.surface,
               overflow: 'hidden',
             }}
           >
-            <Text style={{ position: 'absolute', right: -4, bottom: -12, fontSize: 70, opacity: 0.1 }}>🏠</Text>
-            <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: '#991B1B' }}>
+            <Text style={{ position: 'absolute', right: -4, bottom: -12, fontSize: 70, opacity: 0.12 }}>
+              {theme.accent.motif}
+            </Text>
+            <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: theme.accent.color }}>
               Encontre um amigo
             </Text>
-            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#B91C1C', marginTop: 4, lineHeight: 19 }}>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.accent.dark, marginTop: 4, lineHeight: 19 }}>
               {availableCount > 0
                 ? `${availableCount} ${availableCount === 1 ? 'pet esperando' : 'pets esperando'} um lar. Adote com responsabilidade 💛`
                 : 'Pets pra adoção responsável, anunciados pela comunidade e ONGs.'}
@@ -88,7 +99,7 @@ export default function AdoptionFeedScreen() {
           </View>
 
           {query.isLoading ? (
-            <ActivityIndicator color={theme.brand} style={{ marginTop: 30 }} />
+            <ActivityIndicator color={theme.accent.color} style={{ marginTop: 30 }} />
           ) : listings.length === 0 ? (
             <EmptyState
               emoji="🐾"
@@ -98,7 +109,7 @@ export default function AdoptionFeedScreen() {
                 <PressScale
                   onPress={() => router.push('/(app)/adoption/new' as never)}
                   style={{
-                    backgroundColor: theme.brand,
+                    backgroundColor: theme.accent.color,
                     paddingHorizontal: 18,
                     paddingVertical: 11,
                     borderRadius: 12,
@@ -107,8 +118,8 @@ export default function AdoptionFeedScreen() {
                     gap: 6,
                   }}
                 >
-                  <Ionicons name="add-circle" size={16} color="#fff" />
-                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#fff' }}>Anunciar um pet</Text>
+                  <Ionicons name="add-circle" size={16} color={theme.accent.onAccent} />
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.accent.onAccent }}>Anunciar um pet</Text>
                 </PressScale>
               }
             />
@@ -134,10 +145,10 @@ function SpChip({ label, active, onPress }: { label: string; active: boolean; on
         paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 999,
-        backgroundColor: active ? theme.brand : theme.borderLight,
+        backgroundColor: active ? theme.accent.color : theme.borderLight,
       }}
     >
-      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: active ? '#fff' : theme.textDim }}>
+      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: active ? theme.accent.onAccent : theme.textDim }}>
         {label}
       </Text>
     </Pressable>

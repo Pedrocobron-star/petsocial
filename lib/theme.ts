@@ -1,3 +1,16 @@
+export interface AccentSet {
+  /** Cor principal do accent (CTA, ícone ativo, link da área). */
+  color: string;
+  /** Variação mais escura (pressed/hover). */
+  dark: string;
+  /** Fundo suave da cor (hero, badges) — presença de ~10% da tela. */
+  surface: string;
+  /** Cor de texto/ícone SOBRE `color` (contraste garantido ≥4.5:1). */
+  onAccent: string;
+  /** Emoji-assinatura da área. */
+  motif: string;
+}
+
 export interface Theme {
   name: 'light' | 'dark';
   bg: string;
@@ -14,6 +27,8 @@ export interface Theme {
   brandLight: string;
   brandSurface: string;
   shadow: string;
+  /** Accent por área de feature (default = brand). Injetado por AppThemeProvider. */
+  accent: AccentSet;
 }
 
 export const lightTheme: Theme = {
@@ -32,6 +47,7 @@ export const lightTheme: Theme = {
   brandLight: '#FED7AA',
   brandSurface: '#FFF7ED',
   shadow: '#000000',
+  accent: { color: '#F97316', dark: '#C2410C', surface: '#FFF7ED', onAccent: '#FFFFFF', motif: '🐾' },
 };
 
 export const darkTheme: Theme = {
@@ -50,6 +66,7 @@ export const darkTheme: Theme = {
   brandLight: '#7C2D12',
   brandSurface: '#1F1813',
   shadow: '#000000',
+  accent: { color: '#FB923C', dark: '#FDBA74', surface: '#1F1813', onAccent: '#1A1410', motif: '🐾' },
 };
 
 export type ThemeMode = 'light' | 'dark' | 'system';

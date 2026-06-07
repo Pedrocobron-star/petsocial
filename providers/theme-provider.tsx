@@ -6,13 +6,13 @@ import { darkTheme, lightTheme, type Theme, type ThemeMode } from '@/lib/theme';
 
 const STORAGE_KEY = 'petsocial:theme-mode';
 
-interface ThemeContextValue {
+export interface ThemeContextValue {
   theme: Theme;
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
 }
 
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme();

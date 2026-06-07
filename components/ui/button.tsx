@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { FONTS } from '@/lib/fonts';
+import { useTheme } from '@/providers/theme-provider';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -46,9 +47,15 @@ export function Button({
   style,
   ...rest
 }: Props) {
+  const { theme } = useTheme();
   const isDisabled = disabled || loading;
   const scale = useSharedValue(1);
-  const variantStyle = variantStyles[variant];
+  // 'primary' segue o accent da área (default = brand). Os demais são neutros/
+  // semânticos e nunca mudam por área.
+  const variantStyle =
+    variant === 'primary'
+      ? { bg: theme.accent.color, text: theme.accent.onAccent }
+      : variantStyles[variant];
   const sizeStyle = sizeStyles[size];
 
   const animStyle = useAnimatedStyle(() => ({
@@ -93,7 +100,13 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' || variant === 'danger' ? '#fff' : '#111'}
+          color={
+            variant === 'primary'
+              ? theme.accent.onAccent
+              : variant === 'danger'
+                ? '#fff'
+                : '#111'
+          }
         />
       ) : (
         <Text
