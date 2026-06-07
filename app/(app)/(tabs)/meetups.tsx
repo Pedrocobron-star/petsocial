@@ -15,6 +15,7 @@ import { FONTS } from '@/lib/fonts';
 import { fetchMeetups, qk, type MeetupFilter } from '@/lib/queries';
 import type { MeetupWithDetails } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useTheme } from '@/providers/theme-provider';
 
 const FILTERS: { value: MeetupFilter; label: string }[] = [
@@ -25,6 +26,14 @@ const FILTERS: { value: MeetupFilter; label: string }[] = [
 ];
 
 export default function MeetupsScreen() {
+  return (
+    <AppThemeProvider app="meetups">
+      <MeetupsInner />
+    </AppThemeProvider>
+  );
+}
+
+function MeetupsInner() {
   const { activePet } = useActivePet();
   const { theme } = useTheme();
   const qc = useQueryClient();
@@ -67,8 +76,12 @@ export default function MeetupsScreen() {
           backgroundColor: theme.surface,
           paddingHorizontal: 16,
           paddingVertical: 12,
+          overflow: 'hidden',
         }}
       >
+        <Text style={{ position: 'absolute', right: 96, bottom: -16, fontSize: 64, opacity: 0.12 }}>
+          {theme.accent.motif}
+        </Text>
         <View>
           <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>Rolês</Text>
           <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: theme.textDim, marginTop: -2 }}>
@@ -86,9 +99,12 @@ export default function MeetupsScreen() {
             </Pressable>
           </Link>
           <Link href="/(app)/meetup/new" asChild>
-            <Pressable className="flex-row items-center gap-1 rounded-full bg-brand px-3 py-1.5">
-              <Ionicons name="add" size={18} color="#fff" />
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#fff' }}>Criar</Text>
+            <Pressable
+              className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
+              style={{ backgroundColor: theme.accent.color }}
+            >
+              <Ionicons name="add" size={18} color={theme.accent.onAccent} />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.accent.onAccent }}>Criar</Text>
             </Pressable>
           </Link>
         </View>
@@ -169,7 +185,7 @@ function FeaturedStrip({ events }: { events: MeetupWithDetails[] }) {
                   borderColor: theme.borderLight,
                 }}
               >
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#C2410C' }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.accent.dark }}>
                   {format(d, "dd 'de' MMM • HH:mm", { locale: ptBR })}
                 </Text>
                 <Text

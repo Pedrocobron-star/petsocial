@@ -14,7 +14,9 @@ import {
 } from '@/lib/achievements';
 import { FONTS } from '@/lib/fonts';
 import { fetchAchievementInput, qk } from '@/lib/queries';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useSession } from '@/providers/session-provider';
+import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
 type TierFilter = 'all' | 1 | 2 | 3;
@@ -29,6 +31,15 @@ const TIER_PILLS: { value: TierFilter; label: string; emoji: string }[] = [
 const SEEN_KEY = 'petsocial:achievements-seen';
 
 export default function AchievementsScreen() {
+  return (
+    <AppThemeProvider app="achievements">
+      <AchievementsInner />
+    </AppThemeProvider>
+  );
+}
+
+function AchievementsInner() {
+  const { theme } = useTheme();
   const { session } = useSession();
   const userId = session?.user.id;
   const toast = useToast();
@@ -100,12 +111,12 @@ export default function AchievementsScreen() {
               width: 60,
               height: 60,
               borderRadius: 18,
-              backgroundColor: '#FEF3C7',
+              backgroundColor: theme.accent.surface,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 30 }}>🏆</Text>
+            <Text style={{ fontSize: 30 }}>{theme.accent.motif}</Text>
           </View>
           <View className="flex-1">
             <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: '#1A1410' }}>
@@ -135,7 +146,7 @@ export default function AchievementsScreen() {
             style={{
               width: `${progressPct}%`,
               height: '100%',
-              backgroundColor: '#F59E0B',
+              backgroundColor: theme.accent.color,
               borderRadius: 4,
             }}
           />
@@ -150,7 +161,7 @@ export default function AchievementsScreen() {
               fontFamily: FONTS.bodyBold,
               fontSize: 11,
               letterSpacing: 1.4,
-              color: '#F97316',
+              color: theme.accent.color,
               textTransform: 'uppercase',
               marginBottom: 8,
             }}
@@ -177,13 +188,13 @@ export default function AchievementsScreen() {
                 flex: 1,
                 paddingVertical: 8,
                 borderRadius: 10,
-                backgroundColor: active ? '#F97316' : '#FFFFFF',
+                backgroundColor: active ? theme.accent.color : '#FFFFFF',
                 alignItems: 'center',
                 flexDirection: 'row',
                 justifyContent: 'center',
                 gap: 4,
                 borderWidth: 1,
-                borderColor: active ? '#F97316' : '#E5E5E5',
+                borderColor: active ? theme.accent.color : '#E5E5E5',
               }}
             >
               <Text style={{ fontSize: 12 }}>{p.emoji}</Text>
@@ -191,7 +202,7 @@ export default function AchievementsScreen() {
                 style={{
                   fontFamily: FONTS.bodyBold,
                   fontSize: 11,
-                  color: active ? '#FFFFFF' : '#404040',
+                  color: active ? theme.accent.onAccent : '#404040',
                 }}
               >
                 {p.label} {count}
@@ -350,6 +361,7 @@ function AchievementCard({
   state: AchievementUnlockState;
   onShare?: () => void;
 }) {
+  const { theme } = useTheme();
   const colors = tierColors(state.def.tier);
   return (
     <View
@@ -404,7 +416,7 @@ function AchievementCard({
                 style={{
                   height: '100%',
                   width: `${(state.progress.current / state.progress.target) * 100}%`,
-                  backgroundColor: '#F97316',
+                  backgroundColor: theme.accent.color,
                 }}
               />
             </View>

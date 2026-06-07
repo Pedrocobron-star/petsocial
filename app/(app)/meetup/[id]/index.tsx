@@ -14,10 +14,21 @@ import { haptic } from '@/lib/haptics';
 import { buildIcs, countdownPalette, meetupCountdown } from '@/lib/meetup-countdown';
 import { clearRsvp, deleteMeetup, fetchMeetup, qk, setRsvp } from '@/lib/queries';
 import { useActivePet } from '@/providers/active-pet-provider';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useSession } from '@/providers/session-provider';
+import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
 export default function MeetupDetailScreen() {
+  return (
+    <AppThemeProvider app="meetups">
+      <MeetupDetailInner />
+    </AppThemeProvider>
+  );
+}
+
+function MeetupDetailInner() {
+  const { theme } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { activePet, pets } = useActivePet();
@@ -150,7 +161,7 @@ export default function MeetupDetailScreen() {
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingRight: 8 }}>
               <Pressable hitSlop={10} onPress={handleShare}>
-                <Ionicons name="share-outline" size={22} color="#F97316" />
+                <Ionicons name="share-outline" size={22} color={theme.accent.color} />
               </Pressable>
               {isHost ? (
                 <Pressable hitSlop={10} onPress={showHostMenu} style={{ paddingLeft: 4 }}>
@@ -211,8 +222,8 @@ export default function MeetupDetailScreen() {
 
       <View className="bg-white px-4 py-4">
         <View className="mb-2 flex-row flex-wrap items-center gap-2">
-          <View className="rounded-full bg-brand-light px-3 py-1">
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#C2410C' }}>
+          <View className="rounded-full px-3 py-1" style={{ backgroundColor: theme.accent.surface }}>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.accent.dark }}>
               {format(date, "EEE, dd 'de' MMM • HH:mm", { locale: ptBR })}
             </Text>
           </View>
@@ -230,11 +241,11 @@ export default function MeetupDetailScreen() {
           onPress={openMapsRoute}
           className="mt-2 flex-row items-center gap-1.5 self-start rounded-lg active:opacity-70"
         >
-          <Ionicons name="location-outline" size={18} color="#F97316" />
-          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: '#C2410C' }}>
+          <Ionicons name="location-outline" size={18} color={theme.accent.color} />
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.accent.dark }}>
             {m.location_name}
           </Text>
-          <Ionicons name="open-outline" size={14} color="#C2410C" />
+          <Ionicons name="open-outline" size={14} color={theme.accent.dark} />
         </Pressable>
         {m.description ? (
           <Text style={{ fontFamily: FONTS.body, fontSize: 14, lineHeight: 20, color: '#525252', marginTop: 12 }}>
@@ -264,11 +275,11 @@ export default function MeetupDetailScreen() {
                 gap: 4,
                 paddingVertical: 10,
                 borderRadius: 10,
-                backgroundColor: '#F97316',
+                backgroundColor: theme.accent.color,
               }}
             >
-              <Ionicons name="navigate" size={14} color="#FFFFFF" />
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#FFFFFF' }}>
+              <Ionicons name="navigate" size={14} color={theme.accent.onAccent} />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.accent.onAccent }}>
                 Como chegar
               </Text>
             </Pressable>
@@ -332,7 +343,7 @@ export default function MeetupDetailScreen() {
             fontFamily: FONTS.bodyBold,
             fontSize: 11,
             letterSpacing: 1.4,
-            color: '#F97316',
+            color: theme.accent.color,
             textTransform: 'uppercase',
             marginBottom: 8,
           }}

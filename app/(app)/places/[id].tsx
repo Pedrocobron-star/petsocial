@@ -20,11 +20,20 @@ import {
   upsertPlaceReview,
 } from '@/lib/queries';
 import type { PlaceReviewWithProfile } from '@/lib/types';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
 export default function PlaceDetailScreen() {
+  return (
+    <AppThemeProvider app="places">
+      <PlaceDetailInner />
+    </AppThemeProvider>
+  );
+}
+
+function PlaceDetailInner() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
   const { session } = useSession();
@@ -91,7 +100,7 @@ export default function PlaceDetailScreen() {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.bg }}>
         <Stack.Screen options={{ title: 'Lugar' }} />
-        <ActivityIndicator size="large" color={theme.brand} />
+        <ActivityIndicator size="large" color={theme.accent.color} />
       </View>
     );
   }
@@ -185,11 +194,11 @@ export default function PlaceDetailScreen() {
                 <Ionicons
                   name={isSaved ? 'bookmark' : 'bookmark-outline'}
                   size={22}
-                  color={theme.brand}
+                  color={theme.accent.color}
                 />
               </Pressable>
               <Pressable hitSlop={10} onPress={handleShare} style={{ paddingHorizontal: 8 }}>
-                <Ionicons name="share-outline" size={22} color={theme.brand} />
+                <Ionicons name="share-outline" size={22} color={theme.accent.color} />
               </Pressable>
             </View>
           ),
@@ -278,7 +287,7 @@ export default function PlaceDetailScreen() {
               onPress={openMapsRoute}
               style={{
                 flex: 1,
-                backgroundColor: theme.brand,
+                backgroundColor: theme.accent.color,
                 paddingVertical: 12,
                 paddingHorizontal: 14,
                 borderRadius: 12,
@@ -288,8 +297,8 @@ export default function PlaceDetailScreen() {
                 gap: 6,
               }}
             >
-              <Ionicons name="navigate" size={16} color="#FFFFFF" />
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FFFFFF' }}>
+              <Ionicons name="navigate" size={16} color={theme.accent.onAccent} />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.accent.onAccent }}>
                 Como chegar
               </Text>
             </Pressable>
@@ -400,7 +409,7 @@ export default function PlaceDetailScreen() {
               fontSize: 12,
               letterSpacing: 1.2,
               textTransform: 'uppercase',
-              color: theme.brand,
+              color: theme.accent.color,
             }}
           >
             Reviews
@@ -461,7 +470,7 @@ function InfoRow({ icon, text, onPress }: { icon: keyof typeof Ionicons.glyphMap
           flex: 1,
           fontFamily: FONTS.body,
           fontSize: 13,
-          color: onPress ? theme.brand : theme.text,
+          color: onPress ? theme.accent.color : theme.text,
         }}
       >
         {text}

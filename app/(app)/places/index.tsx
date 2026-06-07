@@ -10,6 +10,7 @@ import { FONTS } from '@/lib/fonts';
 import { PLACE_KIND_META, placeKindMeta } from '@/lib/places-meta';
 import { fetchPlaces, qk } from '@/lib/queries';
 import type { PlaceKind, PlaceSpecies, PlaceWithStats } from '@/lib/types';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useTheme } from '@/providers/theme-provider';
 
 const KIND_FILTERS: { value: PlaceKind | 'all'; label: string; emoji: string }[] = [
@@ -43,6 +44,14 @@ const SORT_OPTIONS: { value: SortKey; label: string; emoji: string }[] = [
 ];
 
 export default function PlacesScreen() {
+  return (
+    <AppThemeProvider app="places">
+      <PlacesInner />
+    </AppThemeProvider>
+  );
+}
+
+function PlacesInner() {
   const { theme } = useTheme();
   const params = useLocalSearchParams<{ kind?: string }>();
   // Aceita ?kind=vet (ou outros) pra pré-filtrar — vindo do health hub etc.
@@ -98,7 +107,7 @@ export default function PlacesScreen() {
           headerRight: () => (
             <Link href={'/(app)/places/new' as never} asChild>
               <Pressable hitSlop={10} style={{ paddingHorizontal: 8 }}>
-                <Ionicons name="add" size={26} color={theme.brand} />
+                <Ionicons name="add" size={26} color={theme.accent.color} />
               </Pressable>
             </Link>
           ),
@@ -158,7 +167,7 @@ export default function PlacesScreen() {
                   paddingHorizontal: 12,
                   paddingVertical: 7,
                   borderRadius: 999,
-                  backgroundColor: active ? theme.brand : theme.borderLight,
+                  backgroundColor: active ? theme.accent.color : theme.borderLight,
                 }}
               >
                 <Text style={{ fontSize: 13 }}>{k.emoji}</Text>
@@ -166,7 +175,7 @@ export default function PlacesScreen() {
                   style={{
                     fontFamily: FONTS.bodyBold,
                     fontSize: 12,
-                    color: active ? '#fff' : theme.text,
+                    color: active ? theme.accent.onAccent : theme.text,
                   }}
                 >
                   {k.label}
@@ -192,8 +201,8 @@ export default function PlacesScreen() {
                   paddingVertical: 6,
                   borderRadius: 999,
                   borderWidth: 1.5,
-                  borderColor: active ? theme.brand : theme.border,
-                  backgroundColor: active ? theme.brandSurface : 'transparent',
+                  borderColor: active ? theme.accent.color : theme.border,
+                  backgroundColor: active ? theme.accent.surface : 'transparent',
                 }}
               >
                 <Text style={{ fontSize: 12 }}>{s.emoji}</Text>
@@ -201,7 +210,7 @@ export default function PlacesScreen() {
                   style={{
                     fontFamily: FONTS.bodyBold,
                     fontSize: 11.5,
-                    color: active ? theme.brandDark : theme.textMuted,
+                    color: active ? theme.accent.dark : theme.textMuted,
                   }}
                 >
                   {s.label}
@@ -227,9 +236,9 @@ export default function PlacesScreen() {
                     paddingHorizontal: 10,
                     paddingVertical: 5,
                     borderRadius: 8,
-                    backgroundColor: active ? theme.brandSurface : 'transparent',
+                    backgroundColor: active ? theme.accent.surface : 'transparent',
                     borderWidth: 1,
-                    borderColor: active ? theme.brand : theme.borderLight,
+                    borderColor: active ? theme.accent.color : theme.borderLight,
                   }}
                 >
                   <Text style={{ fontSize: 11 }}>{s.emoji}</Text>
@@ -237,7 +246,7 @@ export default function PlacesScreen() {
                     style={{
                       fontFamily: FONTS.bodyBold,
                       fontSize: 11,
-                      color: active ? theme.brandDark : theme.textDim,
+                      color: active ? theme.accent.dark : theme.textDim,
                     }}
                   >
                     {s.label}

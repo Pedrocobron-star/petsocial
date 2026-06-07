@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { createPlace } from '@/lib/queries';
 import type { PlaceKind } from '@/lib/types';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -27,6 +28,14 @@ const KINDS: { value: PlaceKind; label: string; emoji: string }[] = [
 ];
 
 export default function NewPlaceScreen() {
+  return (
+    <AppThemeProvider app="places">
+      <NewPlaceInner />
+    </AppThemeProvider>
+  );
+}
+
+function NewPlaceInner() {
   const { theme } = useTheme();
   const router = useRouter();
   const { session } = useSession();
@@ -89,7 +98,7 @@ export default function NewPlaceScreen() {
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 999,
-                backgroundColor: active ? theme.brand : theme.borderLight,
+                backgroundColor: active ? theme.accent.color : theme.borderLight,
               }}
             >
               <Text style={{ fontSize: 14 }}>{k.emoji}</Text>
@@ -97,7 +106,7 @@ export default function NewPlaceScreen() {
                 style={{
                   fontFamily: FONTS.bodyBold,
                   fontSize: 12,
-                  color: active ? '#fff' : theme.text,
+                  color: active ? theme.accent.onAccent : theme.text,
                 }}
               >
                 {k.label}

@@ -11,7 +11,14 @@ import { type AccentSet } from '@/lib/theme';
 // escolhido pra passar contraste WCAG ≥4.5:1 sobre `color`.
 // ============================================================================
 
-export type AppThemeKey = 'default' | 'health' | 'adoption';
+export type AppThemeKey =
+  | 'default'
+  | 'health'
+  | 'adoption'
+  | 'meetups'
+  | 'places'
+  | 'achievements'
+  | 'offers';
 
 interface AppAccent {
   light: AccentSet;
@@ -34,5 +41,25 @@ export const APP_THEMES: Record<AppThemeKey, AppAccent> = {
   adoption: {
     light: { color: '#C2410C', dark: '#9A3412', surface: '#FEF2F2', onAccent: '#FFFFFF', motif: '🏠' },
     dark: { color: '#FB7185', dark: '#FDA4AF', surface: '#2A1316', onAccent: '#2A0A0A', motif: '🏠' },
+  },
+  // Encontros ("Rolês"): violeta social — animado, mas não infantil.
+  meetups: {
+    light: { color: '#6D28D9', dark: '#5B21B6', surface: '#F5F3FF', onAccent: '#FFFFFF', motif: '🗓️' },
+    dark: { color: '#A78BFA', dark: '#C4B5FD', surface: '#1E1B2E', onAccent: '#1E1233', motif: '🗓️' },
+  },
+  // Lugares (Pet Map): azul de mapa/descoberta.
+  places: {
+    light: { color: '#1D4ED8', dark: '#1E40AF', surface: '#EFF6FF', onAccent: '#FFFFFF', motif: '🗺️' },
+    dark: { color: '#60A5FA', dark: '#93C5FD', surface: '#11203A', onAccent: '#07182E', motif: '🗺️' },
+  },
+  // Conquistas: ouro/bronze de medalha (deep amber passa AA como texto e como fundo).
+  achievements: {
+    light: { color: '#A16207', dark: '#854D0E', surface: '#FEF3C7', onAccent: '#FFFFFF', motif: '🏆' },
+    dark: { color: '#FBBF24', dark: '#FCD34D', surface: '#241B07', onAccent: '#2A1F00', motif: '🏆' },
+  },
+  // Clube de Vantagens: magenta de promoção/oferta.
+  offers: {
+    light: { color: '#BE185D', dark: '#9D174D', surface: '#FDF2F8', onAccent: '#FFFFFF', motif: '🎁' },
+    dark: { color: '#F472B6', dark: '#F9A8D4', surface: '#2A1320', onAccent: '#2A0A18', motif: '🎁' },
   },
 };

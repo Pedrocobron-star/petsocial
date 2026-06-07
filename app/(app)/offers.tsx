@@ -17,10 +17,19 @@ import {
   type OfferCategory,
 } from '@/lib/offers';
 import { copyToClipboard } from '@/lib/share';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
 export default function OffersScreen() {
+  return (
+    <AppThemeProvider app="offers">
+      <OffersInner />
+    </AppThemeProvider>
+  );
+}
+
+function OffersInner() {
   const { theme } = useTheme();
   const [cat, setCat] = useState<OfferCategory | 'all'>('all');
 
@@ -39,18 +48,22 @@ export default function OffersScreen() {
           {/* Header */}
           <View
             style={{
-              backgroundColor: '#1A1410',
+              backgroundColor: theme.accent.surface,
               borderRadius: 18,
               padding: 18,
               marginBottom: 14,
+              borderWidth: 1,
+              borderColor: theme.accent.surface,
               overflow: 'hidden',
             }}
           >
-            <Text style={{ position: 'absolute', right: -6, bottom: -10, fontSize: 72, opacity: 0.08 }}>🎁</Text>
-            <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: '#fff' }}>
+            <Text style={{ position: 'absolute', right: -6, bottom: -10, fontSize: 72, opacity: 0.12 }}>
+              {theme.accent.motif}
+            </Text>
+            <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: theme.accent.color }}>
               Clube de vantagens
             </Text>
-            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#D4D4D4', marginTop: 4, lineHeight: 19 }}>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.accent.dark, marginTop: 4, lineHeight: 19 }}>
               Cupons e descontos de parceiros pra economizar com seu pet. Atualizado direto pela gente.
             </Text>
           </View>
@@ -78,7 +91,7 @@ export default function OffersScreen() {
           ) : null}
 
           {query.isLoading ? (
-            <ActivityIndicator color={theme.brand} style={{ marginTop: 30 }} />
+            <ActivityIndicator color={theme.accent.color} style={{ marginTop: 30 }} />
           ) : offers.length === 0 ? (
             <EmptyState
               emoji="🎁"
@@ -107,10 +120,10 @@ function CatChip({ label, active, onPress }: { label: string; active: boolean; o
         paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 999,
-        backgroundColor: active ? theme.brand : theme.borderLight,
+        backgroundColor: active ? theme.accent.color : theme.borderLight,
       }}
     >
-      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: active ? '#fff' : theme.textDim }}>
+      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: active ? theme.accent.onAccent : theme.textDim }}>
         {label}
       </Text>
     </Pressable>
@@ -199,7 +212,7 @@ function OfferCard({ offer }: { offer: Offer }) {
               paddingVertical: 10,
             }}
           >
-            <Ionicons name="pricetag" size={15} color={theme.brand} />
+            <Ionicons name="pricetag" size={15} color={theme.accent.color} />
             <Text style={{ flex: 1, fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text, letterSpacing: 1 }}>
               {offer.coupon_code}
             </Text>
@@ -210,7 +223,7 @@ function OfferCard({ offer }: { offer: Offer }) {
         <PressScale
           onPress={onGo}
           style={{
-            backgroundColor: theme.brand,
+            backgroundColor: theme.accent.color,
             paddingVertical: 12,
             borderRadius: 12,
             flexDirection: 'row',
@@ -220,8 +233,8 @@ function OfferCard({ offer }: { offer: Offer }) {
             marginTop: 2,
           }}
         >
-          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#fff' }}>{offer.cta_label}</Text>
-          <Ionicons name="arrow-forward" size={16} color="#fff" />
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.accent.onAccent }}>{offer.cta_label}</Text>
+          <Ionicons name="arrow-forward" size={16} color={theme.accent.onAccent} />
         </PressScale>
 
         <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim, textAlign: 'center' }}>

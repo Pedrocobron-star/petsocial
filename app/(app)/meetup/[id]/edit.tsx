@@ -13,8 +13,19 @@ import { FONTS } from '@/lib/fonts';
 import { fetchMeetup, qk, updateMeetup } from '@/lib/queries';
 import type { MeetupCategory } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
+import { useTheme } from '@/providers/theme-provider';
 
 export default function EditMeetupScreen() {
+  return (
+    <AppThemeProvider app="meetups">
+      <EditMeetupInner />
+    </AppThemeProvider>
+  );
+}
+
+function EditMeetupInner() {
+  const { theme } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const qc = useQueryClient();
@@ -98,15 +109,16 @@ export default function EditMeetupScreen() {
                     key={opt.value}
                     onPress={() => setCategory(opt.value)}
                     className={`flex-row items-center gap-1.5 rounded-full px-3 py-2 ${
-                      active ? 'bg-brand' : 'bg-neutral-100'
+                      active ? '' : 'bg-neutral-100'
                     }`}
+                    style={active ? { backgroundColor: theme.accent.color } : undefined}
                   >
                     <Text>{opt.emoji}</Text>
                     <Text
                       style={{
                         fontFamily: FONTS.bodyBold,
                         fontSize: 13,
-                        color: active ? '#fff' : '#404040',
+                        color: active ? theme.accent.onAccent : '#404040',
                       }}
                     >
                       {opt.label}
