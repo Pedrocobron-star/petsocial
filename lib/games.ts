@@ -128,6 +128,52 @@ export async function fetchGlobalMyRank(): Promise<GlobalRank | null> {
   return (data as GlobalRank[] | null)?.[0] ?? null;
 }
 
+/** Uma linha do placar do Desafio Diário (só hoje, jogo+dificuldade fixos). */
+export interface DailyLeaderboardEntry {
+  user_id: string;
+  display_name: string;
+  tutor_avatar: string | null;
+  pet_id: string | null;
+  pet_name: string | null;
+  score: number;
+  achieved_at: string;
+}
+
+/** Placar do desafio do dia (reseta sozinho: filtra só hoje, fuso BR). */
+export async function fetchDailyLeaderboard(
+  game: GameKey,
+  difficulty: GameDifficulty,
+  limit = 20,
+): Promise<DailyLeaderboardEntry[]> {
+  const { data, error } = await supabase.rpc('game_daily_leaderboard', {
+    p_game: game,
+    p_difficulty: difficulty,
+    p_limit: limit,
+  });
+  if (error) throw error;
+  return (data as DailyLeaderboardEntry[] | null) ?? [];
+}
+
+export interface DailyResult {
+  best_score: number | null;
+  rank: number | null;
+  total: number;
+  played: boolean;
+}
+
+/** Seu resultado no desafio de hoje (best, rank, total, se já jogou). */
+export async function fetchDailyMyResult(
+  game: GameKey,
+  difficulty: GameDifficulty,
+): Promise<DailyResult | null> {
+  const { data, error } = await supabase.rpc('game_daily_my_result', {
+    p_game: game,
+    p_difficulty: difficulty,
+  });
+  if (error) throw error;
+  return (data as DailyResult[] | null)?.[0] ?? null;
+}
+
 export const qkGames = {
   leaderboard: (game: GameKey, period: GamePeriod) => ['game-leaderboard', game, period] as const,
   myRank: (game: GameKey, period: GamePeriod) => ['game-my-rank', game, period] as const,
@@ -135,4 +181,6 @@ export const qkGames = {
   streak: () => ['game-streak'] as const,
   global: () => ['game-global-leaderboard'] as const,
   globalMyRank: () => ['game-global-my-rank'] as const,
+  daily: (game: GameKey, difficulty: GameDifficulty) => ['game-daily', game, difficulty] as const,
+  dailyMyResult: (game: GameKey, difficulty: GameDifficulty) => ['game-daily-my', game, difficulty] as const,
 };

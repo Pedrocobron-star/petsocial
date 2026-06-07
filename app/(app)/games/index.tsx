@@ -4,6 +4,7 @@ import { Link, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { GameDailyChallengeCard } from '@/components/game-daily-challenge-card';
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { GlobalLeaderboard } from '@/components/global-leaderboard';
@@ -104,6 +105,7 @@ export default function GamesHubScreen() {
         </View>
 
         <StreakCard />
+        <GameDailyChallengeCard />
         <PlayerLevelCard />
 
         {/* Game cards */}
