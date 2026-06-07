@@ -2424,9 +2424,13 @@ export async function createCheckoutSession(plan: SubscriptionPlan): Promise<str
     if (data?.url) return data.url as string;
     throw new Error('no url returned');
   } catch (err) {
-    console.warn('[createCheckoutSession] Edge function não deployada, usando mock:', err);
-    // Mock: abrir página /pro de novo (dev only)
-    return `https://stripe.com/?dev_placeholder=true&plan=${plan}`;
+    if (__DEV__) {
+      console.warn('[createCheckoutSession] Edge function não deployada, usando mock (dev):', err);
+      return `https://stripe.com/?dev_placeholder=true&plan=${plan}`;
+    }
+    // Produção: pagamento ainda não está ligado — não finge um checkout real
+    // (evita mandar o usuário pra uma URL falsa do Stripe).
+    throw new Error('O Pet Pro pago ainda não abriu. A gente te avisa quando estiver disponível! 🐾');
   }
 }
 

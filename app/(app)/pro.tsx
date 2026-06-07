@@ -82,7 +82,7 @@ export default function ProScreen() {
         toast.error('Não foi possível abrir checkout');
       }
     },
-    onError: () => toast.error('Erro ao iniciar pagamento'),
+    onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao iniciar pagamento'),
   });
 
   const monthlyPrice = `R$ ${PRICING.monthlyBRL.toFixed(2).replace('.', ',')}`;
