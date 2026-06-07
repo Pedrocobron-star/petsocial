@@ -6,6 +6,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
+import { StreakCard } from '@/components/streak-card';
 import { FONTS } from '@/lib/fonts';
 import { fetchMyRank, qkGames, type GameKey, type GamePeriod } from '@/lib/games';
 import { useActivePet } from '@/providers/active-pet-provider';
@@ -92,6 +93,8 @@ export default function GamesHubScreen() {
             {activePet ? `Você joga, ${activePet.name} torce — ` : ''}dispute o ranking e seja o nº 1! 🏆
           </Text>
         </View>
+
+        <StreakCard />
 
         {/* Game cards */}
         <View style={{ gap: 12 }}>

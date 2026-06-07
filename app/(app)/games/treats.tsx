@@ -206,6 +206,7 @@ export default function TreatsGameScreen() {
             .then(() => {
               qc.invalidateQueries({ queryKey: ['game-leaderboard', 'treats'] });
               qc.invalidateQueries({ queryKey: ['game-my-rank', 'treats'] });
+              qc.invalidateQueries({ queryKey: ['game-streak'] });
             })
             .catch(() => {});
         }

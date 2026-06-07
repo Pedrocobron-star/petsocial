@@ -84,8 +84,24 @@ export async function fetchMaxDifficulty(game: GameKey): Promise<GameDifficulty 
   return (data as GameDifficulty | null) ?? null;
 }
 
+export interface GameStreak {
+  current_streak: number;
+  played_today: boolean;
+  best_streak: number;
+  plays_today: number;
+  daily_goal: number;
+}
+
+/** Streak diário + meta do dia (derivado de game_scores, fuso BR). null = sem dados. */
+export async function fetchStreak(): Promise<GameStreak | null> {
+  const { data, error } = await supabase.rpc('game_streak');
+  if (error) throw error;
+  return (data as GameStreak[] | null)?.[0] ?? null;
+}
+
 export const qkGames = {
   leaderboard: (game: GameKey, period: GamePeriod) => ['game-leaderboard', game, period] as const,
   myRank: (game: GameKey, period: GamePeriod) => ['game-my-rank', game, period] as const,
   maxDifficulty: (game: GameKey) => ['game-max-difficulty', game] as const,
+  streak: () => ['game-streak'] as const,
 };

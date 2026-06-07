@@ -95,6 +95,7 @@ export default function PetQuizScreen() {
           .then(() => {
             qc.invalidateQueries({ queryKey: ['game-leaderboard', 'quiz'] });
             qc.invalidateQueries({ queryKey: ['game-my-rank', 'quiz'] });
+            qc.invalidateQueries({ queryKey: ['game-streak'] });
           })
           .catch(() => {});
       }

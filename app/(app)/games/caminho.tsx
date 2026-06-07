@@ -192,6 +192,7 @@ export default function CaminhoGameScreen() {
           .then(() => {
             qc.invalidateQueries({ queryKey: ['game-leaderboard', 'caminho'] });
             qc.invalidateQueries({ queryKey: ['game-my-rank', 'caminho'] });
+            qc.invalidateQueries({ queryKey: ['game-streak'] });
           })
           .catch(() => {});
       }
