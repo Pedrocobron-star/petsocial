@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
+import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
@@ -126,6 +127,7 @@ export default function PetQuizScreen() {
               <Text style={{ fontFamily: FONTS.body, fontSize: 13.5, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 20 }}>
                 {params.questions} perguntas de conhecimentos gerais sobre cães, gatos e companhia. Acerte rápido pra ganhar bônus de tempo e subir no ranking! 🏆
               </Text>
+              <GameGradeBadge game="quiz" variant="idle" />
               {/* só aparece na tela idle; nunca durante a partida */}
               <GameDifficultyPicker value={difficulty} onChange={onChangeDifficulty} disabled={false} />
               <Button title="Começar" onPress={start} fullWidth />

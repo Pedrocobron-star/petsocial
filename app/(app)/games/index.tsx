@@ -4,6 +4,7 @@ import { Link, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { FONTS } from '@/lib/fonts';
 import { fetchMyRank, qkGames, type GameKey, type GamePeriod } from '@/lib/games';
@@ -130,6 +131,7 @@ export default function GamesHubScreen() {
                   <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
                     {g.desc}
                   </Text>
+                  <GameGradeBadge game={g.key} variant="card" />
                 </View>
                 <View
                   style={{

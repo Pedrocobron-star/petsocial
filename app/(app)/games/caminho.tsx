@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
+import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
@@ -29,15 +30,20 @@ const LEVELS: Record<GameDifficulty, string[][]> = {
     ['D..T'],
     ['D...', '...T'],
     ['D..', '.#.', '..T'],
+    ['D...', '.##.', '...T'],
+    ['D.#.', '..#.', '...T'],
   ],
   2: [
     ['D....', '..#..', '....T'],
     ['D....', '###.#', '....T'],
     ['D....', '.###.', '....T'],
+    ['D####', '.....', '####T'],
+    ['D....', '.#.#.', '.#.#.', '....T'],
   ],
   3: [
     ['D....#', '####.#', '#....#', '#.####', '#....T'],
     ['D....', '.###.', '.#...', '.#.#.', '...#T'],
+    ['D.....', '.####.', '.#..#.', '.#.##.', '.....T'],
   ],
 };
 
@@ -284,6 +290,7 @@ export default function CaminhoGameScreen() {
               Monte a sequência de setas e toque em ▶️ — o pet anda sozinho até o petisco 🦴, desviando dos
               obstáculos 🌵. Resolva as fases usando o mínimo de setas!
             </Text>
+            <GameGradeBadge game="caminho" variant="idle" />
             <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
               Dificuldade
             </Text>

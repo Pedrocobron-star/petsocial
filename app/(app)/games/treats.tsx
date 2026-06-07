@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
+import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { PetAvatar } from '@/components/pet-avatar';
 import { Button } from '@/components/ui/button';
@@ -347,6 +348,7 @@ export default function TreatsGameScreen() {
                   <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
                     Dificuldade {DIFF_META[difficulty].emoji} {DIFF_META[difficulty].label} · score ×{DIFF_META[difficulty].mult}
                   </Text>
+                  <GameGradeBadge game="treats" variant="idle" />
                   {/* só renderiza na tela idle/over — durante a partida o picker some, então nunca fica editável jogando */}
                   <GameDifficultyPicker value={difficulty} onChange={changeDifficulty} disabled={false} />
                   <Button title="Jogar" onPress={start} fullWidth />
