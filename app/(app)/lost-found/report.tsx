@@ -13,6 +13,7 @@ import { Screen } from '@/components/ui/screen';
 import { TextArea } from '@/components/ui/text-area';
 import { SPECIES_OPTIONS } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
+import { getCurrentPosition, type Coords } from '@/lib/geo';
 import { createLostReport } from '@/lib/queries';
 import { guessExtension, uploadToBucket } from '@/lib/storage';
 import type { LostReportKind, Species } from '@/lib/types';
@@ -47,6 +48,8 @@ export default function NewLostReportScreen() {
   const [breed, setBreed] = useState(params.breed ?? '');
   const [color, setColor] = useState(params.color ?? '');
   const [location, setLocation] = useState('');
+  const [coords, setCoords] = useState<Coords | null>(null);
+  const [locating, setLocating] = useState(false);
   const [lastSeenAt, setLastSeenAt] = useState<Date | null>(new Date());
   const [description, setDescription] = useState('');
   const [contact, setContact] = useState('');
@@ -71,6 +74,8 @@ export default function NewLostReportScreen() {
         description: description.trim() || null,
         contact_info: contact.trim(),
         photo_url: photoUrl || null,
+        latitude: coords?.lat ?? null,
+        longitude: coords?.lng ?? null,
       });
       return id;
     },
@@ -329,6 +334,35 @@ export default function NewLostReportScreen() {
             value={location}
             onChangeText={setLocation}
           />
+          <Pressable
+            onPress={async () => {
+              setLocating(true);
+              const c = await getCurrentPosition();
+              setLocating(false);
+              if (c) setCoords(c);
+              else
+                Alert.alert(
+                  'Localização',
+                  'Não consegui pegar sua localização (permissão negada ou indisponível). Sem problema — o endereço acima já ajuda.',
+                );
+            }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 2 }}
+            accessibilityRole="button"
+          >
+            <Text
+              style={{
+                fontFamily: FONTS.bodyBold,
+                fontSize: 12.5,
+                color: coords ? '#15803d' : '#F97316',
+              }}
+            >
+              {locating
+                ? '📍 Localizando…'
+                : coords
+                  ? '✓ Localização capturada — aparece pra quem busca por perto'
+                  : '📍 Usar minha localização (busca por proximidade)'}
+            </Text>
+          </Pressable>
           <DateTimePickerInput
             label="Quando foi visto pela última vez"
             value={lastSeenAt}

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { speciesEmoji, speciesLabel } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
+import { formatDistance, getCurrentPosition, haversineKm, type Coords } from '@/lib/geo';
 import { fetchLostReports, qk } from '@/lib/queries';
 import type { LostReportKind, LostReportWithPet } from '@/lib/types';
 
@@ -26,6 +27,8 @@ export default function LostFoundIndexScreen() {
   const [filter, setFilter] = useState<LostReportKind | 'all'>('all');
   const qc = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+  const [myLoc, setMyLoc] = useState<Coords | null>(null);
+  const [locating, setLocating] = useState(false);
 
   const query = useQuery({
     queryKey: qk.lostReports(filter),
@@ -37,6 +40,30 @@ export default function LostFoundIndexScreen() {
     await qc.invalidateQueries({ queryKey: ['lost-reports'] });
     setRefreshing(false);
   };
+
+  const toggleNearMe = async () => {
+    if (myLoc) {
+      setMyLoc(null);
+      return;
+    }
+    setLocating(true);
+    const c = await getCurrentPosition();
+    setLocating(false);
+    setMyLoc(c);
+  };
+
+  const reports = query.data ?? [];
+  const rows = myLoc
+    ? reports
+        .map((r) => ({
+          report: r,
+          distanceKm:
+            r.latitude != null && r.longitude != null
+              ? haversineKm(myLoc.lat, myLoc.lng, r.latitude, r.longitude)
+              : null,
+        }))
+        .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity))
+    : reports.map((r) => ({ report: r, distanceKm: null as number | null }));
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -57,11 +84,37 @@ export default function LostFoundIndexScreen() {
       />
       <View className="border-b border-neutral-200 bg-white pt-1">
         <SegmentedControl options={FILTERS} value={filter} onChange={setFilter} />
+        <Pressable
+          onPress={toggleNearMe}
+          accessibilityRole="button"
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 5,
+            paddingVertical: 8,
+          }}
+        >
+          <Ionicons
+            name={myLoc ? 'navigate' : 'navigate-outline'}
+            size={14}
+            color={myLoc ? '#F97316' : '#737373'}
+          />
+          <Text
+            style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: myLoc ? '#F97316' : '#737373' }}
+          >
+            {locating
+              ? 'Localizando…'
+              : myLoc
+                ? 'Perto de mim ✓ · toque pra desligar'
+                : 'Ordenar por proximidade'}
+          </Text>
+        </Pressable>
       </View>
       <FlatList
-        data={query.data ?? []}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ReportCard report={item} />}
+        data={rows}
+        keyExtractor={(item) => item.report.id}
+        renderItem={({ item }) => <ReportCard report={item.report} distanceKm={item.distanceKm} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ padding: 12, flexGrow: 1 }}
         ListEmptyComponent={
@@ -96,7 +149,13 @@ export default function LostFoundIndexScreen() {
   );
 }
 
-function ReportCard({ report }: { report: LostReportWithPet }) {
+function ReportCard({
+  report,
+  distanceKm,
+}: {
+  report: LostReportWithPet;
+  distanceKm?: number | null;
+}) {
   const kindLabel = report.kind === 'lost' ? 'Pet perdido' : 'Pet encontrado';
   const kindColor = report.kind === 'lost' ? '#991B1B' : '#15803d';
   const kindBg = report.kind === 'lost' ? '#FEE2E2' : '#DCFCE7';
@@ -177,6 +236,11 @@ function ReportCard({ report }: { report: LostReportWithPet }) {
               {report.last_seen_location}
             </Text>
           </View>
+          {distanceKm != null && (
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11.5, color: '#F97316', marginTop: 2 }}>
+              📍 a {formatDistance(distanceKm)} de você
+            </Text>
+          )}
           <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#A3A3A3', marginTop: 2 }}>
             {formatDistanceToNow(new Date(report.created_at), { addSuffix: true, locale: ptBR })}
           </Text>

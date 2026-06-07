@@ -181,6 +181,8 @@ export interface LostReport {
   breed: string | null;
   color: string | null;
   last_seen_location: string;
+  latitude: number | null;
+  longitude: number | null;
   last_seen_at: string | null;
   description: string | null;
   contact_info: string;
