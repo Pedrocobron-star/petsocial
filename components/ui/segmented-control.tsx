@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, Text } from 'react-native';
+import { Pressable, ScrollView } from 'react-native';
 import Animated, {
   Easing,
   ReduceMotion,
@@ -51,7 +51,9 @@ function SegmentItem({ label, active, onPress }: { label: string; active: boolea
     progress.value = withTiming(0, { duration: 220, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.Never });
   }
 
-  const activeBg = theme.brand;
+  // Segue o accent da área (default = brand). Mesmo padrão do Button primary.
+  const activeBg = theme.accent.color;
+  const activeText = theme.accent.onAccent;
   const inactiveBg = theme.borderLight;
   const inactiveText = theme.textMuted;
 
@@ -63,7 +65,7 @@ function SegmentItem({ label, active, onPress }: { label: string; active: boolea
   });
 
   const textStyle = useAnimatedStyle(() => ({
-    color: progress.value > 0.5 ? '#fff' : inactiveText,
+    color: progress.value > 0.5 ? activeText : inactiveText,
   }));
 
   return (
