@@ -225,6 +225,14 @@ export default function AdminScreen() {
             color="#0E7490"
             bg="#CFFAFE"
           />
+          <NavCard
+            href="/(app)/admin/news"
+            icon="newspaper"
+            label="Notícias"
+            sub="Redação · criar e publicar"
+            color="#9D174D"
+            bg="#FCE7F3"
+          />
         </View>
 
         {/* Loading */}

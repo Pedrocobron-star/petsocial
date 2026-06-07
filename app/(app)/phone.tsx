@@ -492,6 +492,7 @@ export default function PetPhoneScreen() {
       { label: 'Agenda', emoji: '🗓️', bg: '#2DD4BF', href: '/(app)/agenda' },
       { label: 'Conquistas', emoji: '🏆', bg: '#F59E0B', href: '/(app)/achievements' },
       { label: 'Jogos', emoji: '🎮', bg: '#8B5CF6', href: '/(app)/games' },
+      { label: 'Notícias', emoji: '📰', bg: '#EC4899', href: '/(app)/news' },
       { label: 'Atividade', emoji: '🔔', bg: '#F87171', href: '/(app)/notifications' },
       { label: 'Achados', emoji: '🦴', bg: '#FCD34D', href: '/(app)/lost-found' },
       { label: 'Pet Pro', emoji: '⭐', bg: '#FBBF24', href: '/(app)/pro' },

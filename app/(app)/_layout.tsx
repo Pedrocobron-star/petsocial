@@ -117,6 +117,12 @@ export default function AppLayout() {
         <Stack.Screen name="games/treats" options={{ headerShown: true, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="games/quiz" options={{ headerShown: true, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="games/caminho" options={{ headerShown: true, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="news/index" options={{ headerShown: true, title: 'Notícias' }} />
+        <Stack.Screen name="news/[slug]" options={{ headerShown: true, title: 'Notícia' }} />
+        <Stack.Screen name="news/category/[slug]" options={{ headerShown: true, title: 'Categoria' }} />
+        <Stack.Screen name="admin/news/index" options={{ headerShown: true, title: 'Notícias · Redação' }} />
+        <Stack.Screen name="admin/news/new" options={{ presentation: 'modal', headerShown: true, title: 'Nova matéria' }} />
+        <Stack.Screen name="admin/news/[id]" options={{ headerShown: true, title: 'Editar matéria' }} />
         <Stack.Screen name="pro" options={{ headerShown: true, title: 'Pet Pro' }} />
         <Stack.Screen name="offers" options={{ headerShown: true, title: 'Vantagens' }} />
         <Stack.Screen name="adoption/index" options={{ headerShown: true, title: 'Adoção' }} />
