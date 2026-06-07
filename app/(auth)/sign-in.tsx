@@ -9,6 +9,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Screen } from '@/components/ui/screen';
 import { FONTS } from '@/lib/fonts';
 import { useTranslation } from '@/lib/i18n';
+import { authErrorMessage } from '@/lib/auth-errors';
 import { signInSchema } from '@/lib/validators';
 import { useSession } from '@/providers/session-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -40,7 +41,7 @@ export default function SignInScreen() {
       await signIn(parsed.data.email, parsed.data.password);
       router.replace('/(app)/phone');
     } catch (e) {
-      toast.error(t('auth.signIn.error'), e instanceof Error ? e.message : t('common.retry'));
+      toast.error(t('auth.signIn.error'), authErrorMessage(e));
     } finally {
       setLoading(false);
     }

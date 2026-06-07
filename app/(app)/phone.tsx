@@ -22,6 +22,7 @@ import Svg, { Defs, LinearGradient as SvgGradient, Rect, Stop } from 'react-nati
 import { PetAvatar } from '@/components/pet-avatar';
 import { FONTS } from '@/lib/fonts';
 import { haptic } from '@/lib/haptics';
+import { wasOnboardingSkipped } from '@/lib/onboarding-state';
 import { computeHealthScore } from '@/lib/health-score';
 import {
   fetchHealthSummary,
@@ -505,7 +506,12 @@ export default function PetPhoneScreen() {
       </View>
     );
   }
-  if (pets.length === 0) return <Redirect href="/(app)/onboarding" />;
+  // Sem pet: manda pro onboarding — a menos que o usuário já tenha "Pulado"
+  // nesta sessão (aí vai pro feed, evitando o loop celular↔onboarding).
+  if (pets.length === 0)
+    return (
+      <Redirect href={(wasOnboardingSkipped() ? '/(app)/(tabs)' : '/(app)/onboarding') as never} />
+    );
   if (!activePet) return null;
 
   const phoneW = Math.min(width, 420);

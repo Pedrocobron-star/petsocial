@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Screen } from '@/components/ui/screen';
 import { FONTS } from '@/lib/fonts';
+import { authErrorMessage } from '@/lib/auth-errors';
 import { signUpSchema } from '@/lib/validators';
 import { useSession } from '@/providers/session-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -51,7 +52,7 @@ export default function SignUpScreen() {
       await signUp(parsed.data.email, parsed.data.password, parsed.data.display_name);
       router.replace('/(app)/phone');
     } catch (e) {
-      toast.error('Erro ao criar conta', e instanceof Error ? e.message : 'Tente novamente.');
+      toast.error('Erro ao criar conta', authErrorMessage(e));
     } finally {
       setLoading(false);
     }

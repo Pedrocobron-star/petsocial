@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -87,7 +87,45 @@ export default function PlaceDetailScreen() {
     return counts;
   }, [reviews]);
 
-  if (!place || !meta) return null;
+  if (placeQuery.isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.bg }}>
+        <Stack.Screen options={{ title: 'Lugar' }} />
+        <ActivityIndicator size="large" color={theme.brand} />
+      </View>
+    );
+  }
+  if (placeQuery.isError || !place || !meta) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 24,
+          gap: 10,
+          backgroundColor: theme.bg,
+        }}
+      >
+        <Stack.Screen options={{ title: 'Não encontrado' }} />
+        <Text style={{ fontSize: 52 }}>📍</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: theme.text, textAlign: 'center' }}>
+          Lugar não encontrado
+        </Text>
+        <Text
+          style={{
+            fontFamily: FONTS.body,
+            fontSize: 13,
+            color: theme.textDim,
+            textAlign: 'center',
+            lineHeight: 19,
+          }}
+        >
+          Esse lugar pode ter sido removido ou o link está quebrado.
+        </Text>
+      </View>
+    );
+  }
 
   const handleShare = async () => {
     const full = `${place.name}\n${meta.label}\n📍 ${place.address}${place.city ? `, ${place.city}` : ''}${place.phone ? `\n📞 ${place.phone}` : ''}${place.website ? `\n🌐 ${place.website}` : ''}`;

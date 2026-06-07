@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
 export const signInSchema = z.object({
-  email: z.string().email('Email inválido'),
+  email: z.string().trim().toLowerCase().email('Email inválido'),
   password: z.string().min(6, 'Mínimo de 6 caracteres'),
 });
 export type SignInInput = z.infer<typeof signInSchema>;
 
 export const signUpSchema = z.object({
   display_name: z.string().min(2, 'Nome muito curto').max(50),
-  email: z.string().email('Email inválido'),
+  email: z.string().trim().toLowerCase().email('Email inválido'),
   password: z.string().min(6, 'Mínimo de 6 caracteres'),
 });
 export type SignUpInput = z.infer<typeof signUpSchema>;

@@ -7,6 +7,7 @@ import { AnimatedPet } from '@/components/animated-pet';
 import { PetForm } from '@/components/pet-form';
 import { Screen } from '@/components/ui/screen';
 import { FONTS } from '@/lib/fonts';
+import { markOnboardingSkipped } from '@/lib/onboarding-state';
 import { qk } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/providers/session-provider';
@@ -29,7 +30,10 @@ export default function OnboardingScreen() {
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Pular',
-          onPress: () => router.replace('/(app)/(tabs)'),
+          onPress: () => {
+            markOnboardingSkipped();
+            router.replace('/(app)/(tabs)');
+          },
         },
       ],
     );

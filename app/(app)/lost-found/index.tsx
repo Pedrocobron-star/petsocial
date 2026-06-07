@@ -65,7 +65,14 @@ export default function LostFoundIndexScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ padding: 12, flexGrow: 1 }}
         ListEmptyComponent={
-          query.isLoading ? null : (
+          query.isLoading ? null : query.isError ? (
+            <EmptyState
+              emoji="⚠️"
+              title="Não foi possível carregar"
+              description="Deu um problema ao buscar os reportes. Verifica sua conexão e tenta de novo."
+              action={<Button title="Tentar de novo" onPress={() => query.refetch()} />}
+            />
+          ) : (
             <EmptyState
               emoji={filter === 'found' ? '🐾' : '🔍'}
               title={
