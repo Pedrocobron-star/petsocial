@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { Confetti } from '@/components/confetti';
 import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
@@ -437,6 +438,7 @@ export default function CaminhoGameScreen() {
           </View>
         ) : null}
       </ScrollView>
+      {phase === 'over' ? <Confetti count={48} /> : null}
     </View>
   );
 }

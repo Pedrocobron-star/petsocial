@@ -1403,10 +1403,18 @@ export interface AchievementInput {
   hostedMeetupsCount: number;
   vaccinations: Vaccination[];
   foundReportsCount: number;
+  distinctGamesPlayed: number;
+  maxGameDifficulty: number;
 }
 
 export async function fetchAchievementInput(userId: string): Promise<AchievementInput> {
   const myPets = await fetchMyPets(userId);
+  // Stats de jogo são do tutor (user_id), independem de ter pet cadastrado.
+  const gameStatsRes = await supabase.rpc('game_player_stats');
+  const gstats = (gameStatsRes.data as { distinct_games: number; max_difficulty: number }[] | null)?.[0];
+  const distinctGamesPlayed = gstats?.distinct_games ?? 0;
+  const maxGameDifficulty = gstats?.max_difficulty ?? 0;
+
   if (myPets.length === 0) {
     return {
       myPets,
@@ -1415,6 +1423,8 @@ export async function fetchAchievementInput(userId: string): Promise<Achievement
       hostedMeetupsCount: 0,
       vaccinations: [],
       foundReportsCount: 0,
+      distinctGamesPlayed,
+      maxGameDifficulty,
     };
   }
   const petIds = myPets.map((p) => p.id);
@@ -1446,6 +1456,8 @@ export async function fetchAchievementInput(userId: string): Promise<Achievement
     hostedMeetupsCount: meetupsRes.count ?? 0,
     vaccinations: (vacsRes.data ?? []) as Vaccination[],
     foundReportsCount: foundRes.count ?? 0,
+    distinctGamesPlayed,
+    maxGameDifficulty,
   };
 }
 

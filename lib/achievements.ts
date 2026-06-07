@@ -88,6 +88,30 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     tier: 2,
   },
   // ============================================================================
+  // Conquistas do Cassino Pet (jogos)
+  // ============================================================================
+  {
+    id: 'gamer',
+    emoji: '🎮',
+    title: 'Pet gamer',
+    description: 'Jogou um jogo do Cassino Pet',
+    tier: 1,
+  },
+  {
+    id: 'arcade_explorer',
+    emoji: '🕹️',
+    title: 'Explorador do Cassino',
+    description: 'Jogou os 3 jogos do Cassino Pet',
+    tier: 2,
+  },
+  {
+    id: 'hardcore',
+    emoji: '🔥',
+    title: 'Modo difícil',
+    description: 'Pontuou no Difícil de algum jogo',
+    tier: 3,
+  },
+  // ============================================================================
   // Conquistas Pro — só desbloqueiam com features exclusivas (Pet Pro)
   // ============================================================================
   {
@@ -126,6 +150,8 @@ interface ComputeInput {
   hostedMeetupsCount: number;
   vaccinations: Vaccination[];
   foundReportsCount: number;
+  distinctGamesPlayed: number;
+  maxGameDifficulty: number;
 }
 
 /**
@@ -133,7 +159,16 @@ interface ComputeInput {
  * Mais simples e barato do que persistir; o estado é sempre derivado.
  */
 export function computeAchievements(input: ComputeInput): AchievementUnlockState[] {
-  const { myPets, totalPosts, maxFollowers, hostedMeetupsCount, vaccinations, foundReportsCount } = input;
+  const {
+    myPets,
+    totalPosts,
+    maxFollowers,
+    hostedMeetupsCount,
+    vaccinations,
+    foundReportsCount,
+    distinctGamesPlayed,
+    maxGameDifficulty,
+  } = input;
 
   return ACHIEVEMENTS.map((def) => {
     let unlocked = false;
@@ -183,6 +218,18 @@ export function computeAchievements(input: ComputeInput): AchievementUnlockState
       case 'helper':
         unlocked = foundReportsCount >= 1;
         if (!unlocked) progress = { current: foundReportsCount, target: 1 };
+        break;
+      case 'gamer':
+        unlocked = distinctGamesPlayed >= 1;
+        if (!unlocked) progress = { current: distinctGamesPlayed, target: 1 };
+        break;
+      case 'arcade_explorer':
+        unlocked = distinctGamesPlayed >= 3;
+        progress = { current: Math.min(distinctGamesPlayed, 3), target: 3 };
+        break;
+      case 'hardcore':
+        unlocked = maxGameDifficulty >= 3;
+        if (!unlocked) progress = { current: Math.min(maxGameDifficulty, 3), target: 3 };
         break;
       case 'avatar_artist': {
         // Pelo menos 1 pet com customização Pro
