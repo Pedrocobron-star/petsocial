@@ -3,7 +3,13 @@ import { Image } from 'expo-image';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
-import { fetchLeaderboard, qkGames, type GameKey, type LeaderboardEntry } from '@/lib/games';
+import {
+  fetchLeaderboard,
+  qkGames,
+  type GameKey,
+  type GamePeriod,
+  type LeaderboardEntry,
+} from '@/lib/games';
 
 function isUrl(u: string | null): u is string {
   return !!u && /^https?:\/\//.test(u);
@@ -14,12 +20,17 @@ export function GameLeaderboard({
   game,
   limit = 20,
   currentUserId,
+  period = 'all',
 }: {
   game: GameKey;
   limit?: number;
   currentUserId?: string;
+  period?: GamePeriod;
 }) {
-  const q = useQuery({ queryKey: qkGames.leaderboard(game), queryFn: () => fetchLeaderboard(game, limit) });
+  const q = useQuery({
+    queryKey: qkGames.leaderboard(game, period),
+    queryFn: () => fetchLeaderboard(game, limit, period),
+  });
   const rows = q.data ?? [];
 
   if (q.isLoading) return <ActivityIndicator color="#FBBF24" style={{ padding: 24 }} />;

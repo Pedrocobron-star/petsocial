@@ -8,7 +8,7 @@ import { GameLeaderboard } from '@/components/game-leaderboard';
 import { PetAvatar } from '@/components/pet-avatar';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
-import { qkGames, submitGameScore } from '@/lib/games';
+import { submitGameScore } from '@/lib/games';
 import { haptic } from '@/lib/haptics';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
@@ -160,7 +160,10 @@ export default function TreatsGameScreen() {
         }
         if (userId && finalScore > 0) {
           submitGameScore({ game: 'treats', score: finalScore, petId, userId })
-            .then(() => qc.invalidateQueries({ queryKey: qkGames.leaderboard('treats') }))
+            .then(() => {
+              qc.invalidateQueries({ queryKey: ['game-leaderboard', 'treats'] });
+              qc.invalidateQueries({ queryKey: ['game-my-rank', 'treats'] });
+            })
             .catch(() => {});
         }
       }

@@ -8,7 +8,7 @@ import { GameLeaderboard } from '@/components/game-leaderboard';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { haptic } from '@/lib/haptics';
-import { qkGames, submitGameScore } from '@/lib/games';
+import { submitGameScore } from '@/lib/games';
 import { pickQuizQuestions, type QuizQuestion } from '@/lib/pet-quiz';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
@@ -61,7 +61,10 @@ export default function PetQuizScreen() {
       const finalScore = score; // já acumulado
       if (userId && finalScore > 0) {
         submitGameScore({ game: 'quiz', score: finalScore, petId: activePet?.id ?? null, userId })
-          .then(() => qc.invalidateQueries({ queryKey: qkGames.leaderboard('quiz') }))
+          .then(() => {
+            qc.invalidateQueries({ queryKey: ['game-leaderboard', 'quiz'] });
+            qc.invalidateQueries({ queryKey: ['game-my-rank', 'quiz'] });
+          })
           .catch(() => {});
       }
     } else {

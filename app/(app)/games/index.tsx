@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { Link, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { FONTS } from '@/lib/fonts';
-import type { GameKey } from '@/lib/games';
+import { fetchMyRank, qkGames, type GameKey, type GamePeriod } from '@/lib/games';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 
@@ -52,6 +53,13 @@ export default function GamesHubScreen() {
   const { session } = useSession();
   const userId = session?.user.id;
   const [rankGame, setRankGame] = useState<GameKey>('treats');
+  const [period, setPeriod] = useState<GamePeriod>('week');
+
+  const myRankQuery = useQuery({
+    queryKey: qkGames.myRank(rankGame, period),
+    queryFn: () => fetchMyRank(rankGame, period),
+    enabled: !!userId,
+  });
 
   return (
     <View style={{ flex: 1, backgroundColor: BG }}>
@@ -148,6 +156,30 @@ export default function GamesHubScreen() {
             🏆 Ranking
           </Text>
 
+          {/* período: esta semana (renova toda semana) ou geral */}
+          <View style={{ flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 999, padding: 4 }}>
+            {(['week', 'all'] as GamePeriod[]).map((p) => {
+              const active = period === p;
+              return (
+                <Pressable
+                  key={p}
+                  onPress={() => setPeriod(p)}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 6,
+                    borderRadius: 999,
+                    backgroundColor: active ? 'rgba(251,191,36,0.9)' : 'transparent',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: active ? '#1A1410' : 'rgba(255,255,255,0.6)' }}>
+                    {p === 'week' ? '🔥 Esta semana' : '🏅 Geral'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
           {/* toggle */}
           <View style={{ flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 999, padding: 4 }}>
             {GAMES.map((g) => {
@@ -172,7 +204,30 @@ export default function GamesHubScreen() {
             })}
           </View>
 
-          <GameLeaderboard game={rankGame} limit={20} currentUserId={userId} />
+          {/* Sua posição (mesmo fora do top-20) */}
+          {userId ? (
+            <View
+              style={{
+                backgroundColor: 'rgba(251,191,36,0.12)',
+                borderRadius: 14,
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                alignItems: 'center',
+              }}
+            >
+              {myRankQuery.data ? (
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FBBF24', textAlign: 'center' }}>
+                  🎯 Sua posição: #{myRankQuery.data.rank} de {myRankQuery.data.total} · melhor {myRankQuery.data.score}
+                </Text>
+              ) : (
+                <Text style={{ fontFamily: FONTS.body, fontSize: 12.5, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
+                  Você ainda não pontuou{period === 'week' ? ' esta semana' : ''} — jogue pra entrar no ranking! 🎮
+                </Text>
+              )}
+            </View>
+          ) : null}
+
+          <GameLeaderboard game={rankGame} limit={20} currentUserId={userId} period={period} />
         </View>
       </ScrollView>
     </View>
