@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { AreaHero } from '@/components/area-hero';
 import { Confetti } from '@/components/confetti';
 import { copyToClipboard } from '@/lib/clipboard';
 import {
@@ -103,21 +104,11 @@ function AchievementsInner() {
       <Stack.Screen options={{ title: 'Conquistas' }} />
       {confettiKey !== null ? <Confetti trigger={confettiKey} count={60} /> : null}
 
-      {/* Hero geral — count + barra */}
-      <View className="bg-white px-4 py-6">
+      <AreaHero area="achievements" />
+
+      {/* Resumo — count + barra */}
+      <View className="bg-white px-4 py-5">
         <View className="flex-row items-center gap-3">
-          <View
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: 18,
-              backgroundColor: theme.accent.surface,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 30 }}>{theme.accent.motif}</Text>
-          </View>
           <View className="flex-1">
             <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: '#1A1410' }}>
               {unlocked.length} / {achievements.length}
