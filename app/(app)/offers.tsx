@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
@@ -45,28 +46,7 @@ function OffersInner() {
       <Stack.Screen options={{ title: 'Vantagens', headerShown: true }} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         <CenteredColumn maxWidth={560}>
-          {/* Header */}
-          <View
-            style={{
-              backgroundColor: theme.accent.surface,
-              borderRadius: 18,
-              padding: 18,
-              marginBottom: 14,
-              borderWidth: 1,
-              borderColor: theme.accent.surface,
-              overflow: 'hidden',
-            }}
-          >
-            <Text style={{ position: 'absolute', right: -6, bottom: -10, fontSize: 72, opacity: 0.12 }}>
-              {theme.accent.motif}
-            </Text>
-            <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: theme.accent.color }}>
-              Clube de vantagens
-            </Text>
-            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.accent.dark, marginTop: 4, lineHeight: 19 }}>
-              Cupons e descontos de parceiros pra economizar com seu pet. Atualizado direto pela gente.
-            </Text>
-          </View>
+          <AreaHero area="offers" />
 
           {/* Filtros por categoria */}
           {availableCats.length > 1 ? (

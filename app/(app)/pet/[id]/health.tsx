@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { AreaHero } from '@/components/area-hero';
 import { HealthListSkeleton } from '@/components/health/health-list-skeleton';
 import { HealthScoreCard } from '@/components/health/health-score-card';
 import { HealthScoreTrend } from '@/components/health/health-score-trend';
@@ -99,6 +100,8 @@ function HealthHubInner() {
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <Stack.Screen options={{ title: pet ? `Saúde — ${pet.name}` : 'Saúde' }} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 110 }}>
+        <AreaHero area="health" />
+
         {!summary || !pet ? (
           <HealthListSkeleton withHeader count={2} />
         ) : null}

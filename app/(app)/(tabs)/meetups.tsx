@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
 import { MeetupCard } from '@/components/meetup-card';
 import { Button } from '@/components/ui/button';
@@ -70,44 +71,33 @@ function MeetupsInner() {
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
+          gap: 8,
           borderBottomWidth: 1,
           borderBottomColor: theme.border,
           backgroundColor: theme.surface,
           paddingHorizontal: 16,
           paddingVertical: 12,
-          overflow: 'hidden',
         }}
       >
-        <Text style={{ position: 'absolute', right: 96, bottom: -16, fontSize: 64, opacity: 0.12 }}>
-          {theme.accent.motif}
-        </Text>
-        <View>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>Rolês</Text>
-          <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: theme.textDim, marginTop: -2 }}>
-            Encontros e eventos pra ir com seu pet 🗓️
-          </Text>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Link href="/(app)/agenda" asChild>
-            <Pressable
-              hitSlop={6}
-              accessibilityLabel="Minha agenda"
-              style={{ backgroundColor: theme.borderLight, padding: 8, borderRadius: 999 }}
-            >
-              <Ionicons name="bookmark-outline" size={18} color={theme.text} />
-            </Pressable>
-          </Link>
-          <Link href="/(app)/meetup/new" asChild>
-            <Pressable
-              className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
-              style={{ backgroundColor: theme.accent.color }}
-            >
-              <Ionicons name="add" size={18} color={theme.accent.onAccent} />
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.accent.onAccent }}>Criar</Text>
-            </Pressable>
-          </Link>
-        </View>
+        <Link href="/(app)/agenda" asChild>
+          <Pressable
+            hitSlop={6}
+            accessibilityLabel="Minha agenda"
+            style={{ backgroundColor: theme.borderLight, padding: 8, borderRadius: 999 }}
+          >
+            <Ionicons name="bookmark-outline" size={18} color={theme.text} />
+          </Pressable>
+        </Link>
+        <Link href="/(app)/meetup/new" asChild>
+          <Pressable
+            className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
+            style={{ backgroundColor: theme.accent.color }}
+          >
+            <Ionicons name="add" size={18} color={theme.accent.onAccent} />
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.accent.onAccent }}>Criar</Text>
+          </Pressable>
+        </Link>
       </View>
 
       {featured.length >= 3 ? <FeaturedStrip events={featured} /> : null}
@@ -120,6 +110,11 @@ function MeetupsInner() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <MeetupCard meetup={item} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        ListHeaderComponent={
+          <View style={{ marginHorizontal: -12, marginTop: -12, marginBottom: 12 }}>
+            <AreaHero area="meetups" />
+          </View>
+        }
         contentContainerStyle={{ padding: 12, flexGrow: 1 }}
         ListEmptyComponent={
           meetupsQuery.isLoading ? null : (

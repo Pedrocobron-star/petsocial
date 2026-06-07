@@ -4,6 +4,7 @@ import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
+import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
@@ -263,6 +264,11 @@ function PlacesInner() {
         keyExtractor={(p) => p.id}
         renderItem={({ item }) => <PlaceCard place={item} />}
         contentContainerStyle={{ padding: 12, gap: 10, flexGrow: 1 }}
+        ListHeaderComponent={
+          <View style={{ marginHorizontal: -12, marginTop: -12, marginBottom: 12 }}>
+            <AreaHero area="places" />
+          </View>
+        }
         ListEmptyComponent={
           query.isLoading ? null : (
             <EmptyState

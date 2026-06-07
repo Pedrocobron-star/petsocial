@@ -5,6 +5,7 @@ import { Link, Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
@@ -38,7 +39,6 @@ function AdoptionFeedInner() {
   });
   const all = query.data ?? [];
   const listings = species === 'all' ? all : all.filter((l) => l.species === species);
-  const availableCount = all.filter((l) => l.status === 'available').length;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -58,33 +58,9 @@ function AdoptionFeedInner() {
           ),
         }}
       />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-        <CenteredColumn maxWidth={560}>
-          {/* Header */}
-          <View
-            style={{
-              backgroundColor: theme.accent.surface,
-              borderRadius: 18,
-              padding: 16,
-              marginBottom: 14,
-              borderWidth: 1,
-              borderColor: theme.accent.surface,
-              overflow: 'hidden',
-            }}
-          >
-            <Text style={{ position: 'absolute', right: -4, bottom: -12, fontSize: 70, opacity: 0.12 }}>
-              {theme.accent.motif}
-            </Text>
-            <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: theme.accent.color }}>
-              Encontre um amigo
-            </Text>
-            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.accent.dark, marginTop: 4, lineHeight: 19 }}>
-              {availableCount > 0
-                ? `${availableCount} ${availableCount === 1 ? 'pet esperando' : 'pets esperando'} um lar. Adote com responsabilidade 💛`
-                : 'Pets pra adoção responsável, anunciados pela comunidade e ONGs.'}
-            </Text>
-          </View>
-
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        <AreaHero area="adoption" />
+        <CenteredColumn maxWidth={560} style={{ padding: 16 }}>
           {/* Filtro de espécie */}
           <View style={{ flexDirection: 'row', gap: 6, marginBottom: 14 }}>
             <SpChip label="Todos" active={species === 'all'} onPress={() => setSpecies('all')} />
