@@ -8,6 +8,7 @@ import { Confetti } from '@/components/confetti';
 import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
+import { GameResultShareButton } from '@/components/game-result-share-button';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { submitGameScore, type GameDifficulty } from '@/lib/games';
@@ -434,6 +435,9 @@ export default function CaminhoGameScreen() {
                 Você guiou o {dogEmoji} por todas as fases! Tente um nível mais difícil pra multiplicar os pontos.
               </Text>
               <Button title="Jogar de novo" onPress={start} fullWidth />
+              {score > 0 ? (
+                <GameResultShareButton game="caminho" score={score} difficulty={difficulty} petName={activePet?.name} />
+              ) : null}
             </View>
             <GameLeaderboard game="caminho" limit={20} currentUserId={userId} />
           </View>

@@ -8,6 +8,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
+import { GameResultShareButton } from '@/components/game-result-share-button';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { haptic } from '@/lib/haptics';
@@ -218,6 +219,9 @@ export default function PetQuizScreen() {
                 {score >= params.questions * 12 ? 'Fera dos pets! 🧠✨' : score >= params.questions * 8 ? 'Muito bem! Bora pro topo do ranking.' : 'Joga de novo pra subir no ranking!'}
               </Text>
               <Button title="Jogar de novo" onPress={start} fullWidth />
+              {score > 0 ? (
+                <GameResultShareButton game="quiz" score={score} difficulty={difficulty} petName={activePet?.name} />
+              ) : null}
             </Card>
             <SectionTitle>🏆 Ranking · Quiz Pet</SectionTitle>
             <GameLeaderboard game="quiz" limit={20} currentUserId={userId} />

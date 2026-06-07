@@ -73,6 +73,14 @@ export function petIdCardUrl(token: string): string {
   return `petsocial://id/${token}`;
 }
 
+/** Link pro hub dos jogos (Cassino Pet) — usado ao compartilhar resultado. */
+export function gamesUrl(): string {
+  if (Platform.OS === 'web') {
+    return `${shareBaseUrl()}/games`;
+  }
+  return 'petsocial://games';
+}
+
 /**
  * Compartilha diretamente via WhatsApp. Tenta deep link nativo;
  * se falhar, cai pro wa.me universal (abre WhatsApp Web).

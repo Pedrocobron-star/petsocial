@@ -7,6 +7,7 @@ import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
 import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
+import { GameResultShareButton } from '@/components/game-result-share-button';
 import { PetAvatar } from '@/components/pet-avatar';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
@@ -336,6 +337,9 @@ export default function TreatsGameScreen() {
                       : `Recorde: ${best}. Bora bater e subir no ranking?`}
                   </Text>
                   <Button title="Jogar de novo" onPress={start} fullWidth />
+                  {score > 0 ? (
+                    <GameResultShareButton game="treats" score={score} difficulty={difficulty} petName={activePet?.name} />
+                  ) : null}
                 </>
               ) : (
                 <>
