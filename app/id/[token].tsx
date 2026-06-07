@@ -11,7 +11,7 @@ import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
 import { track } from '@/lib/analytics';
 import { FONTS } from '@/lib/fonts';
-import { fetchPetByIdToken, fetchProfile, qk } from '@/lib/queries';
+import { fetchPetByIdToken } from '@/lib/queries';
 import { copyToClipboard, sharePost } from '@/lib/share';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -33,14 +33,9 @@ export default function PublicPetIdScreen() {
     enabled: !!token,
   });
 
-  const pet = petQuery.data;
-
-  const tutorQuery = useQuery({
-    queryKey: pet ? qk.profile(pet.owner_id) : ['profile', 'none'],
-    queryFn: () => fetchProfile(pet!.owner_id),
-    enabled: !!pet,
-  });
-  const tutor = tutorQuery.data;
+  // pet + tutor vêm juntos do RPC público (gated por token), sem expor owner_id/PII.
+  const pet = petQuery.data?.pet ?? null;
+  const tutor = petQuery.data?.tutor ?? null;
 
   // Analytics: log que alguém visualizou a carteirinha pública
   useEffect(() => {

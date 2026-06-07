@@ -4,13 +4,14 @@ import { Text, View } from 'react-native';
 import { speciesLabel } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
 import { petAgeText } from '@/lib/pet-age';
-import type { Pet, Profile } from '@/lib/types';
+import type { PublicPetCard } from '@/lib/types';
 
 import { PetAvatar } from './pet-avatar';
 
 interface Props {
-  pet: Pet;
-  tutorProfile?: Profile | null;
+  /** Aceita Pet completo (uso logado) ou o subconjunto público da carteirinha. */
+  pet: PublicPetCard;
+  tutorProfile?: { display_name?: string | null; avatar_url?: string | null } | null;
   /** Texto do QR (URL pública). Quando undefined, mostra placeholder. */
   qrUrl?: string;
   /** Largura total do card (default: 340). */

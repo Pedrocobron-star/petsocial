@@ -760,6 +760,36 @@ export interface Report {
 // Places (Pet Shops & Vets)
 // ====================
 
+/**
+ * Subconjunto SEGURO de campos do pet exposto publicamente na carteirinha
+ * (rota /id/[token]) via RPC `public_pet_card`. NÃO inclui owner_id nem campos
+ * internos — só o que o tutor escolheu colocar no cartão.
+ */
+export interface PublicPetCard {
+  id: string;
+  name: string;
+  species: Species;
+  breed?: string | null;
+  birthdate?: string | null;
+  avatar_url?: string | null;
+  microchip_number?: string | null;
+  rga_number?: string | null;
+  sinpatinhas_id?: string | null;
+  blood_type?: string | null;
+  allergies?: string | null;
+  known_conditions?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  preferred_vet_name?: string | null;
+  preferred_vet_phone?: string | null;
+  id_card_token?: string | null;
+}
+
+export interface PublicPetCardResult {
+  pet: PublicPetCard;
+  tutor: { display_name: string | null; avatar_url: string | null };
+}
+
 export type PlaceKind =
   | 'vet'
   | 'pet_shop'

@@ -28,6 +28,7 @@ import type {
   PostMedia,
   PostWithDetails,
   Profile,
+  PublicPetCardResult,
   ReportReason,
   ReportTargetKind,
   Subscription,
@@ -139,14 +140,12 @@ export async function fetchMyPets(userId: string): Promise<Pet[]> {
  * Read all RLS permite acesso público (sem autenticação) — só retorna campos
  * declarados pelo tutor.
  */
-export async function fetchPetByIdToken(token: string): Promise<Pet | null> {
-  const { data, error } = await supabase
-    .from('pets')
-    .select('*')
-    .eq('id_card_token', token)
-    .maybeSingle();
+export async function fetchPetByIdToken(token: string): Promise<PublicPetCardResult | null> {
+  // RPC security-definer gated por token: devolve só os campos da carteirinha +
+  // nome/foto do tutor. Evita o vazamento de PII do antigo select('*') público.
+  const { data, error } = await supabase.rpc('public_pet_card', { p_token: token });
   if (error) throw error;
-  return data;
+  return (data as PublicPetCardResult | null) ?? null;
 }
 
 export async function fetchPet(petId: string): Promise<Pet | null> {
