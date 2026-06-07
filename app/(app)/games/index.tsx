@@ -8,6 +8,7 @@ import { GameDailyChallengeCard } from '@/components/game-daily-challenge-card';
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { GlobalLeaderboard } from '@/components/global-leaderboard';
+import { LeagueCard } from '@/components/league-card';
 import { PlayerLevelCard } from '@/components/player-level-card';
 import { StreakCard } from '@/components/streak-card';
 import { FONTS } from '@/lib/fonts';
@@ -107,6 +108,7 @@ export default function GamesHubScreen() {
         <StreakCard />
         <GameDailyChallengeCard />
         <PlayerLevelCard />
+        <LeagueCard currentUserId={userId} />
 
         {/* Game cards */}
         <View style={{ gap: 12 }}>

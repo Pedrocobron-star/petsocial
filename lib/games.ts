@@ -174,6 +174,33 @@ export async function fetchDailyMyResult(
   return (data as DailyResult[] | null)?.[0] ?? null;
 }
 
+export interface WeeklyRank {
+  points: number;
+  rank: number;
+  total: number;
+}
+
+/** Pontos efetivos da semana (BR) + posição do tutor na liga. null = sem dados. */
+export async function fetchWeeklyRank(): Promise<WeeklyRank | null> {
+  const { data, error } = await supabase.rpc('game_weekly_rank');
+  if (error) throw error;
+  return (data as WeeklyRank[] | null)?.[0] ?? null;
+}
+
+export interface WeeklyLeaderboardEntry {
+  user_id: string;
+  display_name: string;
+  tutor_avatar: string | null;
+  points: number;
+}
+
+/** Placar da liga da semana (top N por pontos da semana). */
+export async function fetchWeeklyLeaderboard(limit = 20): Promise<WeeklyLeaderboardEntry[]> {
+  const { data, error } = await supabase.rpc('game_weekly_leaderboard', { p_limit: limit });
+  if (error) throw error;
+  return (data as WeeklyLeaderboardEntry[] | null) ?? [];
+}
+
 export const qkGames = {
   leaderboard: (game: GameKey, period: GamePeriod) => ['game-leaderboard', game, period] as const,
   myRank: (game: GameKey, period: GamePeriod) => ['game-my-rank', game, period] as const,
@@ -183,4 +210,6 @@ export const qkGames = {
   globalMyRank: () => ['game-global-my-rank'] as const,
   daily: (game: GameKey, difficulty: GameDifficulty) => ['game-daily', game, difficulty] as const,
   dailyMyResult: (game: GameKey, difficulty: GameDifficulty) => ['game-daily-my', game, difficulty] as const,
+  weeklyRank: () => ['game-weekly-rank'] as const,
+  weeklyLeaderboard: () => ['game-weekly-leaderboard'] as const,
 };

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
+import { Animated, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
 import { GameGradeBadge } from '@/components/game-grade-badge';
@@ -100,7 +100,8 @@ export default function TreatsGameScreen() {
 
   const phaseRef = useRef<Phase>('idle');
   const difficultyRef = useRef<GameDifficulty>(2);
-  const elapsedRef = useRef(0);
+  const startedAtRef = useRef(0); // timestamp real do início da rodada (ms)
+  const pausedAtRef = useRef(0); // != 0 => rodada pausada (aba em background)
   const lastSpawnRef = useRef(0);
   const idRef = useRef(0);
   const popupIdRef = useRef(0);
@@ -151,8 +152,9 @@ export default function TreatsGameScreen() {
   useEffect(() => {
     const loop = setInterval(() => {
       if (phaseRef.current !== 'playing') return;
-      elapsedRef.current += TICK_MS;
-      const elapsed = elapsedRef.current;
+      if (pausedAtRef.current) return; // aba em background: não consome o tempo da rodada
+      // relógio baseado em timestamp real (não acumulativo) → imune a throttle/drift
+      const elapsed = Date.now() - startedAtRef.current;
 
       const remaining = Math.max(0, ROUND_SECONDS - Math.floor(elapsed / 1000));
       setTimeLeft(remaining);
@@ -217,9 +219,26 @@ export default function TreatsGameScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bestKey, userId, petId]);
 
+  // pausa a rodada quando a aba vai pro background (não queima o cronômetro);
+  // ao voltar, empurra o início pra frente pelo tempo que ficou oculto.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const onVis = () => {
+      if (document.hidden) {
+        if (phaseRef.current === 'playing' && !pausedAtRef.current) pausedAtRef.current = Date.now();
+      } else if (pausedAtRef.current) {
+        startedAtRef.current += Date.now() - pausedAtRef.current;
+        pausedAtRef.current = 0;
+      }
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+
   const start = () => {
     difficultyRef.current = difficulty; // trava a dificuldade escolhida pra rodada
-    elapsedRef.current = 0;
+    startedAtRef.current = Date.now();
+    pausedAtRef.current = 0;
     lastSpawnRef.current = 0;
     scoreRef.current = 0;
     comboRef.current = 0;
