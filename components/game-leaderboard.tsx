@@ -82,8 +82,8 @@ function Row({ entry, rank, me }: { entry: LeaderboardEntry; rank: number; me: b
           {rank <= 3 ? MEDALS[rank - 1] : rank}
         </Text>
       </View>
-      {isUrl(entry.pet_avatar) ? (
-        <Image source={{ uri: entry.pet_avatar }} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" />
+      {isUrl(entry.tutor_avatar) ? (
+        <Image source={{ uri: entry.tutor_avatar }} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" />
       ) : (
         <View
           style={{
@@ -95,17 +95,21 @@ function Row({ entry, rank, me }: { entry: LeaderboardEntry; rank: number; me: b
             justifyContent: 'center',
           }}
         >
-          <Text style={{ fontSize: 17 }}>🐾</Text>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: '#fff' }}>
+            {(entry.display_name?.trim()?.[0] ?? '🐾').toUpperCase()}
+          </Text>
         </View>
       )}
       <View style={{ flex: 1 }}>
         <Text numberOfLines={1} style={{ fontFamily: FONTS.bodyBold, fontSize: 13.5, color: '#fff' }}>
-          {entry.pet_name || entry.display_name}
-        </Text>
-        <Text numberOfLines={1} style={{ fontFamily: FONTS.body, fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>
-          {entry.pet_name ? `tutor ${entry.display_name}` : 'Tutor'}
+          {entry.display_name}
           {me ? ' · você' : ''}
         </Text>
+        {entry.pet_name ? (
+          <Text numberOfLines={1} style={{ fontFamily: FONTS.body, fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>
+            🐾 jogou com {entry.pet_name}
+          </Text>
+        ) : null}
       </View>
       <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#FBBF24' }}>{entry.score}</Text>
     </View>

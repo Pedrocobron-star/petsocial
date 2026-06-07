@@ -88,7 +88,7 @@ export default function TreatsGameScreen() {
   bestRef.current = best;
 
   const petId = activePet?.id ?? null;
-  const bestKey = petId ? `petsocial:game-best:${petId}` : null;
+  const bestKey = userId ? `petsocial:game-best:${userId}` : null;
   useEffect(() => {
     if (!bestKey) return;
     AsyncStorage.getItem(bestKey)
@@ -286,7 +286,7 @@ export default function TreatsGameScreen() {
                   <Text style={{ fontFamily: FONTS.display, fontSize: 28, color: '#FBBF24' }}>{score} pts</Text>
                   <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: 'rgba(255,255,255,0.75)', textAlign: 'center' }}>
                     {score >= best && score > 0
-                      ? `Novo recorde d${activePet && activePet.name.endsWith('a') ? 'a' : 'o'} ${activePet?.name ?? 'pet'}! 🎉`
+                      ? 'Seu novo recorde! 🎉'
                       : `Recorde: ${best}. Bora bater e subir no ranking?`}
                   </Text>
                   <Button title="Jogar de novo" onPress={start} fullWidth />

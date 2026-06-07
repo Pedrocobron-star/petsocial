@@ -10,6 +10,7 @@ export const GAME_META: Record<GameKey, { label: string; emoji: string; scoreLab
 export interface LeaderboardEntry {
   user_id: string;
   display_name: string;
+  tutor_avatar: string | null;
   pet_id: string | null;
   pet_name: string | null;
   pet_avatar: string | null;

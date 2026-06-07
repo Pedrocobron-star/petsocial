@@ -7,6 +7,7 @@
 -- Dropa a versão antiga (2 args) pra recriar com p_period (default 'all',
 -- então a chamada antiga de 2 args continua funcionando).
 drop function if exists public.game_leaderboard(text, int);
+drop function if exists public.game_leaderboard(text, int, text);
 
 create or replace function public.game_leaderboard(
   p_game text,
@@ -16,6 +17,7 @@ create or replace function public.game_leaderboard(
 returns table (
   user_id uuid,
   display_name text,
+  tutor_avatar text,
   pet_id uuid,
   pet_name text,
   pet_avatar text,
@@ -35,6 +37,7 @@ returns table (
   )
   select b.user_id,
          coalesce(pr.display_name, 'Tutor') as display_name,
+         pr.avatar_url as tutor_avatar,
          b.pet_id,
          p.name as pet_name,
          p.avatar_url as pet_avatar,

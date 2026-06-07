@@ -79,7 +79,7 @@ export default function GamesHubScreen() {
             🎰 Cassino Pet 🐾
           </Text>
           <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
-            {activePet ? `Jogue com ${activePet.name}, ` : 'Jogue, '}dispute o ranking e seja o nº 1! 🏆
+            {activePet ? `Você joga, ${activePet.name} torce — ` : ''}dispute o ranking e seja o nº 1! 🏆
           </Text>
         </View>
 
