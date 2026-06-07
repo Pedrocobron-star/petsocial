@@ -27,15 +27,18 @@ export default function EditRecallScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [saving, setSaving] = useState(false);
 
-  if (!session) return <Redirect href="/welcome" />;
-  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
-  if (!id) return null;
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
 
   const query = useQuery({
     queryKey: ['admin-recall', id],
     queryFn: () => adminFetchRecall(id),
+    enabled: isAdmin && !!id,
   });
   const recall = query.data;
+
+  if (!session) return <Redirect href="/welcome" />;
+  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
+  if (!id) return null;
 
   const handleSubmit = async (input: RecallInput) => {
     setSaving(true);

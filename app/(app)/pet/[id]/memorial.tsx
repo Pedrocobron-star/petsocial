@@ -49,7 +49,7 @@ export default function MemorialScreen() {
   });
   // Galeria de memórias — usa posts do próprio pet
   const postsQuery = useQuery({
-    queryKey: qk.petPosts(id),
+    queryKey: qk.petPosts(id, activePet?.id ?? id),
     queryFn: () => fetchPostsByPet(id, activePet?.id ?? id),
     enabled: !!id,
   });

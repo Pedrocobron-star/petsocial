@@ -59,7 +59,8 @@ export const qk = {
   pet: (petId: string) => ['pet', petId] as const,
   petStats: (petId: string) => ['pet-stats', petId] as const,
   feed: (petId: string, filter: string = 'all') => ['feed', petId, filter] as const,
-  petPosts: (petId: string) => ['pet-posts', petId] as const,
+  petPosts: (petId: string, viewerPetId?: string) =>
+    ['pet-posts', petId, viewerPetId ?? petId] as const,
   post: (postId: string) => ['post', postId] as const,
   comments: (postId: string) => ['comments', postId] as const,
   meetups: (filter: string = 'upcoming') => ['meetups', filter] as const,

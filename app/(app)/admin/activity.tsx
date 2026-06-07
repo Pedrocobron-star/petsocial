@@ -32,14 +32,17 @@ export default function AdminActivityScreen() {
   const { session } = useSession();
   const { theme } = useTheme();
 
-  if (!session) return <Redirect href="/welcome" />;
-  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
 
   const query = useQuery({
     queryKey: ['admin-activity'],
     queryFn: fetchActivity,
     refetchInterval: 15_000, // ao vivo, a cada 15s
+    enabled: isAdmin,
   });
+
+  if (!session) return <Redirect href="/welcome" />;
+  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
 
   const rows = query.data ?? [];
 

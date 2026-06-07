@@ -21,15 +21,18 @@ export default function AdminRecallsListScreen() {
   const { session } = useSession();
   const { theme } = useTheme();
 
-  if (!session) return <Redirect href="/welcome" />;
-  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
 
   const query = useQuery({
     queryKey: ['admin-recalls-list'],
     queryFn: adminListRecalls,
     refetchOnMount: 'always',
+    enabled: isAdmin,
   });
   const recalls = query.data ?? [];
+
+  if (!session) return <Redirect href="/welcome" />;
+  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

@@ -63,7 +63,7 @@ export default function PetDiaryScreen() {
     enabled: !!id,
   });
   const postsQuery = useQuery({
-    queryKey: qk.petPosts(id),
+    queryKey: qk.petPosts(id, activePet!.id),
     queryFn: () => fetchPostsByPet(id, activePet!.id),
     enabled: !!id && !!activePet,
   });

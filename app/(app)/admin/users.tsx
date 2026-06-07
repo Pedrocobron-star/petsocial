@@ -49,8 +49,7 @@ export default function AdminUsersScreen() {
   const { session } = useSession();
   const { theme } = useTheme();
 
-  if (!session) return <Redirect href="/welcome" />;
-  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
 
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('recent_signup');
@@ -60,7 +59,11 @@ export default function AdminUsersScreen() {
     queryKey: ['admin-users', search, sort, offset],
     queryFn: () => fetchUsers(offset, search, sort),
     staleTime: 30_000,
+    enabled: isAdmin,
   });
+
+  if (!session) return <Redirect href="/welcome" />;
+  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
 
   const users = usersQuery.data ?? [];
 

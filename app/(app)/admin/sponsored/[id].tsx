@@ -28,19 +28,23 @@ export default function EditSponsoredPostScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [saving, setSaving] = useState(false);
 
-  if (!session) return <Redirect href="/welcome" />;
-  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
-  if (!id) return null;
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
 
   const postQuery = useQuery({
     queryKey: ['admin-sponsored-post', id],
     queryFn: () => adminFetchSponsoredPost(id),
+    enabled: isAdmin && !!id,
   });
   const metricsQuery = useQuery({
     queryKey: ['admin-sponsored-metrics', id],
     queryFn: () => adminSponsoredMetrics(id),
     refetchInterval: 30_000,
+    enabled: isAdmin && !!id,
   });
+
+  if (!session) return <Redirect href="/welcome" />;
+  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
+  if (!id) return null;
 
   const post = postQuery.data;
   const metrics = metricsQuery.data;

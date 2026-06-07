@@ -37,7 +37,7 @@ export default function BirthdayScreen() {
     enabled: !!id,
   });
   const postsQuery = useQuery({
-    queryKey: qk.petPosts(id),
+    queryKey: qk.petPosts(id, activePet?.id ?? id),
     queryFn: () => fetchPostsByPet(id, activePet?.id ?? id),
     enabled: !!id,
   });

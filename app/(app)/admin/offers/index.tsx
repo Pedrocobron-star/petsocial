@@ -13,16 +13,18 @@ const ADMIN_EMAIL = 'pedrocobron@gmail.com';
 export default function AdminOffersListScreen() {
   const { session } = useSession();
   const { theme } = useTheme();
-
-  if (!session) return <Redirect href="/welcome" />;
-  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
 
   const query = useQuery({
     queryKey: ['admin-offers-list'],
     queryFn: adminListOffers,
     refetchOnMount: 'always',
+    enabled: isAdmin,
   });
   const offers = query.data ?? [];
+
+  if (!session) return <Redirect href="/welcome" />;
+  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

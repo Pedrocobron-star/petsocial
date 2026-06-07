@@ -52,12 +52,14 @@ export default function AdminEngagementScreen() {
   const { session } = useSession();
   const { theme } = useTheme();
 
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
+
+  const topQuery = useQuery({ queryKey: ['admin-top-events', 7], queryFn: () => fetchTopEvents(7), enabled: isAdmin });
+  const heatmapQuery = useQuery({ queryKey: ['admin-heatmap'], queryFn: fetchHeatmap, enabled: isAdmin });
+  const retentionQuery = useQuery({ queryKey: ['admin-retention'], queryFn: fetchRetention, enabled: isAdmin });
+
   if (!session) return <Redirect href="/welcome" />;
   if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
-
-  const topQuery = useQuery({ queryKey: ['admin-top-events', 7], queryFn: () => fetchTopEvents(7) });
-  const heatmapQuery = useQuery({ queryKey: ['admin-heatmap'], queryFn: fetchHeatmap });
-  const retentionQuery = useQuery({ queryKey: ['admin-retention'], queryFn: fetchRetention });
 
   const topEvents = topQuery.data ?? [];
   const heatmap = heatmapQuery.data ?? [];

@@ -17,14 +17,17 @@ export default function AdminSponsoredListScreen() {
   const { theme } = useTheme();
   const qc = useQueryClient();
 
-  if (!session) return <Redirect href="/welcome" />;
-  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
 
   const query = useQuery({
     queryKey: ['admin-sponsored-list'],
     queryFn: adminListSponsoredPosts,
     refetchOnMount: 'always',
+    enabled: isAdmin,
   });
+
+  if (!session) return <Redirect href="/welcome" />;
+  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
 
   const posts = query.data ?? [];
 

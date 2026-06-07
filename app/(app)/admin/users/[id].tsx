@@ -73,14 +73,13 @@ export default function AdminUserDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [pendingPreset, setPendingPreset] = useState<string | null>(null);
 
-  if (!session) return <Redirect href="/welcome" />;
-  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
-  if (!id) return null;
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
 
   const query = useQuery({
     queryKey: ['admin-user-detail', id],
     queryFn: () => fetchUserDetail(id),
     staleTime: 30_000,
+    enabled: isAdmin && !!id,
   });
 
   const detail = query.data;
@@ -122,6 +121,10 @@ export default function AdminUserDetailScreen() {
       { text: 'Revogar', style: 'destructive', onPress: () => revokeMutation.mutate() },
     ]);
   };
+
+  if (!session) return <Redirect href="/welcome" />;
+  if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
+  if (!id) return null;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

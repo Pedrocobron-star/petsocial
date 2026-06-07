@@ -90,27 +90,32 @@ export default function AdminScreen() {
   const { session } = useSession();
   const { theme } = useTheme();
 
-  // Gate duplo (client + server via SECURITY DEFINER nas RPCs)
-  if (!session) return <Redirect href="/welcome" />;
-  if (session.user.email !== ADMIN_EMAIL) {
-    return <Redirect href="/(app)/(tabs)" />;
-  }
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
 
   const statsQuery = useQuery({
     queryKey: ['admin-stats'],
     queryFn: fetchAdminStats,
     refetchInterval: 60_000,
+    enabled: isAdmin,
   });
   const engagementQuery = useQuery({
     queryKey: ['admin-engagement'],
     queryFn: fetchEngagement,
     refetchInterval: 60_000,
+    enabled: isAdmin,
   });
   const signupsQuery = useQuery({
     queryKey: ['admin-latest-signups'],
     queryFn: () => fetchLatestSignups(10),
     refetchInterval: 60_000,
+    enabled: isAdmin,
   });
+
+  // Gate duplo (client + server via SECURITY DEFINER nas RPCs)
+  if (!session) return <Redirect href="/welcome" />;
+  if (session.user.email !== ADMIN_EMAIL) {
+    return <Redirect href="/(app)/(tabs)" />;
+  }
 
   const stats = statsQuery.data;
   const engagement = engagementQuery.data;

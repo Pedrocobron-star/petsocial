@@ -22,12 +22,14 @@ export default function EditAdminPlaceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [saving, setSaving] = useState(false);
 
+  const isAdmin = !!session && session.user.email === ADMIN_EMAIL;
+
+  const query = useQuery({ queryKey: ['admin-place', id], queryFn: () => adminFetchPlace(id), enabled: isAdmin && !!id });
+  const place = query.data;
+
   if (!session) return <Redirect href="/welcome" />;
   if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
   if (!id) return null;
-
-  const query = useQuery({ queryKey: ['admin-place', id], queryFn: () => adminFetchPlace(id) });
-  const place = query.data;
 
   const handleSubmit = async (input: PlaceAdminInput) => {
     setSaving(true);
