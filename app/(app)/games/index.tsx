@@ -6,9 +6,10 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
+import { GlobalLeaderboard } from '@/components/global-leaderboard';
 import { StreakCard } from '@/components/streak-card';
 import { FONTS } from '@/lib/fonts';
-import { fetchMyRank, qkGames, type GameKey, type GamePeriod } from '@/lib/games';
+import { fetchGlobalMyRank, fetchMyRank, qkGames, type GameKey, type GamePeriod } from '@/lib/games';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 
@@ -65,11 +66,18 @@ export default function GamesHubScreen() {
   const userId = session?.user.id;
   const [rankGame, setRankGame] = useState<GameKey>('treats');
   const [period, setPeriod] = useState<GamePeriod>('week');
+  const [scope, setScope] = useState<'game' | 'global'>('game');
 
   const myRankQuery = useQuery({
     queryKey: qkGames.myRank(rankGame, period),
     queryFn: () => fetchMyRank(rankGame, period),
-    enabled: !!userId,
+    enabled: !!userId && scope === 'game',
+  });
+
+  const globalRankQuery = useQuery({
+    queryKey: qkGames.globalMyRank(),
+    queryFn: () => fetchGlobalMyRank(),
+    enabled: !!userId && scope === 'global',
   });
 
   return (
@@ -170,7 +178,39 @@ export default function GamesHubScreen() {
             🏆 Ranking
           </Text>
 
-          {/* período: esta semana (renova toda semana) ou geral */}
+          {/* escopo: por jogo OU placar geral combinado (soma dos 3 jogos) */}
+          <View style={{ flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 999, padding: 4 }}>
+            {(['game', 'global'] as const).map((s) => {
+              const active = scope === s;
+              return (
+                <Pressable
+                  key={s}
+                  onPress={() => setScope(s)}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 7,
+                    borderRadius: 999,
+                    backgroundColor: active ? '#F472B6' : 'transparent',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: active ? '#1A1410' : 'rgba(255,255,255,0.7)' }}>
+                    {s === 'game' ? '🎮 Por jogo' : '🌍 Geral'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {scope === 'global' ? (
+            <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
+              Soma do seu melhor placar em cada um dos 3 jogos. Mande bem em todos pra liderar! 🐾
+            </Text>
+          ) : null}
+
+          {/* período + jogo + sua posição + leaderboard — só no modo por-jogo */}
+          {scope === 'game' ? (
+          <>
           <View style={{ flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 999, padding: 4 }}>
             {(['week', 'all'] as GamePeriod[]).map((p) => {
               const active = period === p;
@@ -242,6 +282,33 @@ export default function GamesHubScreen() {
           ) : null}
 
           <GameLeaderboard game={rankGame} limit={20} currentUserId={userId} period={period} />
+          </>
+          ) : (
+          <>
+          {userId ? (
+            <View
+              style={{
+                backgroundColor: 'rgba(251,191,36,0.12)',
+                borderRadius: 14,
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                alignItems: 'center',
+              }}
+            >
+              {globalRankQuery.data ? (
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FBBF24', textAlign: 'center' }}>
+                  🎯 Sua posição geral: #{globalRankQuery.data.rank} de {globalRankQuery.data.total} · {globalRankQuery.data.total_score} pts
+                </Text>
+              ) : (
+                <Text style={{ fontFamily: FONTS.body, fontSize: 12.5, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
+                  Você ainda não pontuou — jogue os 3 jogos pra entrar no placar geral! 🎮
+                </Text>
+              )}
+            </View>
+          ) : null}
+          <GlobalLeaderboard limit={30} currentUserId={userId} />
+          </>
+          )}
         </View>
       </ScrollView>
     </View>

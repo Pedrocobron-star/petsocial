@@ -99,9 +99,40 @@ export async function fetchStreak(): Promise<GameStreak | null> {
   return (data as GameStreak[] | null)?.[0] ?? null;
 }
 
+/** Uma linha do placar geral combinado (soma do melhor score de cada jogo). */
+export interface GlobalLeaderboardEntry {
+  user_id: string;
+  display_name: string;
+  tutor_avatar: string | null;
+  total_score: number;
+  games_played: number;
+}
+
+/** Placar geral combinado: ranking dos tutores somando os 3 jogos. */
+export async function fetchGlobalLeaderboard(limit = 30): Promise<GlobalLeaderboardEntry[]> {
+  const { data, error } = await supabase.rpc('game_global_leaderboard', { p_limit: limit });
+  if (error) throw error;
+  return (data as GlobalLeaderboardEntry[] | null) ?? [];
+}
+
+export interface GlobalRank {
+  rank: number;
+  total_score: number;
+  total: number;
+}
+
+/** Posição do tutor logado no placar geral. null = ainda não pontuou. */
+export async function fetchGlobalMyRank(): Promise<GlobalRank | null> {
+  const { data, error } = await supabase.rpc('game_global_my_rank');
+  if (error) throw error;
+  return (data as GlobalRank[] | null)?.[0] ?? null;
+}
+
 export const qkGames = {
   leaderboard: (game: GameKey, period: GamePeriod) => ['game-leaderboard', game, period] as const,
   myRank: (game: GameKey, period: GamePeriod) => ['game-my-rank', game, period] as const,
   maxDifficulty: (game: GameKey) => ['game-max-difficulty', game] as const,
   streak: () => ['game-streak'] as const,
+  global: () => ['game-global-leaderboard'] as const,
+  globalMyRank: () => ['game-global-my-rank'] as const,
 };
