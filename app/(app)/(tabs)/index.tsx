@@ -5,6 +5,7 @@ import { FlatList, View, type ViewToken } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/empty-state';
+import { EngagementNudge } from '@/components/engagement-nudge';
 import { Fab } from '@/components/fab';
 import { FeedHeader } from '@/components/feed-header';
 import { HealthRemindersBanner } from '@/components/health-reminders-banner';
@@ -174,6 +175,7 @@ export default function FeedScreen() {
           contentContainerStyle={{ paddingTop: 0, paddingBottom: 24, flexGrow: 1 }}
           ListHeaderComponent={
             <>
+              <EngagementNudge />
               <RecallBanner />
               <HealthRemindersBanner />
             </>
