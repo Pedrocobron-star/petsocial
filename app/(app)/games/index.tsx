@@ -7,6 +7,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { GlobalLeaderboard } from '@/components/global-leaderboard';
+import { PlayerLevelCard } from '@/components/player-level-card';
 import { StreakCard } from '@/components/streak-card';
 import { FONTS } from '@/lib/fonts';
 import { fetchGlobalMyRank, fetchMyRank, qkGames, type GameKey, type GamePeriod } from '@/lib/games';
@@ -103,6 +104,7 @@ export default function GamesHubScreen() {
         </View>
 
         <StreakCard />
+        <PlayerLevelCard />
 
         {/* Game cards */}
         <View style={{ gap: 12 }}>
