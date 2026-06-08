@@ -10,6 +10,8 @@ import { FONTS } from '@/lib/fonts';
 import { DIFF_META, GAME_META, fetchDailyMyResult, fetchStreak, qkGames } from '@/lib/games';
 import { haptic } from '@/lib/haptics';
 import { fetchArticles, qkNews } from '@/lib/news';
+import { fetchHealthSummary, fetchPetStats, qk } from '@/lib/queries';
+import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 
@@ -41,6 +43,7 @@ function todayStr(): string {
 export function EngagementNudge() {
   const { session } = useSession();
   const { theme } = useTheme();
+  const { activePet } = useActivePet();
   const router = useRouter();
   const userId = session?.user.id;
 
@@ -56,6 +59,18 @@ export function EngagementNudge() {
     enabled: !!userId,
   });
   const newsQ = useQuery({ queryKey: qkNews.articles(), queryFn: () => fetchArticles({ limit: 1 }) });
+  const healthQ = useQuery({
+    queryKey: activePet ? qk.healthSummary(activePet.id) : ['health-summary', 'none'],
+    queryFn: () => fetchHealthSummary(activePet!.id),
+    enabled: !!userId && !!activePet,
+    staleTime: 5 * 60_000,
+  });
+  const statsQ = useQuery({
+    queryKey: activePet ? qk.petStats(activePet.id) : ['pet-stats', 'none'],
+    queryFn: () => fetchPetStats(activePet!.id),
+    enabled: !!userId && !!activePet,
+    staleTime: 5 * 60_000,
+  });
 
   // monta o nudge de maior prioridade a partir de dados reais
   const candidate = useMemo<Nudge | null>(() => {
@@ -98,8 +113,29 @@ export function EngagementNudge() {
         };
       }
     }
+    // Nudges de estágio (onboarding) — só pra contas "vazias", baixa prioridade
+    if (activePet && healthQ.data && healthQ.data.vaccinations_count === 0) {
+      return {
+        key: `health:${activePet.id}`,
+        emoji: '💉',
+        text: `${activePet.name} ainda não tem vacina registrada. Comece o histórico de saúde — leva 30s.`,
+        cta: 'Registrar vacina',
+        href: { pathname: '/(app)/pet/[id]/vaccinations', params: { id: activePet.id } },
+        color: '#0F766E',
+      };
+    }
+    if (activePet && statsQ.data && statsQ.data.followers_count === 0) {
+      return {
+        key: `followers:${ds}`,
+        emoji: '👋',
+        text: `${activePet.name} ainda não tem seguidores. Siga outros pets pra começar a interagir!`,
+        cta: 'Descobrir pets',
+        href: '/(app)/(tabs)/explore',
+        color: '#6D28D9',
+      };
+    }
     return null;
-  }, [streakQ.data, dailyQ.data, newsQ.data, today]);
+  }, [streakQ.data, dailyQ.data, newsQ.data, healthQ.data, statsQ.data, activePet, today]);
 
   // decide se mostra (gap de 3h + não dispensado), com atraso pra "pipocar"
   useEffect(() => {

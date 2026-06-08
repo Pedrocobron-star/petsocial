@@ -14,6 +14,7 @@ import {
   type AchievementUnlockState,
 } from '@/lib/achievements';
 import { FONTS } from '@/lib/fonts';
+import { showLocalNotification } from '@/lib/local-notify';
 import { fetchAchievementInput, qk } from '@/lib/queries';
 import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useSession } from '@/providers/session-provider';
@@ -88,11 +89,24 @@ function AchievementsInner() {
         if (seen !== null) {
           // Não é primeiro acesso, então é unlock de fato
           setConfettiKey(Date.now());
+          // Avisa as conquistas NOVAS (toast + notificação local)
+          const seenSet = new Set(seen.split(',').filter(Boolean));
+          const fresh = unlocked.filter((a) => !seenSet.has(a.def.id));
+          if (fresh.length > 0) {
+            const a = fresh[0];
+            const extra = fresh.length > 1 ? ` +${fresh.length - 1}` : '';
+            toast.success(`${a.def.emoji} Conquista desbloqueada!`, `${a.def.title}${extra}`);
+            showLocalNotification(
+              `${a.def.emoji} Conquista desbloqueada!`,
+              `${a.def.title}${extra}`,
+              '/achievements',
+            );
+          }
         }
         AsyncStorage.setItem(key, currentIds);
       }
     });
-  }, [userId, unlocked]);
+  }, [userId, unlocked, toast]);
 
   // Progresso geral
   const progressPct = achievements.length > 0

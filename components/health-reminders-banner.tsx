@@ -1,105 +1,121 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { Dimensions, Pressable, Text, View } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
 import { FEED_CARD_MARGIN, MAX_FEED_WIDTH } from '@/lib/layout';
-import { fetchHealthSummary, fetchParasiteSummary, qk } from '@/lib/queries';
+import {
+  fetchHealthSummary,
+  fetchParasiteSummary,
+  qk,
+  type ParasiteSummary,
+} from '@/lib/queries';
+import type { HealthSummary, Pet } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
 
-/**
- * Banner global no feed que mostra alertas críticos de saúde do pet ativo:
- * vacinas vencidas, antiparasitários atrasados, próximas em 3 dias, doses pendentes hoje.
- */
-export function HealthRemindersBanner() {
-  const { activePet } = useActivePet();
-  const query = useQuery({
-    queryKey: activePet ? qk.healthSummary(activePet.id) : ['health-summary', 'none'],
-    queryFn: () => fetchHealthSummary(activePet!.id),
-    enabled: !!activePet,
-  });
-  const parasiteQuery = useQuery({
-    queryKey: activePet ? qk.parasiteSummary(activePet.id) : ['parasite-summary', 'none'],
-    queryFn: () => fetchParasiteSummary(activePet!.id),
-    enabled: !!activePet,
-  });
+interface Alert {
+  emoji: string;
+  text: string;
+  tone: 'urgent' | 'warn';
+  href: string;
+  /** Menor = mais urgente (pra ordenar entre todos os pets). */
+  score: number;
+}
 
-  const summary = query.data;
-  const parasiteSummary = parasiteQuery.data;
-  if (!summary || !activePet) return null;
+/** Calcula o alerta mais urgente de UM pet (mesma cascata de prioridade). */
+function buildAlert(
+  pet: Pet,
+  summary: HealthSummary | undefined,
+  parasite: ParasiteSummary | undefined,
+): Alert | null {
+  if (!summary) return null;
+  const v = summary.next_vaccine;
+  const p = parasite?.next_due;
 
-  // Decide qual lembrete mostrar (prioriza o mais urgente)
-  // Ordem: vacina atrasada > parasita atrasado > vacina em 3d > parasita em 3d > remédio hoje
-  let alert: { emoji: string; text: string; tone: 'urgent' | 'warn'; href: string } | null = null;
-
-  const healthHref = `/pet/${activePet.id}/health`;
-  const parasitesHref = `/pet/${activePet.id}/parasites`;
-
-  if (summary.next_vaccine) {
-    const d = summary.next_vaccine.days_until;
-    if (d <= 0) {
-      alert = {
-        emoji: '⚠️',
-        text: `Vacina ${summary.next_vaccine.name} de ${activePet.name} venceu!`,
-        tone: 'urgent',
-        href: `/pet/${activePet.id}/vaccinations`,
-      };
-    }
-  }
-
-  // Parasitas atrasados (urgent)
-  if (!alert && parasiteSummary?.next_due) {
-    const d = parasiteSummary.next_due.days_until;
-    if (d < 0) {
-      alert = {
-        emoji: '⚠️',
-        text: `${parasiteSummary.next_due.product_name} de ${activePet.name} atrasado ${Math.abs(d)}d`,
-        tone: 'urgent',
-        href: parasitesHref,
-      };
-    }
-  }
-
-  // Vacina vence em 3d (warn)
-  if (!alert && summary.next_vaccine) {
-    const d = summary.next_vaccine.days_until;
-    if (d <= 3) {
-      alert = {
-        emoji: '🔔',
-        text: `${summary.next_vaccine.name} de ${activePet.name} em ${d} dia${d === 1 ? '' : 's'}`,
-        tone: 'warn',
-        href: `/pet/${activePet.id}/vaccinations`,
-      };
-    }
-  }
-
-  // Parasita vence em 3d (warn)
-  if (!alert && parasiteSummary?.next_due) {
-    const d = parasiteSummary.next_due.days_until;
-    if (d <= 3) {
-      alert = {
-        emoji: '💊',
-        text:
-          d === 0
-            ? `${parasiteSummary.next_due.product_name} vence hoje`
-            : `${parasiteSummary.next_due.product_name} em ${d} dia${d === 1 ? '' : 's'}`,
-        tone: 'warn',
-        href: parasitesHref,
-      };
-    }
-  }
-
-  if (!alert && summary.due_medications_today > 0) {
-    alert = {
-      emoji: '🧪',
-      text: `${summary.due_medications_today} dose${summary.due_medications_today === 1 ? '' : 's'} de remédio pendente${summary.due_medications_today === 1 ? '' : 's'} hoje`,
-      tone: 'warn',
-      href: healthHref,
+  if (v && v.days_until <= 0) {
+    return {
+      emoji: '⚠️',
+      text: `Vacina ${v.name} de ${pet.name} venceu!`,
+      tone: 'urgent',
+      href: `/pet/${pet.id}/vaccinations`,
+      score: -1000 + v.days_until,
     };
   }
+  if (p && p.days_until < 0) {
+    return {
+      emoji: '⚠️',
+      text: `${p.product_name} de ${pet.name} atrasado ${Math.abs(p.days_until)}d`,
+      tone: 'urgent',
+      href: `/pet/${pet.id}/parasites`,
+      score: -900 + p.days_until,
+    };
+  }
+  if (v && v.days_until <= 3) {
+    return {
+      emoji: '🔔',
+      text: `${v.name} de ${pet.name} em ${v.days_until} dia${v.days_until === 1 ? '' : 's'}`,
+      tone: 'warn',
+      href: `/pet/${pet.id}/vaccinations`,
+      score: 100 + v.days_until,
+    };
+  }
+  if (p && p.days_until <= 3) {
+    return {
+      emoji: '💊',
+      text:
+        p.days_until === 0
+          ? `${p.product_name} de ${pet.name} vence hoje`
+          : `${p.product_name} de ${pet.name} em ${p.days_until} dia${p.days_until === 1 ? '' : 's'}`,
+      tone: 'warn',
+      href: `/pet/${pet.id}/parasites`,
+      score: 200 + p.days_until,
+    };
+  }
+  if (summary.due_medications_today > 0) {
+    const n = summary.due_medications_today;
+    return {
+      emoji: '🧪',
+      text: `${n} dose${n === 1 ? '' : 's'} de ${pet.name} pendente${n === 1 ? '' : 's'} hoje`,
+      tone: 'warn',
+      href: `/pet/${pet.id}/health`,
+      score: 300,
+    };
+  }
+  return null;
+}
 
-  if (!alert) return null;
+/**
+ * Banner global no feed com o cuidado de saúde mais urgente — agora varrendo
+ * TODOS os pets do tutor (não só o ativo), pra não deixar passar uma vacina de
+ * outro pet. Mostra o #1 e quantos outros pets têm pendência.
+ */
+export function HealthRemindersBanner() {
+  const { pets } = useActivePet();
+
+  const healthQueries = useQueries({
+    queries: pets.map((p) => ({
+      queryKey: qk.healthSummary(p.id),
+      queryFn: () => fetchHealthSummary(p.id),
+      staleTime: 2 * 60_000,
+    })),
+  });
+  const parasiteQueries = useQueries({
+    queries: pets.map((p) => ({
+      queryKey: qk.parasiteSummary(p.id),
+      queryFn: () => fetchParasiteSummary(p.id),
+      staleTime: 2 * 60_000,
+    })),
+  });
+
+  const alerts: Alert[] = pets
+    .map((p, i) => buildAlert(p, healthQueries[i]?.data, parasiteQueries[i]?.data))
+    .filter((a): a is Alert => a !== null)
+    .sort((a, b) => a.score - b.score);
+
+  if (alerts.length === 0) return null;
+  const alert = alerts[0];
+  const others = alerts.length - 1;
 
   const SCREEN_W = Dimensions.get('window').width;
   const width = Math.min(SCREEN_W - FEED_CARD_MARGIN * 2, MAX_FEED_WIDTH);
@@ -140,7 +156,9 @@ export function HealthRemindersBanner() {
               marginTop: 2,
             }}
           >
-            Toque pra ver os detalhes
+            {others > 0
+              ? `+${others} pendência${others === 1 ? '' : 's'} em outros pets · toque pra ver`
+              : 'Toque pra ver os detalhes'}
           </Text>
         </View>
         <Ionicons
