@@ -6,6 +6,7 @@
  * Admin gerencia via RLS is_admin().
  */
 
+import { logAdminAction } from './admin-audit';
 import { supabase } from './supabase';
 
 export type OfferCategory = 'racao' | 'petshop' | 'saude' | 'servico' | 'acessorio' | 'outro';
@@ -131,8 +132,13 @@ export async function adminUpdateOffer(id: string, patch: Partial<OfferInput>): 
 }
 
 export async function adminDeleteOffer(id: string): Promise<void> {
+  const existing = await adminFetchOffer(id).catch(() => null);
   const { error } = await supabase.from('offers').delete().eq('id', id);
   if (error) throw error;
+  void logAdminAction('delete', 'offer', id, {
+    brand: existing?.brand ?? null,
+    title: existing?.title ?? null,
+  });
 }
 
 export async function adminFetchOffer(id: string): Promise<Offer | null> {

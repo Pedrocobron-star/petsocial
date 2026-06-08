@@ -81,6 +81,10 @@ export default function NewAdoptionScreen() {
       toast.error('Conte mais', 'Descreva o pet, temperamento e por que está pra adoção.');
       return;
     }
+    if (images.length === 0) {
+      toast.error('Adicione uma foto', 'Anúncios sem foto não são publicados — uma foto aumenta muito a chance de adoção.');
+      return;
+    }
     setSaving(true);
     try {
       const listing = await createAdoptionListing(userId, {

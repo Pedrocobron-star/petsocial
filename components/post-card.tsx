@@ -421,6 +421,24 @@ function PostCardComponent({
           onPress={onShareTap}
           accessibilityLabel="Compartilhar"
         />
+        {activePet && activePet.id !== post.pet.id ? (
+          <IconAction
+            name="repeat-outline"
+            size={24}
+            color={theme.text}
+            onPress={async () => {
+              try {
+                await repostPost(post.id, activePet.id);
+                toast.success('Repostado!', `Apareceu no perfil de ${activePet.name}`);
+                await qc.invalidateQueries({ queryKey: qk.petPosts(activePet.id) });
+                await qc.invalidateQueries({ queryKey: qk.feed(activePet.id) });
+              } catch (e) {
+                toast.error('Erro ao repostar', e instanceof Error ? e.message : 'Tente novamente.');
+              }
+            }}
+            accessibilityLabel={`Repostar como ${activePet.name}`}
+          />
+        ) : null}
         <View style={{ flex: 1 }} />
         <IconAction
           name={isSaved ? 'bookmark' : 'bookmark-outline'}

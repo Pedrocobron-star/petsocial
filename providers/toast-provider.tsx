@@ -58,6 +58,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <View
         pointerEvents="box-none"
+        accessibilityLiveRegion="polite"
+        accessibilityRole="alert"
         style={{
           position: 'absolute',
           top: insets.top + 12,

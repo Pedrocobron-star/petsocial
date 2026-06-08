@@ -1,3 +1,4 @@
+import { logAdminAction } from './admin-audit';
 import { supabase } from './supabase';
 
 /**
@@ -214,8 +215,10 @@ export async function adminUpdateArticle(id: string, input: NewsArticleInput): P
 }
 
 export async function adminDeleteArticle(id: string): Promise<void> {
+  const existing = await fetchArticleByIdAdmin(id).catch(() => null);
   const { error } = await supabase.from('news_articles').delete().eq('id', id);
   if (error) throw error;
+  void logAdminAction('delete', 'news_article', id, { title: existing?.title ?? null });
 }
 
 export const qkNews = {

@@ -25,8 +25,9 @@ export default function Root({ children }: PropsWithChildren) {
           content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
         />
 
-        {/* Brand */}
-        <meta name="theme-color" content="#F97316" />
+        {/* Brand — theme-color por esquema (status bar iOS legível no dark) */}
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F97316" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1A1410" />
         <meta name="msapplication-TileColor" content="#F97316" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
