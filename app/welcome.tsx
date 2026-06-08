@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link, Redirect } from 'expo-router';
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedPet } from '@/components/animated-pet';
@@ -14,7 +14,14 @@ import { useSession } from '@/providers/session-provider';
 export default function WelcomeScreen() {
   const { session, loading } = useSession();
 
-  if (!loading && session) return <Redirect href="/(app)/(tabs)" />;
+  // Bypass do redirect só pra preview da capa enquanto logado (?preview na web).
+  // Não muda nada pro usuário real: sem o param, logado sempre vai pro feed.
+  const previewMode =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).has('preview');
+
+  if (!loading && session && !previewMode) return <Redirect href="/(app)/(tabs)" />;
 
   return (
     <SafeAreaView edges={['top']} className="flex-1" style={{ backgroundColor: '#FFFBF5' }}>
