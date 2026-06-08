@@ -129,18 +129,19 @@ export function PetPhoneMockup() {
     return () => loop.stop();
   }, [float]);
 
-  // entrada escalonada dos ícones
+  // entrada escalonada dos ícones (+ widget de resumo por último)
   const iconAnims = useRef(APPS.map(() => new Animated.Value(0))).current;
   const dockAnims = useRef(DOCK.map(() => new Animated.Value(0))).current;
+  const widgetAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    const all = [...iconAnims, ...dockAnims];
+    const all = [...iconAnims, widgetAnim, ...dockAnims];
     Animated.stagger(
       70,
       all.map((a) =>
         Animated.spring(a, { toValue: 1, useNativeDriver: true, friction: 6, tension: 90 }),
       ),
     ).start();
-  }, [iconAnims, dockAnims]);
+  }, [iconAnims, dockAnims, widgetAnim]);
 
   // notificação que cicla
   const [notifIdx, setNotifIdx] = useState(0);
@@ -250,6 +251,56 @@ export function PetPhoneMockup() {
               <AppIcon key={a.label} emoji={a.emoji} bg={a.bg} label={a.label} anim={iconAnims[i]} />
             ))}
           </View>
+
+          {/* widget de resumo (estilo widget de iOS) — preenche a tela e reforça o gancho de saúde */}
+          <Animated.View
+            style={{
+              marginHorizontal: 16,
+              marginTop: 18,
+              backgroundColor: 'rgba(255,255,255,0.92)',
+              borderRadius: 20,
+              padding: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+              shadowColor: '#1A1410',
+              shadowOpacity: 0.12,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 5 },
+              opacity: widgetAnim,
+              transform: [{ scale: widgetAnim }],
+            }}
+          >
+            {/* anel de score */}
+            <View
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 25,
+                borderWidth: 4,
+                borderColor: '#14B8A6',
+                borderTopColor: '#E2E8F0',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: [{ rotate: '45deg' }],
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.display, fontSize: 16, color: '#0F766E', transform: [{ rotate: '-45deg' }] }}>
+                87
+              </Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: '#1A1410' }}>Resumo de hoje</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 }}>
+                <Text style={{ fontSize: 11 }}>💉</Text>
+                <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#525252' }}>V10 em 7 dias</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                <Text style={{ fontSize: 11 }}>🔥</Text>
+                <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#525252' }}>Streak de 3 dias nos jogos</Text>
+              </View>
+            </View>
+          </Animated.View>
 
           {/* dock */}
           <View
