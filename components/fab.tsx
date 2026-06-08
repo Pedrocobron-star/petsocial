@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { useEffect } from 'react';
 import { Pressable, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
   ReduceMotion,
@@ -25,6 +26,7 @@ interface Props {
  * Pulsa sutilmente pra chamar atenção sem ser irritante.
  */
 export function Fab({ href, icon = 'add', color = '#F97316', position }: Props) {
+  const insets = useSafeAreaInsets();
   const pulse = useSharedValue(1);
   const enterScale = useSharedValue(0);
 
@@ -65,7 +67,7 @@ export function Fab({ href, icon = 'add', color = '#F97316', position }: Props) 
         {
           position: 'absolute',
           right: 16,
-          bottom: 96, // acima do tab bar
+          bottom: 96 + insets.bottom, // acima do tab bar + safe area (home indicator iPhone)
           zIndex: 100,
         },
         position,

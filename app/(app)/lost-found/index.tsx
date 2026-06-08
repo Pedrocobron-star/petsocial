@@ -7,6 +7,7 @@ import { Link, Stack } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 
+import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
 import { PetAvatar } from '@/components/pet-avatar';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { FONTS } from '@/lib/fonts';
 import { formatDistance, getCurrentPosition, haversineKm, type Coords } from '@/lib/geo';
 import { fetchLostReports, qk } from '@/lib/queries';
 import type { LostReportKind, LostReportWithPet } from '@/lib/types';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useTheme } from '@/providers/theme-provider';
 
 const FILTERS: { value: LostReportKind | 'all'; label: string }[] = [
@@ -25,6 +27,14 @@ const FILTERS: { value: LostReportKind | 'all'; label: string }[] = [
 ];
 
 export default function LostFoundIndexScreen() {
+  return (
+    <AppThemeProvider app="lostfound">
+      <LostFoundInner />
+    </AppThemeProvider>
+  );
+}
+
+function LostFoundInner() {
   const { theme } = useTheme();
   const [filter, setFilter] = useState<LostReportKind | 'all'>('all');
   const qc = useQueryClient();
@@ -71,12 +81,15 @@ export default function LostFoundIndexScreen() {
     <View className="flex-1" style={{ backgroundColor: theme.bg }}>
       <Stack.Screen
         options={{
-          title: 'Lost & Found',
+          title: 'Achados',
           headerRight: () => (
             <Link href={'/(app)/lost-found/report' as never} asChild>
-              <Pressable className="flex-row items-center gap-1 rounded-full bg-brand px-3 py-1.5 mr-2">
-                <Ionicons name="add" size={16} color="#fff" />
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#fff' }}>
+              <Pressable
+                className="flex-row items-center gap-1 rounded-full px-3 py-1.5 mr-2"
+                style={{ backgroundColor: theme.accent.color }}
+              >
+                <Ionicons name="add" size={16} color={theme.accent.onAccent} />
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.accent.onAccent }}>
                   Reportar
                 </Text>
               </Pressable>
@@ -84,48 +97,57 @@ export default function LostFoundIndexScreen() {
           ),
         }}
       />
-      <View
-        className="border-b pt-1"
-        style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-      >
-        <SegmentedControl options={FILTERS} value={filter} onChange={setFilter} />
-        <Pressable
-          onPress={toggleNearMe}
-          accessibilityRole="button"
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 5,
-            paddingVertical: 8,
-          }}
-        >
-          <Ionicons
-            name={myLoc ? 'navigate' : 'navigate-outline'}
-            size={14}
-            color={myLoc ? theme.brand : theme.textDim}
-          />
-          <Text
-            style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: myLoc ? theme.brand : theme.textDim }}
-          >
-            {locating
-              ? 'Localizando…'
-              : myLoc
-                ? 'Perto de mim ✓ · toque pra desligar'
-                : 'Ordenar por proximidade'}
-          </Text>
-        </Pressable>
-      </View>
       <FlatList
         data={rows}
         keyExtractor={(item) => item.report.id}
         renderItem={({ item }) => <ReportCard report={item.report} distanceKm={item.distanceKm} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ padding: 12, flexGrow: 1 }}
+        ListHeaderComponent={
+          <View style={{ marginHorizontal: -12, marginTop: -12, marginBottom: 12 }}>
+            <AreaHero area="lostfound" />
+            <View
+              style={{
+                borderBottomWidth: 1,
+                borderColor: theme.border,
+                backgroundColor: theme.surface,
+                paddingTop: 4,
+              }}
+            >
+              <SegmentedControl options={FILTERS} value={filter} onChange={setFilter} />
+              <Pressable
+                onPress={toggleNearMe}
+                accessibilityRole="button"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 5,
+                  paddingVertical: 8,
+                }}
+              >
+                <Ionicons
+                  name={myLoc ? 'navigate' : 'navigate-outline'}
+                  size={14}
+                  color={myLoc ? theme.accent.color : theme.textDim}
+                />
+                <Text
+                  style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: myLoc ? theme.accent.color : theme.textDim }}
+                >
+                  {locating
+                    ? 'Localizando…'
+                    : myLoc
+                      ? 'Perto de mim ✓ · toque pra desligar'
+                      : 'Ordenar por proximidade'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        }
         ListEmptyComponent={
           query.isLoading ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60 }}>
-              <ActivityIndicator color={theme.brand} />
+              <ActivityIndicator color={theme.accent.color} />
             </View>
           ) : query.isError ? (
             <EmptyState
@@ -247,7 +269,7 @@ function ReportCard({
             </Text>
           </View>
           {distanceKm != null && (
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11.5, color: theme.brand, marginTop: 2 }}>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11.5, color: theme.accent.color, marginTop: 2 }}>
               📍 a {formatDistance(distanceKm)} de você
             </Text>
           )}

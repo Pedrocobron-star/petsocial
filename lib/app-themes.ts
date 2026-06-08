@@ -18,7 +18,9 @@ export type AppThemeKey =
   | 'meetups'
   | 'places'
   | 'achievements'
-  | 'offers';
+  | 'offers'
+  | 'messages'
+  | 'lostfound';
 
 interface AppAccent {
   light: AccentSet;
@@ -61,5 +63,15 @@ export const APP_THEMES: Record<AppThemeKey, AppAccent> = {
   offers: {
     light: { color: '#BE185D', dark: '#9D174D', surface: '#FDF2F8', onAccent: '#FFFFFF', motif: '🎁' },
     dark: { color: '#F472B6', dark: '#F9A8D4', surface: '#2A1320', onAccent: '#2A0A18', motif: '🎁' },
+  },
+  // Mensagens: verde-esmeralda conversa — acolhedor, distinto do teal clínico.
+  messages: {
+    light: { color: '#047857', dark: '#065F46', surface: '#ECFDF5', onAccent: '#FFFFFF', motif: '💬' },
+    dark: { color: '#34D399', dark: '#6EE7B7', surface: '#0C2620', onAccent: '#05241B', motif: '💬' },
+  },
+  // Achados (Lost & Found): ciano de busca/radar — casa com a geolocalização.
+  lostfound: {
+    light: { color: '#0E7490', dark: '#155E75', surface: '#ECFEFF', onAccent: '#FFFFFF', motif: '🔍' },
+    dark: { color: '#22D3EE', dark: '#67E8F9', surface: '#0A2A33', onAccent: '#04222A', motif: '🔍' },
   },
 };

@@ -6,15 +6,25 @@ import { Link } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
 
+import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
 import { UserInitialAvatar } from '@/components/user-initial-avatar';
 import { FONTS } from '@/lib/fonts';
 import { fetchConversations, qk } from '@/lib/queries';
 import type { ConversationSummary } from '@/lib/types';
+import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 
 export default function MessagesScreen() {
+  return (
+    <AppThemeProvider app="messages">
+      <MessagesInner />
+    </AppThemeProvider>
+  );
+}
+
+function MessagesInner() {
   const { session } = useSession();
   const { theme } = useTheme();
   const userId = session?.user.id;
@@ -46,49 +56,6 @@ export default function MessagesScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      {/* Search bar */}
-      <View
-        style={{
-          paddingHorizontal: 14,
-          paddingTop: 10,
-          paddingBottom: 8,
-          backgroundColor: theme.surface,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.borderLight,
-        }}
-      >
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
-            paddingHorizontal: 12,
-            backgroundColor: theme.borderLight,
-            borderRadius: 12,
-          }}
-        >
-          <Ionicons name="search" size={16} color={theme.textDim} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Buscar conversas..."
-            placeholderTextColor={theme.textDim}
-            style={{
-              flex: 1,
-              paddingVertical: 9,
-              fontFamily: FONTS.body,
-              fontSize: 14,
-              color: theme.text,
-            }}
-          />
-          {query.length > 0 ? (
-            <Pressable onPress={() => setQuery('')} hitSlop={10}>
-              <Ionicons name="close-circle" size={16} color={theme.textDim} />
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
-
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
@@ -96,7 +63,55 @@ export default function MessagesScreen() {
         ItemSeparatorComponent={() => (
           <View style={{ height: 1, backgroundColor: theme.borderLight, marginLeft: 76 }} />
         )}
-        contentContainerStyle={{ flexGrow: 1, paddingVertical: 4 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 4 }}
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={
+          <>
+            <AreaHero area="messages" />
+            {/* Search bar */}
+            <View
+              style={{
+                paddingHorizontal: 14,
+                paddingTop: 10,
+                paddingBottom: 8,
+                backgroundColor: theme.surface,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.borderLight,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: theme.borderLight,
+                  borderRadius: 12,
+                }}
+              >
+                <Ionicons name="search" size={16} color={theme.textDim} />
+                <TextInput
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder="Buscar conversas..."
+                  placeholderTextColor={theme.textDim}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 9,
+                    fontFamily: FONTS.body,
+                    fontSize: 14,
+                    color: theme.text,
+                  }}
+                />
+                {query.length > 0 ? (
+                  <Pressable onPress={() => setQuery('')} hitSlop={10}>
+                    <Ionicons name="close-circle" size={16} color={theme.textDim} />
+                  </Pressable>
+                ) : null}
+              </View>
+            </View>
+          </>
+        }
         ListEmptyComponent={
           listQuery.isLoading ? null : showEmptySearch ? (
             <EmptyState
@@ -133,7 +148,7 @@ function ConversationRow({ conv }: { conv: ConversationSummary }) {
           gap: 12,
           paddingHorizontal: 16,
           paddingVertical: 12,
-          backgroundColor: conv.unread_count > 0 ? theme.brandSurface : theme.surface,
+          backgroundColor: conv.unread_count > 0 ? theme.accent.surface : theme.surface,
         }}
       >
         <UserInitialAvatar
@@ -173,8 +188,8 @@ function ConversationRow({ conv }: { conv: ConversationSummary }) {
               {preview}
             </Text>
             {conv.unread_count > 0 ? (
-              <View style={{ minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 5, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10, color: '#fff' }}>
+              <View style={{ minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 5, backgroundColor: theme.accent.color, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10, color: theme.accent.onAccent }}>
                   {conv.unread_count}
                 </Text>
               </View>

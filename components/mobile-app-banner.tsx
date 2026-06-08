@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FONTS } from '@/lib/fonts';
 import { track } from '@/lib/analytics';
@@ -33,6 +34,7 @@ interface BeforeInstallPromptEvent extends Event {
 type Mode = 'native' | 'android' | 'ios';
 
 export function MobileAppBanner() {
+  const insets = useSafeAreaInsets();
   const [visible, setVisible] = useState(false);
   const [mode, setMode] = useState<Mode>('android');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -146,7 +148,7 @@ export function MobileAppBanner() {
       <View
         style={{
           position: 'absolute',
-          bottom: 84,
+          bottom: 84 + insets.bottom,
           left: 12,
           right: 12,
           zIndex: 9999,

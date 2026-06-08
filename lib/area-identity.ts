@@ -69,4 +69,20 @@ export const AREA_IDENTITY: Record<Exclude<AppThemeKey, 'default'>, AreaIdentity
     shape: 'ticket',
     grad: ['#F472B6', '#BE185D'],
   },
+  messages: {
+    title: 'Mensagens',
+    tagline: 'Converse com outros tutores',
+    motif: '💬',
+    pattern: '✉️',
+    shape: 'wave',
+    grad: ['#34D399', '#047857'],
+  },
+  lostfound: {
+    title: 'Achados',
+    tagline: 'Perdeu ou achou? A rede procura junto',
+    motif: '🔍',
+    pattern: '🐾',
+    shape: 'notch',
+    grad: ['#22D3EE', '#0E7490'],
+  },
 };
