@@ -66,6 +66,7 @@ export function ExploreSearchBar({ value, onChange, placeholder = 'Buscar pets, 
         />
         <TextInput
           ref={inputRef}
+          accessibilityLabel="Buscar"
           value={value}
           onChangeText={onChange}
           placeholder={placeholder}
@@ -84,7 +85,12 @@ export function ExploreSearchBar({ value, onChange, placeholder = 'Buscar pets, 
           onBlur={() => setFocus(false)}
         />
         {value ? (
-          <Pressable hitSlop={10} onPress={() => onChange('')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Limpar busca"
+            hitSlop={10}
+            onPress={() => onChange('')}
+          >
             <Ionicons name="close-circle" size={18} color={theme.textDim} />
           </Pressable>
         ) : null}

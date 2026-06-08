@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTheme } from '@/providers/theme-provider';
+
 interface Props {
   children: ReactNode;
   scroll?: boolean;
@@ -10,8 +12,13 @@ interface Props {
 }
 
 export function Screen({ children, scroll = false, className, contentClassName }: Props) {
+  const { theme } = useTheme();
   return (
-    <SafeAreaView edges={['top', 'bottom']} className={`flex-1 bg-neutral-50 ${className ?? ''}`}>
+    <SafeAreaView
+      edges={['top', 'bottom']}
+      className={`flex-1 ${className ?? ''}`}
+      style={{ backgroundColor: theme.bg }}
+    >
       {scroll ? (
         <ScrollView
           contentContainerClassName={`px-4 py-4 ${contentClassName ?? ''}`}

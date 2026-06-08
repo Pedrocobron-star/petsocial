@@ -73,6 +73,8 @@ export function Fab({ href, icon = 'add', color = '#F97316', position }: Props) 
     >
       <Link href={href as never} asChild>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Criar publicação"
           style={{
             width: 56,
             height: 56,

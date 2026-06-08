@@ -56,6 +56,7 @@ export default function FeedScreen() {
     queryKey: activePet ? qk.feed(activePet.id, filter) : ['feed', 'none', filter],
     queryFn: () => fetchFeed(activePet!.id, filter),
     enabled: !!activePet,
+    staleTime: 60_000,
   });
 
   // Sponsored posts ativos — buscados em paralelo, cache de 2min
@@ -69,14 +70,16 @@ export default function FeedScreen() {
     queryKey: userId ? qk.unreadCount(userId) : ['unread-count', 'anon'],
     queryFn: () => fetchUnreadNotificationCount(userId!),
     enabled: !!userId,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
   });
 
   const unreadMsgQuery = useQuery({
     queryKey: userId ? qk.unreadMessages(userId) : ['unread-messages', 'anon'],
     queryFn: () => fetchUnreadMessageCount(userId!),
     enabled: !!userId,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
   });
 
   const onRefresh = async () => {

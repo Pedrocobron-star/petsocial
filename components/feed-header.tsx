@@ -67,6 +67,12 @@ export function FeedHeader({ unreadMessages, unreadNotifications }: Props) {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <Link href={'/(app)/messages' as never} asChild>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              unreadMessages > 0
+                ? `Mensagens, ${unreadMessages} não lidas`
+                : 'Mensagens'
+            }
             hitSlop={6}
             style={{
               width: 34,
@@ -105,6 +111,12 @@ export function FeedHeader({ unreadMessages, unreadNotifications }: Props) {
         </Link>
         <Link href={'/(app)/notifications' as never} asChild>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              unreadNotifications > 0
+                ? `Notificações, ${unreadNotifications} não lidas`
+                : 'Notificações'
+            }
             hitSlop={6}
             style={{
               width: 34,

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Dimensions, Pressable, Text, TextInput, View , Alert } from 'react-native';
 import Animated, {
   Easing,
@@ -58,20 +58,28 @@ function IconAction({
   size = 26,
   color,
   onPress,
+  accessibilityLabel,
 }: {
   name: keyof typeof Ionicons.glyphMap;
   size?: number;
   color: string;
   onPress?: () => void;
+  accessibilityLabel?: string;
 }) {
   return (
-    <Pressable onPress={onPress} hitSlop={8} style={{ paddingHorizontal: 6, paddingVertical: 4 }}>
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      style={{ paddingHorizontal: 6, paddingVertical: 4 }}
+    >
       <Ionicons name={name} size={size} color={color} />
     </Pressable>
   );
 }
 
-export function PostCard({
+function PostCardComponent({
   post,
   isActive = true,
 }: {
@@ -392,21 +400,34 @@ export function PostCard({
               size={27}
               color={liked ? '#EF4444' : theme.text}
               onPress={handleLike}
+              accessibilityLabel="Curtir"
             />
           </Animated.View>
         </View>
         <Link href={{ pathname: '/post/[id]', params: { id: post.id } }} asChild>
-          <Pressable hitSlop={8} style={{ paddingHorizontal: 6, paddingVertical: 4 }}>
+          <Pressable
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Comentar"
+            style={{ paddingHorizontal: 6, paddingVertical: 4 }}
+          >
             <Ionicons name="chatbubble-outline" size={24} color={theme.text} />
           </Pressable>
         </Link>
-        <IconAction name="paper-plane-outline" size={23} color={theme.text} onPress={onShareTap} />
+        <IconAction
+          name="paper-plane-outline"
+          size={23}
+          color={theme.text}
+          onPress={onShareTap}
+          accessibilityLabel="Compartilhar"
+        />
         <View style={{ flex: 1 }} />
         <IconAction
           name={isSaved ? 'bookmark' : 'bookmark-outline'}
           size={23}
           color={isSaved ? theme.brand : theme.text}
           onPress={onSaveTap}
+          accessibilityLabel="Salvar"
         />
       </View>
 
@@ -693,3 +714,10 @@ export function PostCard({
     </Animated.View>
   );
 }
+
+/**
+ * Memoizado: evita re-render quando o feed revalida e a prop `post` (e `isActive`)
+ * não mudam. Shallow compare padrão — suficiente porque o feed reusa a mesma
+ * referência de objeto `post` entre renders quando nada mudou.
+ */
+export const PostCard = memo(PostCardComponent);

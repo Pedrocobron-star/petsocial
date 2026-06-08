@@ -19,8 +19,10 @@ import { guessExtension, uploadToBucket } from '@/lib/storage';
 import type { LostReportKind, Species } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
+import { useTheme } from '@/providers/theme-provider';
 
 export default function NewLostReportScreen() {
+  const { theme } = useTheme();
   const router = useRouter();
   const qc = useQueryClient();
   const { session } = useSession();
@@ -140,7 +142,7 @@ export default function NewLostReportScreen() {
   return (
     <Screen>
       <ScrollView contentContainerClassName="px-4 pb-12" keyboardShouldPersistTaps="handled">
-        <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: '#1A1410', marginBottom: 16 }}>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: theme.text, marginBottom: 16 }}>
           Reportar pet
         </Text>
 
@@ -151,15 +153,15 @@ export default function NewLostReportScreen() {
               flex: 1,
               padding: 14,
               borderRadius: 14,
-              backgroundColor: kind === 'lost' ? '#FEE2E2' : '#fff',
+              backgroundColor: kind === 'lost' ? '#FEE2E2' : theme.surface,
               borderWidth: 1,
-              borderColor: kind === 'lost' ? '#dc2626' : '#E5E5E5',
+              borderColor: kind === 'lost' ? '#dc2626' : theme.border,
               alignItems: 'center',
               gap: 4,
             }}
           >
             <Text style={{ fontSize: 24 }}>😢</Text>
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: kind === 'lost' ? '#991B1B' : '#404040' }}>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: kind === 'lost' ? '#991B1B' : theme.textMuted }}>
               Perdi meu pet
             </Text>
           </Pressable>
@@ -169,15 +171,15 @@ export default function NewLostReportScreen() {
               flex: 1,
               padding: 14,
               borderRadius: 14,
-              backgroundColor: kind === 'found' ? '#DCFCE7' : '#fff',
+              backgroundColor: kind === 'found' ? '#DCFCE7' : theme.surface,
               borderWidth: 1,
-              borderColor: kind === 'found' ? '#16a34a' : '#E5E5E5',
+              borderColor: kind === 'found' ? '#16a34a' : theme.border,
               alignItems: 'center',
               gap: 4,
             }}
           >
             <Text style={{ fontSize: 24 }}>🤝</Text>
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: kind === 'found' ? '#166534' : '#404040' }}>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: kind === 'found' ? '#166534' : theme.textMuted }}>
               Achei um pet
             </Text>
           </Pressable>
@@ -190,7 +192,7 @@ export default function NewLostReportScreen() {
                 style={{
                   fontFamily: FONTS.bodySemibold,
                   fontSize: 13,
-                  color: '#404040',
+                  color: theme.textMuted,
                   marginBottom: 6,
                 }}
               >
@@ -199,15 +201,14 @@ export default function NewLostReportScreen() {
               <View className="flex-row flex-wrap gap-2">
                 <Pressable
                   onPress={() => setLinkedPetId(null)}
-                  className={`rounded-full px-3 py-2 ${
-                    linkedPetId === null ? 'bg-brand' : 'bg-neutral-100'
-                  }`}
+                  className="rounded-full px-3 py-2"
+                  style={{ backgroundColor: linkedPetId === null ? theme.brand : theme.borderLight }}
                 >
                   <Text
                     style={{
                       fontFamily: FONTS.bodyBold,
                       fontSize: 12,
-                      color: linkedPetId === null ? '#fff' : '#404040',
+                      color: linkedPetId === null ? '#fff' : theme.textMuted,
                     }}
                   >
                     Não / outro
@@ -224,13 +225,14 @@ export default function NewLostReportScreen() {
                         setSpecies(p.species);
                         setBreed(p.breed ?? '');
                       }}
-                      className={`rounded-full px-3 py-2 ${active ? 'bg-brand' : 'bg-neutral-100'}`}
+                      className="rounded-full px-3 py-2"
+                      style={{ backgroundColor: active ? theme.brand : theme.borderLight }}
                     >
                       <Text
                         style={{
                           fontFamily: FONTS.bodyBold,
                           fontSize: 12,
-                          color: active ? '#fff' : '#404040',
+                          color: active ? '#fff' : theme.textMuted,
                         }}
                       >
                         {p.name}
@@ -247,7 +249,7 @@ export default function NewLostReportScreen() {
               style={{
                 fontFamily: FONTS.bodySemibold,
                 fontSize: 13,
-                color: '#404040',
+                color: theme.textMuted,
                 marginBottom: 6,
               }}
             >
@@ -259,9 +261,9 @@ export default function NewLostReportScreen() {
                 height: 120,
                 borderRadius: 14,
                 borderWidth: 2,
-                borderColor: '#E5E5E5',
+                borderColor: theme.border,
                 borderStyle: 'dashed',
-                backgroundColor: '#fff',
+                backgroundColor: theme.surface,
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
@@ -271,8 +273,8 @@ export default function NewLostReportScreen() {
                 <Image source={{ uri: photoUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
               ) : (
                 <>
-                  <Ionicons name="camera" size={28} color="#A3A3A3" />
-                  <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: '#737373', marginTop: 4 }}>
+                  <Ionicons name="camera" size={28} color={theme.textDim} />
+                  <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: theme.textDim, marginTop: 4 }}>
                     {uploading ? 'Enviando...' : 'Toque pra adicionar foto'}
                   </Text>
                 </>
@@ -292,7 +294,7 @@ export default function NewLostReportScreen() {
               style={{
                 fontFamily: FONTS.bodySemibold,
                 fontSize: 13,
-                color: '#404040',
+                color: theme.textMuted,
                 marginBottom: 6,
               }}
             >
@@ -305,16 +307,15 @@ export default function NewLostReportScreen() {
                   <Pressable
                     key={opt.value}
                     onPress={() => setSpecies(active ? '' : opt.value)}
-                    className={`flex-row items-center gap-1.5 rounded-full px-3 py-2 ${
-                      active ? 'bg-brand' : 'bg-neutral-100'
-                    }`}
+                    className="flex-row items-center gap-1.5 rounded-full px-3 py-2"
+                    style={{ backgroundColor: active ? theme.brand : theme.borderLight }}
                   >
                     <Text>{opt.emoji}</Text>
                     <Text
                       style={{
                         fontFamily: FONTS.bodyBold,
                         fontSize: 12,
-                        color: active ? '#fff' : '#404040',
+                        color: active ? '#fff' : theme.textMuted,
                       }}
                     >
                       {opt.label}

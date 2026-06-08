@@ -32,6 +32,7 @@ import type { MediaType, Pet } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 import { useIsPro } from '@/providers/subscription-provider';
+import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
 const MAX_MEDIA = 10;
@@ -47,6 +48,7 @@ interface PickedMedia {
 
 export default function CreatePostScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const { session } = useSession();
   const { pets, activePet, setActivePet } = useActivePet();
   const toast = useToast();
@@ -259,10 +261,13 @@ export default function CreatePostScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-neutral-50">
-      <View className="border-b border-neutral-200 bg-white px-4 py-3">
+    <SafeAreaView edges={['top']} className="flex-1" style={{ backgroundColor: theme.bg }}>
+      <View
+        className="border-b px-4 py-3"
+        style={{ borderColor: theme.border, backgroundColor: theme.surface }}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: '#1A1410' }}>Novo post</Text>
+          <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>Novo post</Text>
           {/* Contador de posts/dia — só pra free */}
           {!isPro ? (
             <Pressable
@@ -313,8 +318,8 @@ export default function CreatePostScreen() {
         </View>
         {caption.trim() && draftLoaded ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-            <Ionicons name="save-outline" size={11} color="#737373" />
-            <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: '#737373' }}>
+            <Ionicons name="save-outline" size={11} color={theme.textDim} />
+            <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim }}>
               Rascunho salvo automaticamente
             </Text>
           </View>
@@ -349,7 +354,7 @@ export default function CreatePostScreen() {
       <ScrollView contentContainerClassName="p-4 pb-12" keyboardShouldPersistTaps="handled">
         {pets.length > 1 ? (
           <View className="mb-4">
-            <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 13, color: '#404040', marginBottom: 6 }}>
+            <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 13, color: theme.textMuted, marginBottom: 6 }}>
               Postando como
             </Text>
             <View className="-mx-4">
@@ -357,13 +362,16 @@ export default function CreatePostScreen() {
             </View>
           </View>
         ) : (
-          <View className="mb-4 flex-row items-center gap-3 rounded-2xl bg-white p-3">
+          <View
+            className="mb-4 flex-row items-center gap-3 rounded-2xl p-3"
+            style={{ backgroundColor: theme.card }}
+          >
             <PetAvatar pet={activePet} size={40} />
             <View>
-              <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#737373' }}>
+              <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
                 Postando como
               </Text>
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: '#1A1410' }}>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}>
                 {activePet.name}
               </Text>
             </View>
@@ -373,12 +381,15 @@ export default function CreatePostScreen() {
         {media.length === 0 ? (
           <Pressable
             onPress={pickMedia}
-            className="mb-4 aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-neutral-300 bg-white"
+            className="mb-4 aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed"
+            style={{ borderColor: theme.border, backgroundColor: theme.surface }}
           >
             <View className="items-center">
-              <Ionicons name="cloud-upload-outline" size={48} color="#737373" />
-              <Text className="mt-2 font-medium text-neutral-600">Toque pra escolher fotos ou vídeos</Text>
-              <Text className="mt-1 text-xs text-neutral-500">
+              <Ionicons name="cloud-upload-outline" size={48} color={theme.textDim} />
+              <Text className="mt-2 font-medium" style={{ color: theme.textMuted }}>
+                Toque pra escolher fotos ou vídeos
+              </Text>
+              <Text className="mt-1 text-xs" style={{ color: theme.textDim }}>
                 Até {MAX_MEDIA} • Vídeos de até 60s
               </Text>
             </View>
@@ -396,6 +407,7 @@ export default function CreatePostScreen() {
                   media={m}
                   index={i}
                   total={media.length}
+                  placeholderColor={theme.border}
                   onRemove={() => removeAt(i)}
                   onMoveLeft={() => moveItem(i, i - 1)}
                   onMoveRight={() => moveItem(i, i + 1)}
@@ -404,14 +416,15 @@ export default function CreatePostScreen() {
               {media.length < MAX_MEDIA ? (
                 <Pressable
                   onPress={pickMedia}
-                  className="h-28 w-28 items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 bg-white"
+                  className="h-28 w-28 items-center justify-center rounded-2xl border-2 border-dashed"
+                  style={{ borderColor: theme.border, backgroundColor: theme.surface }}
                 >
-                  <Ionicons name="add" size={32} color="#737373" />
-                  <Text className="text-xs text-neutral-500">Mais</Text>
+                  <Ionicons name="add" size={32} color={theme.textDim} />
+                  <Text className="text-xs" style={{ color: theme.textDim }}>Mais</Text>
                 </Pressable>
               ) : null}
             </ScrollView>
-            <Text className="mt-2 text-xs text-neutral-500">
+            <Text className="mt-2 text-xs" style={{ color: theme.textDim }}>
               {media.length}/{MAX_MEDIA} {media.length === 1 ? 'mídia' : 'mídias'}
               {media.length > 1 ? ' · use as setas pra reordenar' : ''}
             </Text>
@@ -436,7 +449,7 @@ export default function CreatePostScreen() {
               marginBottom: 6,
             }}
           >
-            <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 13, color: '#404040' }}>
+            <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 13, color: theme.textMuted }}>
               Marcar pets {taggedPets.length > 0 ? `(${taggedPets.length})` : ''}
             </Text>
             <Pressable
@@ -514,6 +527,7 @@ function MediaThumbnail({
   media,
   index,
   total,
+  placeholderColor,
   onRemove,
   onMoveLeft,
   onMoveRight,
@@ -521,6 +535,7 @@ function MediaThumbnail({
   media: PickedMedia;
   index: number;
   total: number;
+  placeholderColor: string;
   onRemove: () => void;
   onMoveLeft: () => void;
   onMoveRight: () => void;
@@ -529,7 +544,10 @@ function MediaThumbnail({
   const canRight = index < total - 1;
   return (
     <View className="relative">
-      <View className="h-28 w-28 overflow-hidden rounded-2xl bg-neutral-200">
+      <View
+        className="h-28 w-28 overflow-hidden rounded-2xl"
+        style={{ backgroundColor: placeholderColor }}
+      >
         {media.type === 'image' ? (
           <Image source={{ uri: media.uri }} style={{ width: 112, height: 112 }} contentFit="cover" />
         ) : (

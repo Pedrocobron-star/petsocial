@@ -53,6 +53,9 @@ export function ComposeBar({ pet }: Props) {
           Compartilha algo com {pet.name}...
         </Text>
         <View
+          accessibilityRole="button"
+          accessibilityLabel="Adicionar foto"
+          hitSlop={8}
           style={{
             width: 30,
             height: 30,
