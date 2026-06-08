@@ -151,6 +151,7 @@ export default function AppLayout() {
           <Stack.Screen name="admin/places/index" options={{ headerShown: true, title: 'Lugares' }} />
           <Stack.Screen name="admin/places/new" options={{ headerShown: true, title: 'Novo lugar', presentation: 'modal' }} />
           <Stack.Screen name="admin/places/[id]" options={{ headerShown: true, title: 'Editar lugar' }} />
+          <Stack.Screen name="admin/adoption" options={{ headerShown: true, title: 'Adoção · Moderação' }} />
         </Stack>
         </RealtimeProvider>
       </ActivePetProvider>

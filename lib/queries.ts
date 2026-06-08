@@ -1405,6 +1405,7 @@ export interface AchievementInput {
   foundReportsCount: number;
   distinctGamesPlayed: number;
   maxGameDifficulty: number;
+  tournamentWins: number;
 }
 
 export async function fetchAchievementInput(userId: string): Promise<AchievementInput> {
@@ -1414,6 +1415,13 @@ export async function fetchAchievementInput(userId: string): Promise<Achievement
   const gstats = (gameStatsRes.data as { distinct_games: number; max_difficulty: number }[] | null)?.[0];
   const distinctGamesPlayed = gstats?.distinct_games ?? 0;
   const maxGameDifficulty = gstats?.max_difficulty ?? 0;
+
+  // Vitórias de torneio (pódio) — nível tutor, independe de ter pet.
+  const tournamentWinsRes = await supabase
+    .from('tournament_winners')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId);
+  const tournamentWins = tournamentWinsRes.count ?? 0;
 
   if (myPets.length === 0) {
     return {
@@ -1425,6 +1433,7 @@ export async function fetchAchievementInput(userId: string): Promise<Achievement
       foundReportsCount: 0,
       distinctGamesPlayed,
       maxGameDifficulty,
+      tournamentWins,
     };
   }
   const petIds = myPets.map((p) => p.id);
@@ -1458,6 +1467,7 @@ export async function fetchAchievementInput(userId: string): Promise<Achievement
     foundReportsCount: foundRes.count ?? 0,
     distinctGamesPlayed,
     maxGameDifficulty,
+    tournamentWins,
   };
 }
 

@@ -233,6 +233,14 @@ export default function AdminScreen() {
             color="#9D174D"
             bg="#FCE7F3"
           />
+          <NavCard
+            href="/(app)/admin/adoption"
+            icon="heart"
+            label="Adoção"
+            sub="Moderação de anúncios"
+            color="#9F1239"
+            bg="#FFE4E6"
+          />
         </View>
 
         {/* Loading */}

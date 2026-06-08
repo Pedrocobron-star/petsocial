@@ -6,6 +6,7 @@
  * Fotos vão pro bucket público `posts`.
  */
 
+import { logAdminAction } from './admin-audit';
 import { supabase } from './supabase';
 import { deleteFromBucket } from './storage';
 
@@ -35,7 +36,20 @@ export interface AdoptionListing {
   contact_phone: string | null;
   image_urls: string[];
   priority: number;
+  /** Sinalizado pela heuristica anti-spam do servidor (link, venda, etc). */
+  needs_review: boolean;
+  /** Codigo do motivo do flag (a UI traduz). */
+  review_reason: AdoptionReviewReason | null;
 }
+
+export type AdoptionReviewReason = 'external_link' | 'too_short' | 'possible_sale';
+
+/** Traducao dos codigos de review_reason pra exibir no painel admin. */
+export const REVIEW_REASON_LABEL: Record<AdoptionReviewReason, string> = {
+  external_link: 'Link externo na descrição',
+  too_short: 'Descrição muito curta',
+  possible_sale: 'Possível venda (preço na descrição)',
+};
 
 export const SPECIES_META: Record<AdoptionSpecies, { label: string; emoji: string }> = {
   dog: { label: 'Cão', emoji: '🐶' },
@@ -179,6 +193,40 @@ export async function deleteAdoptionListing(id: string): Promise<void> {
   // Best-effort: remove as fotos órfãs do bucket público `posts`.
   const urls = (row?.image_urls ?? []) as string[];
   await Promise.all(urls.map((u) => deleteFromBucket('posts', u)));
+}
+
+// ============================================================================
+// Moderação (admin)
+// ============================================================================
+
+/** Fila de moderação: anúncios sinalizados pela heurística, mais recentes 1º. */
+export async function adminListAdoptionForReview(): Promise<AdoptionListing[]> {
+  const { data, error } = await supabase
+    .from('adoption_listings')
+    .select('*')
+    .eq('needs_review', true)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as AdoptionListing[];
+}
+
+/** Aprova o anúncio (limpa o flag needs_review). */
+export async function adminApproveAdoption(id: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_set_adoption_review', {
+    p_id: id,
+    p_needs_review: false,
+  });
+  if (error) throw error;
+  void logAdminAction('approve', 'adoption_listing', id);
+}
+
+/** Remove o anúncio (viola regras) — apaga linha + limpa fotos do bucket. */
+export async function adminDeleteAdoption(id: string, petName?: string): Promise<void> {
+  const { data, error } = await supabase.rpc('admin_delete_adoption', { p_id: id });
+  if (error) throw error;
+  void logAdminAction('delete', 'adoption_listing', id, { pet_name: petName ?? null });
+  const urls = (data ?? []) as string[];
+  await Promise.all(urls.map((u) => deleteFromBucket('posts', u).catch(() => undefined)));
 }
 
 /** Monta o resumo de chips (espécie · sexo · porte · idade). */

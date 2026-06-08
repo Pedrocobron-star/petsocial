@@ -111,6 +111,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Pontuou no Difícil de algum jogo',
     tier: 3,
   },
+  {
+    id: 'tournament_champ',
+    emoji: '🏆',
+    title: 'Campeão de torneio',
+    description: 'Entrou no pódio (top 10) de um Torneio de Cassino',
+    tier: 3,
+  },
   // ============================================================================
   // Conquistas Pro — só desbloqueiam com features exclusivas (Pet Pro)
   // ============================================================================
@@ -152,6 +159,7 @@ interface ComputeInput {
   foundReportsCount: number;
   distinctGamesPlayed: number;
   maxGameDifficulty: number;
+  tournamentWins: number;
 }
 
 /**
@@ -168,6 +176,7 @@ export function computeAchievements(input: ComputeInput): AchievementUnlockState
     foundReportsCount,
     distinctGamesPlayed,
     maxGameDifficulty,
+    tournamentWins,
   } = input;
 
   return ACHIEVEMENTS.map((def) => {
@@ -230,6 +239,10 @@ export function computeAchievements(input: ComputeInput): AchievementUnlockState
       case 'hardcore':
         unlocked = maxGameDifficulty >= 3;
         if (!unlocked) progress = { current: Math.min(maxGameDifficulty, 3), target: 3 };
+        break;
+      case 'tournament_champ':
+        unlocked = tournamentWins >= 1;
+        if (!unlocked) progress = { current: tournamentWins, target: 1 };
         break;
       case 'avatar_artist': {
         // Pelo menos 1 pet com customização Pro
