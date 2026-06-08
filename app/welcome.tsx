@@ -4,6 +4,7 @@ import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedPet } from '@/components/animated-pet';
+import { PetPhoneMockup } from '@/components/marketing/pet-phone-mockup';
 import { PawPrintsBg } from '@/components/paw-prints-bg';
 import { WordSwap } from '@/components/word-swap';
 import { FONTS } from '@/lib/fonts';
@@ -20,6 +21,7 @@ export default function WelcomeScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 0 }}>
         <NavBar />
         <Hero />
+        <AppsShowcase />
         <Features />
         <HowItWorks />
         <PrivacyPromise />
@@ -66,46 +68,107 @@ function NavBar() {
 
 function Hero() {
   const { width } = useWindowDimensions();
-  const isWide = width >= 700;
-  const headlineSize = width >= 1024 ? 72 : width >= 700 ? 56 : 42;
-  const headlineLine = headlineSize + 6;
+  const isWide = width >= 880;
+  const headlineSize = width >= 1024 ? 66 : width >= 700 ? 54 : 40;
+  const headlineLine = headlineSize + 4;
 
   return (
     <View style={{ backgroundColor: '#FFF7ED', position: 'relative', overflow: 'hidden' }}>
       <PawPrintsBg opacity={0.08} count={12} />
+      {/* manchas de cor de fundo — dão profundidade tipo "wallpaper" */}
+      <View
+        style={{
+          position: 'absolute',
+          top: -120,
+          right: -80,
+          width: 360,
+          height: 360,
+          borderRadius: 180,
+          backgroundColor: '#FED7AA',
+          opacity: 0.5,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          bottom: -140,
+          left: -100,
+          width: 320,
+          height: 320,
+          borderRadius: 160,
+          backgroundColor: '#FDE68A',
+          opacity: 0.35,
+        }}
+      />
       <View
         style={{
           marginHorizontal: 'auto',
           width: '100%',
           maxWidth: 1152,
           paddingHorizontal: 24,
-          paddingVertical: isWide ? 72 : 48,
+          paddingTop: isWide ? 64 : 44,
+          paddingBottom: isWide ? 64 : 44,
           flexDirection: isWide ? 'row' : 'column',
-          alignItems: isWide ? 'center' : 'stretch',
-          gap: isWide ? 48 : 36,
+          alignItems: 'center',
+          gap: isWide ? 40 : 8,
           zIndex: 1,
         }}
       >
-        <View style={{ flex: 1 }}>
-          <View style={{ marginTop: 0 }}>
+        <View style={{ flex: 1, alignItems: isWide ? 'flex-start' : 'center' }}>
+          {/* eyebrow / selo do conceito */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 7,
+              backgroundColor: '#FFFFFF',
+              borderWidth: 1,
+              borderColor: '#FED7AA',
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 999,
+              marginBottom: 18,
+              shadowColor: '#F97316',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.12,
+              shadowRadius: 10,
+            }}
+          >
+            <Text style={{ fontSize: 13 }}>📱</Text>
+            <Text
+              style={{
+                fontFamily: FONTS.bodyBold,
+                fontSize: 11.5,
+                letterSpacing: 0.8,
+                color: '#C2410C',
+                textTransform: 'uppercase',
+              }}
+            >
+              Novo · o celular do pet
+            </Text>
+          </View>
+
+          <View style={{ alignItems: isWide ? 'flex-start' : 'center' }}>
             <Text
               style={{
                 fontFamily: FONTS.display,
                 fontSize: headlineSize,
                 lineHeight: headlineLine,
                 color: '#1A1410',
+                textAlign: isWide ? 'left' : 'center',
               }}
             >
-              A saúde
+              Um celular
             </Text>
             <WordSwap
-              words={['do seu cachorro', 'do seu gato', 'do seu coelho', 'do seu pet']}
-              interval={2400}
+              words={['inteirinho', 'só dele', 'completo', 'de verdade']}
+              interval={2200}
               style={{
                 fontFamily: FONTS.display,
                 fontSize: headlineSize,
                 lineHeight: headlineLine,
                 color: '#F97316',
+                textAlign: isWide ? 'left' : 'center',
               }}
             />
             <Text
@@ -114,9 +177,10 @@ function Hero() {
                 fontSize: headlineSize,
                 lineHeight: headlineLine,
                 color: '#1A1410',
+                textAlign: isWide ? 'left' : 'center',
               }}
             >
-              em um app só.
+              pro seu pet.
             </Text>
           </View>
 
@@ -127,14 +191,24 @@ function Hero() {
               lineHeight: isWide ? 28 : 24,
               color: '#525252',
               marginTop: 20,
-              maxWidth: 540,
+              maxWidth: 520,
+              textAlign: isWide ? 'left' : 'center',
             }}
           >
-            Vacinas em dia, sintomas registrados, carteirinha digital pronta — e a comunidade pet do Brasil.{' '}
-            <Text style={{ fontFamily: FONTS.bodyBold }}>Sem timeline de gente.</Text>
+            Saúde, jogos, notícias, carteirinha, lugares, rolês — cada coisa é um{' '}
+            <Text style={{ fontFamily: FONTS.bodyBold, color: '#1A1410' }}>app</Text> dentro do Pet
+            Social. Deslize, toque e cuide de tudo num lugar só.
           </Text>
 
-          <View style={{ marginTop: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+          <View
+            style={{
+              marginTop: 28,
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              gap: 12,
+              justifyContent: isWide ? 'flex-start' : 'center',
+            }}
+          >
             <Link href="/(auth)/sign-up" asChild>
               <Pressable
                 style={{
@@ -186,6 +260,7 @@ function Hero() {
               flexWrap: 'wrap',
               gap: 18,
               alignItems: 'center',
+              justifyContent: isWide ? 'flex-start' : 'center',
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -197,165 +272,94 @@ function Hero() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Ionicons name="cash-outline" size={16} color="#525252" />
               <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#525252' }}>
-                Grátis sem cartão de crédito
-              </Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="ban-outline" size={16} color="#525252" />
-              <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#525252' }}>
-                Sem venda de dados, nunca
+                Grátis sem cartão
               </Text>
             </View>
           </View>
         </View>
 
-        <HeroVisual />
+        {/* Centerpiece: o celular do pet animado */}
+        <View style={{ flexShrink: 0, marginTop: isWide ? 0 : 16 }}>
+          <PetPhoneMockup />
+        </View>
       </View>
     </View>
   );
 }
 
-function HeroVisual() {
+/** Vitrine dos "apps" — comunica a amplitude do produto, reforça a metáfora do celular. */
+function AppsShowcase() {
+  const apps: { emoji: string; name: string; desc: string; bg: string; fg: string }[] = [
+    { emoji: '🩺', name: 'Saúde', desc: 'Vacinas, sintomas e o Score de Saúde do seu pet.', bg: '#CCFBF1', fg: '#0F766E' },
+    { emoji: '🪪', name: 'Carteirinha', desc: 'ID digital com QR pra quem encontrar seu pet te achar.', bg: '#CFFAFE', fg: '#0E7490' },
+    { emoji: '🎮', name: 'Jogos', desc: 'Joguinhos, desafio diário, streak e ranking de tutores.', bg: '#EDE9FE', fg: '#6D28D9' },
+    { emoji: '📰', name: 'Notícias', desc: 'Jornal do mundo pet, assinado pela Redação Pet Social.', bg: '#FCE7F3', fg: '#BE185D' },
+    { emoji: '📍', name: 'Lugares', desc: 'Parques, vets e cafés pet-friendly perto de você.', bg: '#DBEAFE', fg: '#1D4ED8' },
+    { emoji: '🎉', name: 'Rolês', desc: 'Encontros de pets pra socializar na sua região.', bg: '#F3E8FF', fg: '#7E22CE' },
+    { emoji: '🏆', name: 'Conquistas', desc: 'Medalhas por cuidar bem e manter tudo em dia.', bg: '#FEF3C7', fg: '#B45309' },
+    { emoji: '🦴', name: 'Achados', desc: 'Mural de perdidos e encontrados com geolocalização.', bg: '#FEF9C3', fg: '#A16207' },
+    { emoji: '🎁', name: 'Vantagens', desc: 'Clube de descontos em produtos e serviços pet.', bg: '#FCE7F3', fg: '#BE185D' },
+  ];
   const { width } = useWindowDimensions();
-  const isWide = width >= 700;
+  const cols = width >= 1000 ? 3 : width >= 640 ? 2 : 1;
+
   return (
-    <View
-      style={{
-        width: isWide ? undefined : '100%',
-        flex: isWide ? 1 : undefined,
-        minHeight: 420,
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        paddingVertical: 12,
-      }}
-    >
-      {/* Mockup do app: card de alertas de saúde — comunica o produto, não mascotes */}
-      <View
-        style={{
-          width: '100%',
-          maxWidth: 380,
-          backgroundColor: '#FFFFFF',
-          borderRadius: 22,
-          padding: 18,
-          borderWidth: 1,
-          borderColor: '#F1ECE5',
-          shadowColor: '#1A1410',
-          shadowOffset: { width: 0, height: 18 },
-          shadowOpacity: 0.10,
-          shadowRadius: 36,
-          elevation: 8,
-          gap: 12,
-        }}
-      >
-        {/* Header do mockup */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <View
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 12,
-              backgroundColor: '#1A1410',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 18 }}>🐶</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: FONTS.display, fontSize: 16, color: '#1A1410' }}>Bidu</Text>
-            <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>
-              Vira-lata caramelo · 4 anos
-            </Text>
-          </View>
-          <View
-            style={{
-              backgroundColor: '#DCFCE7',
-              paddingHorizontal: 8,
-              paddingVertical: 3,
-              borderRadius: 999,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: FONTS.bodyBold,
-                fontSize: 10,
-                color: '#166534',
-                letterSpacing: 0.5,
-              }}
-            >
-              SAÚDE: 87%
-            </Text>
-          </View>
+    <View style={{ backgroundColor: '#FFFBF5', paddingHorizontal: 24, paddingVertical: 72 }}>
+      <View style={{ marginHorizontal: 'auto', width: '100%', maxWidth: 1152 }}>
+        <SectionHeader kicker="A TELA INICIAL" title="Um app pra cada parte da vida do seu pet" />
+
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -8 }}>
+          {apps.map((a) => (
+            <View key={a.name} style={{ width: `${100 / cols}%`, padding: 8 }}>
+              <View
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 18,
+                  padding: 18,
+                  height: '100%',
+                  borderWidth: 1,
+                  borderColor: '#F1ECE5',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 14,
+                }}
+              >
+                <View
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 15,
+                    backgroundColor: a.bg,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Text style={{ fontSize: 26 }}>{a.emoji}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: FONTS.display, fontSize: 17, color: a.fg, marginBottom: 3 }}>
+                    {a.name}
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.body, fontSize: 13, lineHeight: 18, color: '#525252' }}>
+                    {a.desc}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ))}
         </View>
 
-        {/* Alerta 1 — vacina vencendo */}
-        <AlertRow
-          color="#FEE2E2"
-          accent="#991B1B"
-          icon="alert-circle"
-          title="V10 (Décupla) atrasada"
-          subtitle="Última dose há 14 meses · Marcar"
-        />
-        {/* Alerta 2 — em dia */}
-        <AlertRow
-          color="#DCFCE7"
-          accent="#166534"
-          icon="checkmark-circle"
-          title="Antirrábica aplicada"
-          subtitle="Próxima dose: 12 mar 2026"
-        />
-        {/* Alerta 3 — próximo */}
-        <AlertRow
-          color="#FEF3C7"
-          accent="#92400E"
-          icon="time"
-          title="Vermífugo em 9 dias"
-          subtitle="Drontal · 15kg · Lembrete ativo"
-        />
-        {/* Alerta 4 — registro */}
-        <AlertRow
-          color="#DBEAFE"
-          accent="#1E40AF"
-          icon="document-text"
-          title="Prontuário atualizado"
-          subtitle="3 sintomas · 4 vacinas · Pronto pro vet"
-        />
-      </View>
-    </View>
-  );
-}
-
-function AlertRow({
-  color,
-  accent,
-  icon,
-  title,
-  subtitle,
-}: {
-  color: string;
-  accent: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        backgroundColor: color,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 12,
-      }}
-    >
-      <Ionicons name={icon} size={20} color={accent} />
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: accent }}>{title}</Text>
-        <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: accent, opacity: 0.85 }}>
-          {subtitle}
+        <Text
+          style={{
+            fontFamily: FONTS.body,
+            fontSize: 13,
+            color: '#737373',
+            textAlign: 'center',
+            marginTop: 24,
+          }}
+        >
+          E tem mais: feed só de pets, chat, diário, galeria, agenda… tudo grátis.
         </Text>
       </View>
     </View>
@@ -817,7 +821,7 @@ function FinalCTA() {
             textAlign: 'center',
           }}
         >
-          Pronto pra cuidar com mais tranquilidade?
+          Liga o celular do seu pet.
         </Text>
         <Text
           style={{
@@ -830,7 +834,7 @@ function FinalCTA() {
             maxWidth: 480,
           }}
         >
-          Vacinas em dia, sintomas registrados, comunidade pra trocar. Tudo grátis, em 30 segundos.
+          Saúde, jogos, notícias, comunidade — todos os apps num lugar só. Grátis, em 30 segundos.
         </Text>
         <View style={{ marginTop: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
           <Link href="/(auth)/sign-up" asChild>
