@@ -8,6 +8,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { AreaHero } from '@/components/area-hero';
 import { HealthListSkeleton } from '@/components/health/health-list-skeleton';
 import { HealthScoreCard } from '@/components/health/health-score-card';
+import { HealthRecordPdfButton } from '@/components/health/health-record-pdf-button';
 import { HealthScoreTrend } from '@/components/health/health-score-trend';
 import { HealthShareButton } from '@/components/health/health-share-button';
 import { HealthTimeline } from '@/components/health/health-timeline';
@@ -286,8 +287,9 @@ function HealthHubInner() {
 
         {/* Compartilhar prontuário com vet */}
         {summary && pet ? (
-          <View style={{ marginTop: 8 }}>
+          <View style={{ marginTop: 8, gap: 10 }}>
             <HealthShareButton pet={pet} summary={summary} parasiteSummary={parasiteSummary} />
+            <HealthRecordPdfButton pet={pet} />
           </View>
         ) : null}
       </ScrollView>
