@@ -11,6 +11,7 @@ import { GlobalLeaderboard } from '@/components/global-leaderboard';
 import { LeagueCard } from '@/components/league-card';
 import { PlayerLevelCard } from '@/components/player-level-card';
 import { StreakCard } from '@/components/streak-card';
+import { TournamentCard } from '@/components/tournament-card';
 import { FONTS } from '@/lib/fonts';
 import { fetchGlobalMyRank, fetchMyRank, qkGames, type GameKey, type GamePeriod } from '@/lib/games';
 import { useActivePet } from '@/providers/active-pet-provider';
@@ -106,6 +107,7 @@ export default function GamesHubScreen() {
         </View>
 
         <StreakCard />
+        <TournamentCard />
         <GameDailyChallengeCard />
         <PlayerLevelCard />
         <LeagueCard currentUserId={userId} />
