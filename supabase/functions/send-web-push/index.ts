@@ -9,11 +9,19 @@
  *   { user_id?: string, user_ids?: string[], title: string, body?: string,
  *     url?: string, tag?: string }
  *
+ * AUTORIZAÇÃO (a função é --no-verify-jwt, então validamos manualmente):
+ *   - Header `x-petsocial-secret` == app_secrets.push_secret  → chamada do
+ *     servidor/cron, pode mirar QUALQUER user (user_ids livre).
+ *   - OU `Authorization: Bearer <JWT válido>` → self-push: só envia pro próprio
+ *     user (ignora user_ids arbitrários). É o caso do botão "enviar teste".
+ *   - Sem nenhum dos dois → 401. Fecha o abuso anônimo da URL pública.
+ *
  * Secrets necessárias (supabase secrets set ...):
  *   - VAPID_PUBLIC_KEY   (a chave pública VAPID)
  *   - VAPID_PRIVATE_KEY  (a chave privada VAPID — NUNCA commitar)
  *   - VAPID_SUBJECT      (opcional, default mailto:pedrocobron@gmail.com)
  *   (SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são injetadas automaticamente)
+ *   O push_secret vive na tabela app_secrets (gerado no banco, nunca digitado).
  *
  * Deploy: `supabase functions deploy send-web-push --no-verify-jwt`
  */
@@ -33,7 +41,8 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 // CORS — necessário pra o app (outro domínio) chamar via fetch/supabase.functions.invoke
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-petsocial-secret',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
@@ -44,8 +53,45 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
   try {
+    // ---- AuthZ: segredo interno (cron) OU JWT válido (self-push) ----
+    const incomingSecret = req.headers.get('x-petsocial-secret');
+    let expectedSecret: string | null = null;
+    {
+      const { data } = await supabase
+        .from('app_secrets')
+        .select('value')
+        .eq('key', 'push_secret')
+        .maybeSingle();
+      expectedSecret = data?.value ?? null;
+    }
+
+    let authorized = false;
+    let restrictToSelf: string | null = null;
+
+    if (expectedSecret && incomingSecret && incomingSecret === expectedSecret) {
+      authorized = true; // servidor/cron — pode mirar qualquer user
+    } else {
+      const authHeader = req.headers.get('Authorization') || '';
+      const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+      if (token) {
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) {
+          authorized = true;
+          restrictToSelf = user.id; // self-push: só pra si mesmo
+        }
+      }
+    }
+
+    if (!authorized) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), {
+        status: 401,
+        headers: jsonHeaders,
+      });
+    }
+
     const { user_id, user_ids, title, body, url, tag } = await req.json();
-    const ids: string[] = user_ids ?? (user_id ? [user_id] : []);
+    let ids: string[] = user_ids ?? (user_id ? [user_id] : []);
+    if (restrictToSelf) ids = [restrictToSelf]; // ignora alvos arbitrários
     if (!ids.length || !title) {
       return new Response(JSON.stringify({ error: 'user_id(s) e title obrigatórios' }), {
         status: 400,
