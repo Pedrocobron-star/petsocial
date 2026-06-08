@@ -243,7 +243,7 @@ export default function NewsArticleScreen() {
               </View>
 
               {/* Produtos afiliados */}
-              <AffiliateProducts products={article.affiliate_products} />
+              <AffiliateProducts products={article.affiliate_products} articleSlug={article.slug} />
 
               {/* Slot publicitário */}
               {sponsored ? (

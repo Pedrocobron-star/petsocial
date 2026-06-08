@@ -9,6 +9,7 @@ import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
+import { track } from '@/lib/analytics';
 import { FONTS } from '@/lib/fonts';
 import {
   fetchActiveOffers,
@@ -110,15 +111,28 @@ function CatChip({ label, active, onPress }: { label: string; active: boolean; o
   );
 }
 
+/** 'YYYY-MM-DD...' -> 'DD/MM' (ou null). Pra dar urgência ao cupom. */
+function validUntilLabel(s: string | null): string | null {
+  if (!s) return null;
+  const parts = s.slice(0, 10).split('-');
+  if (parts.length !== 3) return null;
+  return `${parts[2]}/${parts[1]}`;
+}
+
 function OfferCard({ offer }: { offer: Offer }) {
   const { theme } = useTheme();
   const toast = useToast();
   const meta = offerCategoryMeta(offer.category);
+  const validLabel = validUntilLabel(offer.valid_until);
 
   const onCopy = async () => {
     if (!offer.coupon_code) return;
     const ok = await copyToClipboard(offer.coupon_code);
-    if (ok) toast.success('Cupom copiado!', offer.coupon_code);
+    if (ok) {
+      toast.success('Cupom copiado!', offer.coupon_code);
+      // Sinal de conversão: cai no painel admin (top events). Sem PII.
+      track('offer_coupon_copied', { offer_id: offer.id, brand: offer.brand });
+    }
   };
 
   const onGo = async () => {
@@ -216,6 +230,12 @@ function OfferCard({ offer }: { offer: Offer }) {
           <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.accent.onAccent }}>{offer.cta_label}</Text>
           <Ionicons name="arrow-forward" size={16} color={theme.accent.onAccent} />
         </PressScale>
+
+        {validLabel ? (
+          <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 11, color: theme.textDim, textAlign: 'center' }}>
+            ⏳ Válido até {validLabel}
+          </Text>
+        ) : null}
 
         <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim, textAlign: 'center' }}>
           Oferta do parceiro {offer.brand} · Pet Social não se responsabiliza pela compra

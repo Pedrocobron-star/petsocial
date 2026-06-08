@@ -1,14 +1,21 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { PostCard } from '@/components/post-card';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { FONTS } from '@/lib/fonts';
 import { fetchPostsByHashtag, qk } from '@/lib/queries';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useTheme } from '@/providers/theme-provider';
+
+type TagSort = 'recent' | 'top';
+const SORTS: { value: TagSort; label: string }[] = [
+  { value: 'recent', label: 'Recentes' },
+  { value: 'top', label: 'Top 🔥' },
+];
 
 export default function HashtagScreen() {
   const { name } = useLocalSearchParams<{ name: string }>();
@@ -16,6 +23,7 @@ export default function HashtagScreen() {
   const { theme } = useTheme();
   const qc = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+  const [sort, setSort] = useState<TagSort>('recent');
 
   const postsQuery = useQuery({
     queryKey: qk.hashtag(name),
@@ -23,7 +31,16 @@ export default function HashtagScreen() {
     enabled: !!name && !!activePet,
   });
 
-  const posts = postsQuery.data ?? [];
+  // "Top" reordena por curtidas (desempate por comentários) o conjunto já
+  // carregado; "Recentes" mantém a ordem do servidor (created_at desc).
+  const posts = useMemo(() => {
+    const list = postsQuery.data ?? [];
+    if (sort !== 'top') return list;
+    return [...list].sort(
+      (a, b) =>
+        b.likes_count - a.likes_count || b.comments_count - a.comments_count,
+    );
+  }, [postsQuery.data, sort]);
 
   const onRefresh = async () => {
     if (!name) return;
@@ -71,6 +88,11 @@ export default function HashtagScreen() {
           </Text>
         </View>
       </View>
+      {posts.length > 1 ? (
+        <View style={{ backgroundColor: theme.surface, borderBottomWidth: 1, borderBottomColor: theme.borderLight }}>
+          <SegmentedControl options={SORTS} value={sort} onChange={setSort} />
+        </View>
+      ) : null}
       <FlatList
         data={posts}
         keyExtractor={(p) => p.id}

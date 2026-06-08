@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Linking, Platform, Pressable, Text, View } from 'react-native';
 
+import { track } from '@/lib/analytics';
 import { FONTS } from '@/lib/fonts';
 import { haptic } from '@/lib/haptics';
 import type { AffiliateProduct, AffiliateStore } from '@/lib/news';
@@ -33,7 +34,14 @@ function openUrl(url: string) {
   }
 }
 
-export function AffiliateProducts({ products }: { products: AffiliateProduct[] }) {
+export function AffiliateProducts({
+  products,
+  articleSlug,
+}: {
+  products: AffiliateProduct[];
+  /** slug da matéria — vai junto no evento de clique pra atribuir receita por matéria. */
+  articleSlug?: string;
+}) {
   const { theme } = useTheme();
 
   if (!products || products.length === 0) return null;
@@ -66,7 +74,7 @@ export function AffiliateProducts({ products }: { products: AffiliateProduct[] }
 
       <View style={{ gap: 12 }}>
         {products.map((p, i) => (
-          <ProductCard key={`${p.url}-${i}`} product={p} />
+          <ProductCard key={`${p.url}-${i}`} product={p} articleSlug={articleSlug} />
         ))}
       </View>
 
@@ -87,11 +95,22 @@ export function AffiliateProducts({ products }: { products: AffiliateProduct[] }
   );
 }
 
-function ProductCard({ product }: { product: AffiliateProduct }) {
+function ProductCard({ product, articleSlug }: { product: AffiliateProduct; articleSlug?: string }) {
   const { theme } = useTheme();
   const meta = STORE_META[product.store] ?? STORE_META.outro;
   const badgeBg = product.store === 'outro' ? theme.brand : meta.bg;
   const badgeFg = product.store === 'outro' ? theme.accent.onAccent : meta.fg;
+
+  const onBuy = () => {
+    // Atribuição de receita: loga loja + produto + matéria. Cai no painel admin
+    // (top events) automaticamente. Sem PII.
+    track('affiliate_click', {
+      store: product.store,
+      label: product.label,
+      article: articleSlug ?? null,
+    });
+    openUrl(product.url);
+  };
 
   return (
     <View
@@ -161,7 +180,7 @@ function ProductCard({ product }: { product: AffiliateProduct }) {
 
       {/* CTA Comprar */}
       <Pressable
-        onPress={() => openUrl(product.url)}
+        onPress={onBuy}
         accessibilityRole="link"
         accessibilityLabel={`Comprar ${product.label} na ${meta.label}`}
         hitSlop={6}
