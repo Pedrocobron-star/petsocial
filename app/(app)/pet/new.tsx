@@ -10,6 +10,7 @@ import { Screen } from '@/components/ui/screen';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import { FONTS } from '@/lib/fonts';
 import { qk } from '@/lib/queries';
+import { claimReferral, clearPendingRef, readPendingRef } from '@/lib/referral';
 import { supabase } from '@/lib/supabase';
 import { FREE_TIER_LIMITS } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
@@ -118,6 +119,12 @@ export default function NewPetScreen() {
               return;
             }
             try {
+              // Convite: registra quem indicou ANTES de inserir — o 1º pet
+              // dispara a recompensa (7 dias de Pro pra ambos) via trigger.
+              const pendingRef = readPendingRef();
+              if (pendingRef) {
+                await claimReferral(pendingRef).catch(() => false);
+              }
               const { error } = await supabase.from('pets').insert({
                 owner_id: userId,
                 name: data.name,
@@ -139,6 +146,7 @@ export default function NewPetScreen() {
                 sinpatinhas_id: data.sinpatinhas_id || null,
               });
               if (error) throw error;
+              clearPendingRef();
               await qc.invalidateQueries({ queryKey: qk.myPets(userId) });
               toast.success(`${data.name} entrou na família! 🎉`, 'Bora customizar o avatar?');
               router.back();

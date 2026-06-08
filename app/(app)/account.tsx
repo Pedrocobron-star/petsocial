@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native';
 
+import { InviteFriendsCard } from '@/components/invite-friends-card';
 import { PremiumBadge } from '@/components/premium-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -152,6 +153,8 @@ export default function AccountScreen() {
             </Text>
           )}
         </View>
+
+        <InviteFriendsCard />
 
         {!isPro ? (
           <Button

@@ -44,7 +44,7 @@ export async function sharePost({ title, message, url }: ShareOptions): Promise<
  * SPA route. Quando o backend não estiver disponível (dev local), cai pro
  * SPA path direto.
  */
-function shareBaseUrl(): string {
+export function shareBaseUrl(): string {
   if (Platform.OS === 'web' && globalThis.location?.origin) {
     return globalThis.location.origin;
   }

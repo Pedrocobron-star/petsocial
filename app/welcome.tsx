@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link, Redirect } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,12 +8,15 @@ import { AnimatedPet } from '@/components/animated-pet';
 import { PetPhoneMockup } from '@/components/marketing/pet-phone-mockup';
 import { PawPrintsBg } from '@/components/paw-prints-bg';
 import { WordSwap } from '@/components/word-swap';
+import { track } from '@/lib/analytics';
 import { FONTS } from '@/lib/fonts';
 import { useTranslation } from '@/lib/i18n';
+import { storePendingRef } from '@/lib/referral';
 import { useSession } from '@/providers/session-provider';
 
 export default function WelcomeScreen() {
   const { session, loading } = useSession();
+  const [invited, setInvited] = useState(false);
 
   // Bypass do redirect só pra preview da capa enquanto logado (?preview na web).
   // Não muda nada pro usuário real: sem o param, logado sempre vai pro feed.
@@ -21,12 +25,24 @@ export default function WelcomeScreen() {
     typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).has('preview');
 
+  // Captura ?ref=CODE (convite) → guarda pro signup. Reclamado antes do 1º pet.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const code = new URLSearchParams(window.location.search).get('ref');
+    if (code) {
+      storePendingRef(code);
+      setInvited(true);
+      track('referral_link_opened', { code: code.trim().toUpperCase() });
+    }
+  }, []);
+
   if (!loading && session && !previewMode) return <Redirect href="/(app)/(tabs)" />;
 
   return (
     <SafeAreaView edges={['top']} className="flex-1" style={{ backgroundColor: '#FFFBF5' }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 0 }}>
         <NavBar />
+        {invited ? <InviteRibbon /> : null}
         <Hero />
         <AppsShowcase />
         <Features />
@@ -37,6 +53,29 @@ export default function WelcomeScreen() {
         <Footer />
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/** Faixa de "você foi convidado" — só aparece quando veio por link de indicação. */
+function InviteRibbon() {
+  return (
+    <View
+      style={{
+        backgroundColor: '#065F46',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+      }}
+    >
+      <Text style={{ fontSize: 15 }}>🎁</Text>
+      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FFFFFF', textAlign: 'center' }}>
+        Você foi convidado! Crie sua conta e ganhe{' '}
+        <Text style={{ color: '#6EE7B7' }}>7 dias de Pet Pro grátis</Text>.
+      </Text>
+    </View>
   );
 }
 
