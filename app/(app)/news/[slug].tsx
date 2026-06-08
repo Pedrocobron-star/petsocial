@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Image } from 'expo-image';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -13,7 +13,13 @@ import { SponsoredPostCard } from '@/components/sponsored-post-card';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { FONTS } from '@/lib/fonts';
 import { resetMetaTags, setMetaTags } from '@/lib/meta-tags';
-import { fetchArticleBySlug, incrementArticleView, qkNews } from '@/lib/news';
+import {
+  fetchArticleBySlug,
+  fetchRelatedArticles,
+  incrementArticleView,
+  qkNews,
+  type NewsArticle,
+} from '@/lib/news';
 import { sharePost } from '@/lib/share';
 import { fetchActiveSponsoredPosts } from '@/lib/sponsored';
 import { useTheme } from '@/providers/theme-provider';
@@ -43,6 +49,21 @@ export default function NewsArticleScreen() {
 
   const article = articleQuery.data ?? null;
   const sponsored = sponsoredQuery.data?.[0] ?? null;
+
+  const relatedQuery = useQuery({
+    queryKey: article ? qkNews.related(article.id) : ['news-related', 'none'],
+    queryFn: () =>
+      fetchRelatedArticles({ excludeId: article!.id, categoryId: article!.category_id, limit: 4 }),
+    enabled: !!article,
+    staleTime: 5 * 60_000,
+  });
+  const related = relatedQuery.data ?? [];
+
+  // Ao trocar de matéria (ex.: clicou numa relacionada), volta ao topo.
+  const scrollRef = useRef<ScrollView>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [article?.id]);
 
   // Incrementa view UMA vez por matéria carregada.
   const viewedRef = useRef<string | null>(null);
@@ -100,7 +121,7 @@ export default function NewsArticleScreen() {
           description="Essa notícia pode ter sido removida ou o link está incorreto."
         />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
+        <ScrollView ref={scrollRef} contentContainerStyle={{ paddingBottom: 48 }}>
           <CenteredColumn maxWidth={620}>
             {/* Capa */}
             {article.cover_url ? (
@@ -265,11 +286,97 @@ export default function NewsArticleScreen() {
                   Compartilhar
                 </Text>
               </Pressable>
+
+              {/* Leia também — mantém o leitor no portal */}
+              {related.length > 0 ? (
+                <View style={{ marginTop: 36 }}>
+                  <Text
+                    style={{
+                      fontFamily: FONTS.bodyBold,
+                      fontSize: 11,
+                      letterSpacing: 0.8,
+                      color: theme.textDim,
+                      textTransform: 'uppercase',
+                      marginBottom: 12,
+                    }}
+                  >
+                    Leia também
+                  </Text>
+                  <View style={{ gap: 10 }}>
+                    {related.map((r) => (
+                      <RelatedRow key={r.id} article={r} />
+                    ))}
+                  </View>
+                </View>
+              ) : null}
             </View>
           </CenteredColumn>
         </ScrollView>
       )}
     </View>
+  );
+}
+
+function RelatedRow({ article }: { article: NewsArticle }) {
+  const { theme } = useTheme();
+  return (
+    <Link href={`/news/${article.slug}` as never} asChild>
+      <Pressable
+        accessibilityRole="link"
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          gap: 12,
+          backgroundColor: theme.card,
+          borderRadius: 14,
+          padding: 10,
+          borderWidth: 1,
+          borderColor: theme.borderLight,
+          opacity: pressed ? 0.85 : 1,
+        })}
+      >
+        {article.cover_url ? (
+          <Image
+            source={{ uri: article.cover_url }}
+            style={{ width: 72, height: 72, borderRadius: 10, backgroundColor: theme.brandSurface }}
+            contentFit="cover"
+            transition={150}
+          />
+        ) : (
+          <View
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 10,
+              backgroundColor: article.category?.color ? `${article.category.color}22` : theme.brandSurface,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 30 }}>{article.category?.emoji ?? '📰'}</Text>
+          </View>
+        )}
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          {article.category ? (
+            <Text
+              style={{
+                fontFamily: FONTS.bodyBold,
+                fontSize: 10.5,
+                color: article.category.color,
+                marginBottom: 3,
+              }}
+            >
+              {article.category.emoji} {article.category.name}
+            </Text>
+          ) : null}
+          <Text
+            style={{ fontFamily: FONTS.bodySemibold, fontSize: 14, color: theme.text, lineHeight: 19 }}
+            numberOfLines={3}
+          >
+            {article.title}
+          </Text>
+        </View>
+      </Pressable>
+    </Link>
   );
 }
 

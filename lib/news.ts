@@ -116,6 +116,48 @@ export async function incrementArticleView(id: string): Promise<void> {
   await supabase.rpc('news_increment_view', { p_id: id }).then(undefined, () => {});
 }
 
+/**
+ * Matérias relacionadas pro fim do artigo: prioriza a MESMA categoria (mais
+ * recentes), e completa com as últimas publicadas se faltar — pra nunca ficar
+ * vazio quando a categoria tem só esse texto. Mantém o leitor no portal.
+ */
+export async function fetchRelatedArticles(opts: {
+  excludeId: string;
+  categoryId?: string | null;
+  limit?: number;
+}): Promise<NewsArticle[]> {
+  const limit = opts.limit ?? 4;
+  const base = () =>
+    supabase
+      .from('news_articles')
+      .select(ARTICLE_SELECT)
+      .eq('status', 'published')
+      .neq('id', opts.excludeId)
+      .order('published_at', { ascending: false });
+
+  const out: NewsArticle[] = [];
+  const seen = new Set<string>([opts.excludeId]);
+  const push = (rows: NewsArticle[] | null) => {
+    for (const a of rows ?? []) {
+      if (out.length >= limit) break;
+      if (!seen.has(a.id)) {
+        seen.add(a.id);
+        out.push(a);
+      }
+    }
+  };
+
+  if (opts.categoryId) {
+    const { data } = await base().eq('category_id', opts.categoryId).limit(limit);
+    push(data as NewsArticle[] | null);
+  }
+  if (out.length < limit) {
+    const { data } = await base().limit(limit + 1);
+    push(data as NewsArticle[] | null);
+  }
+  return out.slice(0, limit);
+}
+
 // ---------- admin (CMS) ----------
 
 export async function fetchAllArticlesAdmin(): Promise<NewsArticle[]> {
@@ -180,6 +222,7 @@ export const qkNews = {
   categories: () => ['news-categories'] as const,
   articles: (categoryId?: string, featured?: boolean) => ['news-articles', categoryId ?? null, !!featured] as const,
   article: (slug: string) => ['news-article', slug] as const,
+  related: (id: string) => ['news-related', id] as const,
   adminList: () => ['news-admin-list'] as const,
   adminArticle: (id: string) => ['news-admin-article', id] as const,
 };
