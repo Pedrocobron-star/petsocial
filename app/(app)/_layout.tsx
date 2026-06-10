@@ -5,6 +5,7 @@ import { AppQuickActions } from '@/components/app-quick-actions';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { HeaderHomeIcon } from '@/components/header-home-logo';
 import { HealthNotificationHandler } from '@/components/health-notification-handler';
+import { NotificationPrompt } from '@/components/notification-prompt';
 import { ActivePetProvider } from '@/providers/active-pet-provider';
 import { RealtimeProvider } from '@/providers/realtime-provider';
 import { useSession } from '@/providers/session-provider';
@@ -33,6 +34,7 @@ export default function AppLayout() {
         <RealtimeProvider>
           <HealthNotificationHandler />
           <AppQuickActions />
+          <NotificationPrompt />
           <Stack
           screenOptions={{
             headerShown: false,

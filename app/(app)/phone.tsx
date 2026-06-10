@@ -17,10 +17,12 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient as SvgGradient, Rect, Stop } from 'react-native-svg';
 
 import { PetAvatar } from '@/components/pet-avatar';
 import { FONTS } from '@/lib/fonts';
+import { setThemeColorMeta } from '@/lib/theme-color';
 import { haptic } from '@/lib/haptics';
 import { wasOnboardingSkipped } from '@/lib/onboarding-state';
 import { computeHealthScore } from '@/lib/health-score';
@@ -367,6 +369,7 @@ export default function PetPhoneScreen() {
   const { session } = useSession();
   const { width, height } = useWindowDimensions();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const userId = session?.user.id;
   const pid = activePet?.id ?? '';
   const photoUri = activePet?.avatar_url ?? null;
@@ -449,6 +452,12 @@ export default function PetPhoneScreen() {
     wallpaperId === 'pet-photo'
       ? { id: 'pet-photo', from: DEFAULT_WP.from, to: DEFAULT_WP.to }
       : WALLPAPERS.find((w) => w.id === wallpaperId) ?? DEFAULT_WP;
+
+  // PWA instalado: casa a barra de status do telefone com o topo do wallpaper
+  // (em vez do laranja default), pra a barra se fundir com o app (estilo Instagram).
+  useEffect(() => {
+    setThemeColorMeta(wp.from);
+  }, [wp.from]);
 
   const summary = summaryQuery.data;
   const parasite = parasiteQuery.data;
@@ -545,26 +554,10 @@ export default function PetPhoneScreen() {
 
       {/* Coluna largura-de-telefone */}
       <View style={{ flex: 1, width: phoneW, alignSelf: 'center' }}>
-        {/* STATUS BAR */}
-        <View
-          style={{
-            height: 46,
-            flexDirection: 'row',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            paddingHorizontal: 24,
-            paddingBottom: 6,
-          }}
-        >
-          <Text style={[{ fontFamily: FONTS.bodyBold, fontSize: 15, color: '#fff' }, LABEL_SHADOW]}>
-            {format(now, 'HH:mm')}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <Ionicons name="cellular" size={16} color="#fff" />
-            <Ionicons name="wifi" size={16} color="#fff" />
-            <BatteryGlyph score={batteryScore} />
-          </View>
-        </View>
+        {/* Sem barra de status fake: deixamos a do telefone aparecer e casamos
+            a cor dela com o wallpaper (theme-color). Aqui só reservamos o espaço
+            seguro do topo (notch) pra o conteúdo não ficar embaixo da barra. */}
+        <View style={{ height: Math.max(insets.top, 14) }} />
 
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 18, paddingTop: 6, paddingBottom: 10 }}
@@ -587,9 +580,12 @@ export default function PetPhoneScreen() {
           >
             <PetAvatar pet={activePet} size={56} />
             <View style={{ flex: 1 }}>
-              <Text style={[{ fontFamily: FONTS.body, fontSize: 12.5, color: 'rgba(255,255,255,0.9)' }, LABEL_SHADOW]}>
-                {greeting} {greetEmoji}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+                <Text style={[{ fontFamily: FONTS.body, fontSize: 12.5, color: 'rgba(255,255,255,0.9)' }, LABEL_SHADOW]}>
+                  {greeting} {greetEmoji}
+                </Text>
+                {batteryScore != null ? <BatteryGlyph score={batteryScore} /> : null}
+              </View>
               <Text numberOfLines={1} style={[{ fontFamily: FONTS.bodyBold, fontSize: 19, color: '#fff' }, LABEL_SHADOW]}>
                 {activePet.name}
               </Text>

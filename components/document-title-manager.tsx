@@ -3,6 +3,8 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { resetMetaTags } from '@/lib/meta-tags';
+import { setThemeColorMeta } from '@/lib/theme-color';
+import { useTheme } from '@/providers/theme-provider';
 
 const SITE_NAME = 'Maestro Pet';
 
@@ -119,6 +121,7 @@ function injectBrandedFavicon() {
  */
 export function DocumentTitleManager() {
   const pathname = usePathname();
+  const { theme } = useTheme();
 
   // Injeta favicon uma vez no mount
   useEffect(() => {
@@ -137,7 +140,13 @@ export function DocumentTitleManager() {
     // sobrescreve depois (effect order: cleanup → next mount).
     const fragment = title.replace(` · ${SITE_NAME}`, '');
     resetMetaTags(fragment === SITE_NAME ? undefined : fragment);
-  }, [pathname]);
+
+    // Casa a barra de status do telefone (PWA) com o fundo da tela. O
+    // springboard (/phone) cuida da própria cor (combina com o wallpaper).
+    if (pathname !== '/phone') {
+      setThemeColorMeta(theme.bg);
+    }
+  }, [pathname, theme.bg]);
 
   return null;
 }
