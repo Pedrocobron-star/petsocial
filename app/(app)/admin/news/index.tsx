@@ -123,9 +123,19 @@ function ArticleRow({ article }: { article: NewsArticle }) {
               </Text>
             </View>
           </View>
-          <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim }}>
-            Atualizada {format(new Date(article.updated_at), "d 'de' MMM, yyyy", { locale: ptBR })}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim }}>
+              Atualizada {format(new Date(article.updated_at), "d 'de' MMM, yyyy", { locale: ptBR })}
+            </Text>
+            {article.status === 'scheduled' && article.scheduled_at ? (
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10, color: '#92400E' }}>
+                · sai {format(new Date(article.scheduled_at), "d/MM 'às' HH:mm", { locale: ptBR })}
+              </Text>
+            ) : null}
+            {article.notify_on_publish ? (
+              <Ionicons name="notifications" size={11} color={theme.brand} />
+            ) : null}
+          </View>
         </View>
         <Ionicons name="chevron-forward" size={18} color={theme.textDim} />
       </Pressable>
@@ -137,7 +147,9 @@ function StatusBadge({ status }: { status: NewsArticle['status'] }) {
   const conf =
     status === 'published'
       ? { bg: '#DCFCE7', color: '#166534', label: 'Publicada' }
-      : { bg: '#E5E5E5', color: '#525252', label: 'Rascunho' };
+      : status === 'scheduled'
+        ? { bg: '#FEF3C7', color: '#92400E', label: 'Agendada' }
+        : { bg: '#E5E5E5', color: '#525252', label: 'Rascunho' };
   return (
     <View
       style={{

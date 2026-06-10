@@ -31,6 +31,16 @@ const STORES: { value: AffiliateStore; label: string }[] = [
 
 const DEFAULT_AUTHOR = 'Redação Maestro Pet';
 
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+function toDateStr(d: Date): string {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function toTimeStr(d: Date): string {
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
 /**
  * Formulário compartilhado de matéria do Portal de Notícias (criar OU editar).
  * Monta um NewsArticleInput e delega para onSubmit.
@@ -68,6 +78,15 @@ export function NewsForm({
   const [authorName, setAuthorName] = useState(initial?.author_name ?? DEFAULT_AUTHOR);
   const [isFeatured, setIsFeatured] = useState(initial?.is_featured ?? false);
   const [status, setStatus] = useState<NewsStatus>(initial?.status ?? 'draft');
+  const [notifyOnPublish, setNotifyOnPublish] = useState(initial?.notify_on_publish ?? false);
+  const [schedDate, setSchedDate] = useState(() => {
+    const base = initial?.scheduled_at ? new Date(initial.scheduled_at) : new Date(Date.now() + 60 * 60 * 1000);
+    return toDateStr(base);
+  });
+  const [schedTime, setSchedTime] = useState(() => {
+    const base = initial?.scheduled_at ? new Date(initial.scheduled_at) : new Date(Date.now() + 60 * 60 * 1000);
+    return toTimeStr(base);
+  });
   const [products, setProducts] = useState<AffiliateProduct[]>(initial?.affiliate_products ?? []);
 
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -141,6 +160,20 @@ export function NewsForm({
       }))
       .filter((p) => p.label && p.url);
 
+    let scheduledAtIso: string | null = null;
+    if (status === 'scheduled') {
+      const dt = new Date(`${schedDate}T${schedTime}`);
+      if (Number.isNaN(dt.getTime())) {
+        toast.error('Data/hora inválida', 'Confira a data e a hora do agendamento');
+        return;
+      }
+      if (dt.getTime() <= Date.now()) {
+        toast.error('Escolha um horário no futuro', 'A matéria sai automaticamente nesse momento');
+        return;
+      }
+      scheduledAtIso = dt.toISOString();
+    }
+
     try {
       await onSubmit({
         slug: cleanSlug,
@@ -153,6 +186,8 @@ export function NewsForm({
         status,
         is_featured: isFeatured,
         affiliate_products: cleanProducts,
+        scheduled_at: scheduledAtIso,
+        notify_on_publish: notifyOnPublish,
       });
     } catch (e) {
       toast.error('Erro ao salvar', e instanceof Error ? e.message : 'Tente novamente');
@@ -341,12 +376,43 @@ export function NewsForm({
             onPress={() => setStatus('draft')}
           />
           <Segment
-            label="Publicada"
+            label="Publicar agora"
             selected={status === 'published'}
             onPress={() => setStatus('published')}
           />
+          <Segment
+            label="Agendar"
+            selected={status === 'scheduled'}
+            onPress={() => setStatus('scheduled')}
+          />
         </View>
       </View>
+
+      {status === 'scheduled' ? (
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1.4 }}>
+            <Field
+              label="Data"
+              value={schedDate}
+              onChange={setSchedDate}
+              placeholder="AAAA-MM-DD"
+              autoCapitalize="none"
+              hint="Quando a matéria sai automaticamente"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Field label="Hora" value={schedTime} onChange={setSchedTime} placeholder="HH:MM" autoCapitalize="none" />
+          </View>
+        </View>
+      ) : null}
+
+      {status !== 'draft' ? (
+        <Toggle
+          label="📣 Notificar os tutores quando publicar (push pra base toda)"
+          value={notifyOnPublish}
+          onChange={setNotifyOnPublish}
+        />
+      ) : null}
 
       {/* Produtos afiliados */}
       <SectionTitle title="Produtos afiliados" />

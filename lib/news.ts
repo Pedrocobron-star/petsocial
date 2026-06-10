@@ -25,7 +25,7 @@ export interface NewsCategory {
   sort_order: number;
 }
 
-export type NewsStatus = 'draft' | 'published';
+export type NewsStatus = 'draft' | 'published' | 'scheduled';
 
 export interface NewsArticle {
   id: string;
@@ -41,6 +41,8 @@ export interface NewsArticle {
   affiliate_products: AffiliateProduct[];
   view_count: number;
   published_at: string | null;
+  scheduled_at: string | null;
+  notify_on_publish: boolean;
   created_at: string;
   updated_at: string;
   category?: NewsCategory | null;
@@ -57,6 +59,10 @@ export interface NewsArticleInput {
   status: NewsStatus;
   is_featured: boolean;
   affiliate_products: AffiliateProduct[];
+  /** ISO — quando status='scheduled'. */
+  scheduled_at?: string | null;
+  /** dispara push pra base toda quando a matéria for publicada. */
+  notify_on_publish?: boolean;
 }
 
 const ARTICLE_SELECT = '*, category:news_categories(*)';
@@ -193,6 +199,8 @@ function toRow(input: NewsArticleInput) {
     status: input.status,
     is_featured: input.is_featured,
     affiliate_products: input.affiliate_products,
+    notify_on_publish: !!input.notify_on_publish,
+    scheduled_at: input.status === 'scheduled' ? (input.scheduled_at ?? null) : null,
     published_at: input.status === 'published' ? new Date().toISOString() : null,
     updated_at: new Date().toISOString(),
   };
