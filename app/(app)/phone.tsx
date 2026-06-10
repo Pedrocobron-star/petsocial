@@ -30,6 +30,7 @@ import {
   fetchUnreadMessageCount,
   fetchUnreadNotificationCount,
   qk,
+  sendMozartWelcome,
 } from '@/lib/queries';
 import type { Pet } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
@@ -405,6 +406,16 @@ export default function PetPhoneScreen() {
     enabled: !!userId,
     refetchInterval: 30_000,
   });
+
+  // Mozart manda a DM de boas-vindas pra quem é novo (idempotente no servidor).
+  // Faz o badge do Chat acender com a mensagem do mascote.
+  const unreadMsgRefetch = unreadMsgQuery.refetch;
+  useEffect(() => {
+    if (!userId) return;
+    sendMozartWelcome()
+      .then(() => unreadMsgRefetch())
+      .catch(() => {});
+  }, [userId, unreadMsgRefetch]);
   const summaryQuery = useQuery({
     queryKey: qk.healthSummary(pid),
     queryFn: () => fetchHealthSummary(pid),

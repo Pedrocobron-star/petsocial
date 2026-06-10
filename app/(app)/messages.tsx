@@ -3,14 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
 
 import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
 import { UserInitialAvatar } from '@/components/user-initial-avatar';
 import { FONTS } from '@/lib/fonts';
-import { fetchConversations, qk } from '@/lib/queries';
+import { fetchConversations, qk, sendMozartWelcome } from '@/lib/queries';
 import type { ConversationSummary } from '@/lib/types';
 import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useSession } from '@/providers/session-provider';
@@ -35,6 +35,15 @@ function MessagesInner() {
     queryFn: () => fetchConversations(userId!),
     enabled: !!userId,
   });
+
+  // Garante a DM de boas-vindas do Mozart pra quem abre o chat pela 1ª vez.
+  const listRefetch = listQuery.refetch;
+  useEffect(() => {
+    if (!userId) return;
+    sendMozartWelcome()
+      .then(() => listRefetch())
+      .catch(() => {});
+  }, [userId, listRefetch]);
 
   // Filtra por display_name e por preview da última mensagem
   const filtered = useMemo<ConversationSummary[]>(() => {

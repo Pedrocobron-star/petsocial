@@ -1749,6 +1749,16 @@ export async function fetchUnreadMessageCount(userId: string): Promise<number> {
   return counts.reduce((a, b) => a + b, 0);
 }
 
+/**
+ * Garante que o usuário logado recebeu a DM de boas-vindas do Mozart (mascote
+ * oficial). Idempotente no servidor (flag profiles.mozart_welcomed) — pode
+ * chamar à vontade. Não lança em erro pra não atrapalhar o fluxo.
+ */
+export async function sendMozartWelcome(): Promise<void> {
+  const { error } = await supabase.rpc('mozart_send_welcome');
+  if (error) throw error;
+}
+
 // -------- Pet Health: Medications --------
 
 export async function fetchMedications(petId: string): Promise<MedicationWithLogs[]> {
