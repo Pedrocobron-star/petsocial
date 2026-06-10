@@ -56,10 +56,10 @@ export function MobileAppBanner() {
       // localStorage indisponível (modo privado) — segue tentando mostrar
     }
 
-    // Só em mobile
+    // A instalação nativa (beforeinstallprompt) vale pra desktop e mobile.
+    // Só o fallback de instruções manuais é exclusivo do mobile.
     const ua = window.navigator.userAgent.toLowerCase();
     const isMobile = /mobi|android|iphone|ipad|ipod/i.test(ua) || window.innerWidth < 768;
-    if (!isMobile) return;
     const isIos = /iphone|ipad|ipod/i.test(ua);
 
     const win = window as typeof window & { __deferredInstallPrompt?: BeforeInstallPromptEvent };
@@ -90,17 +90,22 @@ export function MobileAppBanner() {
     };
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
 
-    // 4) Fallback manual: depois de 2,5s, se o nativo não veio, mostra instruções
-    const tid = setTimeout(() => {
-      if (shownRef.current) return;
-      setMode(isIos ? 'ios' : 'android');
-      setVisible(true);
-      shownRef.current = true;
-      track('mobile_banner_shown', { mode: isIos ? 'ios' : 'android' });
-    }, 2500);
+    // 4) Fallback manual: SÓ no mobile. Depois de 2,5s, se o nativo não veio,
+    // mostra o passo a passo. No desktop o Chrome já mostra o ícone de instalar
+    // na barra de endereço quando instalável, então não forçamos instruções.
+    let tid: ReturnType<typeof setTimeout> | undefined;
+    if (isMobile) {
+      tid = setTimeout(() => {
+        if (shownRef.current) return;
+        setMode(isIos ? 'ios' : 'android');
+        setVisible(true);
+        shownRef.current = true;
+        track('mobile_banner_shown', { mode: isIos ? 'ios' : 'android' });
+      }, 2500);
+    }
 
     return () => {
-      clearTimeout(tid);
+      if (tid) clearTimeout(tid);
       window.removeEventListener('pwa-installable', onInstallable);
       window.removeEventListener('beforeinstallprompt', onBeforeInstall);
     };

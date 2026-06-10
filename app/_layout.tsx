@@ -29,6 +29,7 @@ import { ConfirmHost } from '@/components/confirm-host';
 import { DocumentTitleManager } from '@/components/document-title-manager';
 import { MobileAppBanner } from '@/components/mobile-app-banner';
 import { I18nProvider } from '@/lib/i18n';
+import { bootstrapPwaWeb } from '@/lib/pwa-bootstrap';
 import { initSentry } from '@/lib/sentry';
 import { MotionProvider } from '@/providers/motion-provider';
 import { QueryProvider } from '@/providers/query-provider';
@@ -42,6 +43,11 @@ import { ToastProvider } from '@/providers/toast-provider';
 // Init Sentry o mais cedo possível, antes de qualquer render. No-op se sem DSN
 // configurada ou em dev.
 initSentry();
+
+// Injeta manifest + service worker + favicon do Mozart em runtime (web only).
+// Necessário porque o modo SPA (output:single) ignora o app/+html.tsx — sem
+// isso a PWA não fica instalável e o botão "Instalar" não aparece.
+bootstrapPwaWeb();
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
