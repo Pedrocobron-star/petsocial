@@ -118,6 +118,37 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Entrou no pódio (top 10) de um Torneio de Cassino',
     tier: 3,
   },
+  // ============================================================================
+  // Conquistas da Missão do Dia (foto do dia)
+  // ============================================================================
+  {
+    id: 'mission_first',
+    emoji: '🎯',
+    title: 'Foto do dia',
+    description: 'Cumpriu a primeira missão do dia',
+    tier: 1,
+  },
+  {
+    id: 'mission_week',
+    emoji: '📅',
+    title: 'Semana fotogênica',
+    description: 'Cumpriu 7 missões do dia',
+    tier: 2,
+  },
+  {
+    id: 'mission_streak',
+    emoji: '🔥',
+    title: 'Sequência de fogo',
+    description: '7 dias seguidos cumprindo a missão do dia',
+    tier: 3,
+  },
+  {
+    id: 'mission_month',
+    emoji: '🏅',
+    title: 'Mês completo',
+    description: 'Cumpriu 30 missões do dia',
+    tier: 3,
+  },
 ];
 
 export interface AchievementUnlockState {
@@ -136,6 +167,8 @@ interface ComputeInput {
   distinctGamesPlayed: number;
   maxGameDifficulty: number;
   tournamentWins: number;
+  missionsCompleted: number;
+  missionStreak: number;
 }
 
 /**
@@ -153,6 +186,8 @@ export function computeAchievements(input: ComputeInput): AchievementUnlockState
     distinctGamesPlayed,
     maxGameDifficulty,
     tournamentWins,
+    missionsCompleted,
+    missionStreak,
   } = input;
 
   return ACHIEVEMENTS.map((def) => {
@@ -219,6 +254,22 @@ export function computeAchievements(input: ComputeInput): AchievementUnlockState
       case 'tournament_champ':
         unlocked = tournamentWins >= 1;
         if (!unlocked) progress = { current: tournamentWins, target: 1 };
+        break;
+      case 'mission_first':
+        unlocked = missionsCompleted >= 1;
+        if (!unlocked) progress = { current: missionsCompleted, target: 1 };
+        break;
+      case 'mission_week':
+        unlocked = missionsCompleted >= 7;
+        progress = { current: Math.min(missionsCompleted, 7), target: 7 };
+        break;
+      case 'mission_streak':
+        unlocked = missionStreak >= 7;
+        progress = { current: Math.min(missionStreak, 7), target: 7 };
+        break;
+      case 'mission_month':
+        unlocked = missionsCompleted >= 30;
+        progress = { current: Math.min(missionsCompleted, 30), target: 30 };
         break;
     }
 

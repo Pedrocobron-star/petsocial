@@ -3,9 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -49,6 +49,7 @@ interface PickedMedia {
 
 export default function CreatePostScreen() {
   const router = useRouter();
+  const { tag } = useLocalSearchParams<{ tag?: string }>();
   const { theme } = useTheme();
   const { session } = useSession();
   const { pets, activePet, setActivePet } = useActivePet();
@@ -88,6 +89,23 @@ export default function CreatePostScreen() {
       .catch(() => {})
       .finally(() => setDraftLoaded(true));
   }, [petId]);
+
+  // Veio da "Missão do dia" com ?tag= → pré-preenche a hashtag (uma vez).
+  const tagApplied = useRef(false);
+  useEffect(() => {
+    if (!draftLoaded || tagApplied.current) return;
+    const t = typeof tag === 'string' ? tag.trim() : '';
+    if (!t) return;
+    tagApplied.current = true;
+    const hash = `#${t}`;
+    setCaption((prev) =>
+      prev.toLowerCase().includes(hash.toLowerCase())
+        ? prev
+        : prev
+          ? `${prev.trimEnd()} ${hash} `
+          : `${hash} `,
+    );
+  }, [draftLoaded, tag]);
 
   // Auto-save draft a cada mudança (debounce de 600ms via timeout)
   useEffect(() => {

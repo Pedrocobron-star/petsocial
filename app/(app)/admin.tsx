@@ -273,6 +273,14 @@ export default function AdminScreen() {
             color="#9D174D"
             bg="#FCE7F3"
           />
+          <NavCard
+            href="/(app)/admin/daily-missions"
+            icon="camera"
+            label="Missão do Dia"
+            sub="Objetivo de foto por dia"
+            color="#C2410C"
+            bg="#FFEDD5"
+          />
         </View>
 
         {/* Loading */}

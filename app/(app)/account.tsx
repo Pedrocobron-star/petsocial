@@ -40,6 +40,19 @@ export default function AccountScreen() {
 
   const [showDelete, setShowDelete] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await signOut();
+    } catch {
+      // se a sessão já caiu, segue mesmo assim pro welcome
+    }
+    router.replace('/welcome' as never);
+  };
 
   const cancelMut = useMutation({
     mutationFn: () => cancelSubscription(userId!),
@@ -425,6 +438,44 @@ export default function AccountScreen() {
           </Link>
         </View>
 
+        {/* Sair da conta (logout simples, não destrutivo) */}
+        <Pressable
+          onPress={() => setShowLogout(true)}
+          style={{
+            backgroundColor: theme.surface,
+            borderRadius: 12,
+            padding: 14,
+            marginTop: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            borderWidth: 1,
+            borderColor: theme.borderLight,
+          }}
+        >
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: '#FEF3C7',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="log-out-outline" size={18} color="#92400E" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }}>
+              Sair da conta
+            </Text>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim, marginTop: 2 }}>
+              Desconecta deste aparelho. Seus dados continuam salvos.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={theme.textDim} />
+        </Pressable>
+
         {/* LGPD — Privacidade & Dados */}
         <View style={{ marginTop: 8 }}>
           <Text
@@ -545,6 +596,49 @@ export default function AccountScreen() {
       />
 
       <ChangePasswordModal visible={showPassword} onClose={() => setShowPassword(false)} />
+
+      <Modal visible={showLogout} transparent animationType="fade" onRequestClose={() => !loggingOut && setShowLogout(false)}>
+        <View style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 24 }}>
+          <View style={{ backgroundColor: theme.surface, borderRadius: 18, padding: 22, gap: 8 }}>
+            <View style={{ alignItems: 'center', gap: 10 }}>
+              <View
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 26,
+                  backgroundColor: '#FEF3C7',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="log-out-outline" size={26} color="#92400E" />
+              </View>
+              <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: theme.text, textAlign: 'center' }}>
+                Sair da conta?
+              </Text>
+              <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.textDim, textAlign: 'center', lineHeight: 19 }}>
+                Você vai precisar entrar de novo com email e senha. Nada é apagado, é só desconectar.
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+              <Button
+                title="Cancelar"
+                variant="ghost"
+                onPress={() => setShowLogout(false)}
+                disabled={loggingOut}
+                style={{ flex: 1 }}
+              />
+              <Button
+                title="Sair"
+                onPress={handleLogout}
+                loading={loggingOut}
+                disabled={loggingOut}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { FlatList, View, type ViewToken } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DailyMissionCard } from '@/components/daily-mission-card';
 import { EmptyState } from '@/components/empty-state';
 import { EngagementNudge } from '@/components/engagement-nudge';
 import { Fab } from '@/components/fab';
@@ -179,6 +180,7 @@ export default function FeedScreen() {
           contentContainerStyle={{ paddingTop: 0, paddingBottom: 24, flexGrow: 1 }}
           ListHeaderComponent={
             <>
+              <DailyMissionCard />
               <FeedEngagementNudge />
               <EngagementNudge />
               <RecallBanner />

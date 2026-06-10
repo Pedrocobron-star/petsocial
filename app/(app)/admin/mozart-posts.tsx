@@ -84,7 +84,7 @@ export default function AdminMozartPostsScreen() {
               Posts do Mozart
             </Text>
             <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#A3A3A3', marginTop: 2 }}>
-              Posta no feed pelo perfil oficial — aparece pra todos
+              Posta no feed pelo perfil oficial. Aparece pra todos.
             </Text>
           </View>
         </View>

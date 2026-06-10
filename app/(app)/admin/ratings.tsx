@@ -61,7 +61,7 @@ const TEMPLATES: Template[] = [
     emoji: '🙏',
     tiers: [3],
     grantPro: false,
-    text: 'Oi! Aqui é o Mozart 🐾 Obrigado pela avaliação! A gente quer deixar o Maestro Pet ainda melhor pra você — me conta o que faltou ou o que dava pra melhorar? Sua ajuda vale muito! 🙏',
+    text: 'Oi! Aqui é o Mozart 🐾 Obrigado pela avaliação! A gente quer deixar o Maestro Pet ainda melhor pra você. Me conta o que faltou ou o que dava pra melhorar? Sua ajuda vale muito! 🙏',
   },
   {
     key: 'recover',
@@ -69,7 +69,7 @@ const TEMPLATES: Template[] = [
     emoji: '🎁',
     tiers: [1, 2],
     grantPro: true,
-    text: 'Oi! Aqui é o Mozart 🐾 Obrigado de verdade por avaliar — é com feedback sincero assim que a gente melhora o app. Quero te dar 1 mês de Pet Pro de presente pra você ter uma experiência melhor por aqui. Me conta o que a gente pode melhorar? 💛',
+    text: 'Oi! Aqui é o Mozart 🐾 Obrigado de verdade por avaliar! É com feedback sincero assim que a gente melhora o app. Quero te dar 1 mês de Pet Pro de presente pra você ter uma experiência melhor por aqui. Me conta o que a gente pode melhorar? 💛',
   },
 ];
 
