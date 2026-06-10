@@ -2,6 +2,7 @@ import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 
 import { AppQuickActions } from '@/components/app-quick-actions';
+import { BackHomeGuard } from '@/components/back-home-guard';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { HeaderHomeIcon } from '@/components/header-home-logo';
 import { HealthNotificationHandler } from '@/components/health-notification-handler';
@@ -34,6 +35,7 @@ export default function AppLayout() {
         <RealtimeProvider>
           <HealthNotificationHandler />
           <AppQuickActions />
+          <BackHomeGuard />
           <NotificationPrompt />
           <Stack
           screenOptions={{
