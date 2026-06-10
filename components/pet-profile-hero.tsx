@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
-import { speciesLabel, temperamentEmoji, temperamentLabel } from '@/lib/constants';
+import { speciesLabel } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
 import { formatCount } from '@/lib/format';
 import { petAgeText } from '@/lib/pet-age';
@@ -199,8 +199,8 @@ export function PetProfileHero({
           </Text>
         ) : null}
 
-        {/* Personality / Temperament badges */}
-        {personality || pet.social_temperament ? (
+        {/* Personalidade (resultado do quiz) ou CTA pra fazer o quiz */}
+        {personality || isOwn ? (
           <View
             style={{
               flexDirection: 'row',
@@ -232,24 +232,6 @@ export function PetProfileHero({
                   </Text>
                 </PressScale>
               </Link>
-            ) : null}
-            {pet.social_temperament ? (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 6,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 999,
-                  backgroundColor: '#F5F5F5',
-                }}
-              >
-                <Text style={{ fontSize: 14 }}>{temperamentEmoji(pet.social_temperament)}</Text>
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#404040' }}>
-                  {temperamentLabel(pet.social_temperament)}
-                </Text>
-              </View>
             ) : null}
             {!personality && isOwn ? (
               <Link

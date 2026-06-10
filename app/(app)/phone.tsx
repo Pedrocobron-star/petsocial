@@ -492,6 +492,7 @@ export default function PetPhoneScreen() {
       { label: 'Notícias', emoji: '📰', bg: '#EC4899', href: '/(app)/news' },
       { label: 'Notificações', emoji: '🔔', bg: '#F87171', href: '/(app)/notifications' },
       { label: 'Achados', emoji: '🦴', bg: '#FCD34D', href: '/(app)/lost-found' },
+      { label: 'Adoção', emoji: '🏠', bg: '#F472B6', href: '/(app)/adoption' },
       { label: 'Ajustes', emoji: '⚙️', bg: '#94A3B8', href: '/(app)/account' },
       { label: 'Pet Pro', emoji: '⭐', bg: '#FBBF24', href: '/(app)/pro' },
       ...(isAdmin ? [{ label: 'Admin', emoji: '🛠️', bg: '#1F2937', href: '/(app)/admin' }] : []),

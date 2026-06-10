@@ -20,9 +20,12 @@ interface Props {
 
 function fmtDate(iso: string | null | undefined): string {
   if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('pt-BR');
+  // Parseia 'YYYY-MM-DD' como data LOCAL (não UTC) — senão o fuso BR mostra 1 dia a menos.
+  const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return '—';
+  const dt = new Date(y, m - 1, d);
+  if (Number.isNaN(dt.getTime())) return '—';
+  return dt.toLocaleDateString('pt-BR');
 }
 
 function speciesEmoji(species: string): string {

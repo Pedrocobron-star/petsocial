@@ -29,6 +29,7 @@ export default function QuizScreen() {
   });
 
   const [step, setStep] = useState(0);
+  const [started, setStarted] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [result, setResult] = useState<PersonalityType | null>(null);
 
@@ -191,7 +192,7 @@ export default function QuizScreen() {
   }
 
   // Tela inicial
-  if (step === -1 || (step === 0 && Object.keys(answers).length === 0)) {
+  if (!started) {
     return (
       <View style={{ flex: 1, backgroundColor: '#FFF7ED' }}>
         <Stack.Screen options={{ title: 'Quiz de personalidade', headerShown: true }} />
@@ -247,7 +248,16 @@ export default function QuizScreen() {
           </View>
 
           <View style={{ marginTop: 22 }}>
-            <Button title="Começar quiz 🚀" onPress={() => setStep(0)} fullWidth />
+            <Button
+              title="Começar quiz 🚀"
+              onPress={() => {
+                setStep(0);
+                setAnswers({});
+                setResult(null);
+                setStarted(true);
+              }}
+              fullWidth
+            />
           </View>
         </ScrollView>
       </View>

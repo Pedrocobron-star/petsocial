@@ -4,10 +4,10 @@ import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 
-import { SPECIES_OPTIONS, TEMPERAMENT_OPTIONS } from '@/lib/constants';
+import { SPECIES_OPTIONS } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
 import { guessExtension, uploadToBucket } from '@/lib/storage';
-import type { SocialTemperament, Species } from '@/lib/types';
+import type { Species } from '@/lib/types';
 import { petSchema, type PetInput } from '@/lib/validators';
 
 import { Button } from './ui/button';
@@ -28,9 +28,6 @@ export function PetForm({ userId, initial, submitLabel, onSubmit }: Props) {
   const [birthdate, setBirthdate] = useState(initial?.birthdate ?? '');
   const [bio, setBio] = useState(initial?.bio ?? '');
   const [avatarUrl, setAvatarUrl] = useState(initial?.avatar_url ?? '');
-  const [temperament, setTemperament] = useState<SocialTemperament | ''>(
-    (initial?.social_temperament as SocialTemperament | undefined) ?? '',
-  );
   // Carteirinha
   const [microchipNumber, setMicrochipNumber] = useState(initial?.microchip_number ?? '');
   const [rgaNumber, setRgaNumber] = useState(initial?.rga_number ?? '');
@@ -86,7 +83,6 @@ export function PetForm({ userId, initial, submitLabel, onSubmit }: Props) {
       birthdate,
       bio,
       avatar_url: avatarUrl,
-      social_temperament: temperament,
       microchip_number: microchipNumber,
       rga_number: rgaNumber,
       blood_type: bloodType,
@@ -191,62 +187,6 @@ export function PetForm({ userId, initial, submitLabel, onSubmit }: Props) {
           error={errors.bio}
           rows={3}
         />
-
-        <View>
-          <Text
-            style={{
-              fontFamily: FONTS.bodySemibold,
-              fontSize: 13,
-              color: '#404040',
-              marginBottom: 6,
-            }}
-          >
-            Como ele(a) é com outros pets? (opcional)
-          </Text>
-          <View className="gap-2">
-            {TEMPERAMENT_OPTIONS.map((opt) => {
-              const active = temperament === opt.value;
-              return (
-                <Pressable
-                  key={opt.value}
-                  onPress={() => setTemperament(active ? '' : opt.value)}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 10,
-                    borderRadius: 14,
-                    padding: 12,
-                    backgroundColor: active ? '#FFEDD5' : '#fff',
-                    borderWidth: 1,
-                    borderColor: active ? '#F97316' : '#E5E5E5',
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 10,
-                      backgroundColor: active ? '#fff' : '#FAFAFA',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text style={{ fontSize: 20 }}>{opt.emoji}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#1A1410' }}>
-                      {opt.label}
-                    </Text>
-                    <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#737373' }}>
-                      {opt.desc}
-                    </Text>
-                  </View>
-                  {active ? <Ionicons name="checkmark-circle" size={20} color="#F97316" /> : null}
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
 
         {/* ============================================================
             CARTEIRINHA — seção colapsável com campos opcionais

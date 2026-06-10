@@ -43,7 +43,11 @@ export default function Root({ children }: PropsWithChildren) {
         {/* Web App Manifest — installability da PWA (faz o beforeinstallprompt disparar) */}
         <link rel="manifest" href="/manifest.json" />
 
-        {/* Apple touch icon (PWA install em iOS) */}
+        {/* Favicon — cara do Mozart na aba do navegador */}
+        <link rel="icon" type="image/png" href="/mozart/rosto.png" />
+        <link rel="shortcut icon" href="/mozart/rosto.png" />
+
+        {/* Apple touch icon (PWA install em iOS) — ícone opaco (transparente vira preto no iOS) */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 

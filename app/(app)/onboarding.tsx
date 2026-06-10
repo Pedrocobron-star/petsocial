@@ -106,7 +106,6 @@ export default function OnboardingScreen() {
                   birthdate: data.birthdate || null,
                   bio: data.bio || null,
                   avatar_url: data.avatar_url || null,
-                  social_temperament: data.social_temperament || null,
                 });
                 if (error) throw error;
                 await qc.invalidateQueries({ queryKey: qk.myPets(userId) });

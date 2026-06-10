@@ -133,7 +133,6 @@ export default function NewPetScreen() {
                 birthdate: data.birthdate || null,
                 bio: data.bio || null,
                 avatar_url: data.avatar_url || null,
-                social_temperament: data.social_temperament || null,
                 microchip_number: data.microchip_number || null,
                 rga_number: data.rga_number || null,
                 blood_type: data.blood_type || null,

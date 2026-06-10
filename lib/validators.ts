@@ -20,10 +20,6 @@ export const petSchema = z.object({
   birthdate: z.string().optional().or(z.literal('')),
   bio: z.string().max(200).optional().or(z.literal('')),
   avatar_url: z.string().url().optional().or(z.literal('')),
-  social_temperament: z
-    .enum(['sociable', 'shy', 'needs_space', 'mixed'])
-    .optional()
-    .or(z.literal('')),
   // Campos da carteirinha — todos opcionais, declarados pelo tutor
   microchip_number: z.string().max(40).optional().or(z.literal('')),
   rga_number: z.string().max(40).optional().or(z.literal('')),

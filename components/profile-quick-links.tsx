@@ -17,31 +17,9 @@ interface LinkItem {
   tintText: string;
 }
 
+// Só funções SOCIAIS da rede — os demais apps (Saúde, Lembretes, Pet Map,
+// Conquistas, Vantagens, Adoção, Achados, etc.) vivem no springboard (/phone).
 const ITEMS: LinkItem[] = [
-  {
-    href: '/(app)/pets-overview',
-    emoji: '🩺',
-    label: 'Saúde dos pets',
-    sub: 'Vista consolidada de todos',
-    tint: '#FFEDD5',
-    tintText: '#9A3412',
-  },
-  {
-    href: '/(app)/reminders',
-    icon: 'notifications',
-    label: 'Lembretes',
-    sub: 'O que cuidar nos seus pets',
-    tint: '#FEF3C7',
-    tintText: '#92400E',
-  },
-  {
-    href: '/(app)/shared-pets',
-    emoji: '🤝',
-    label: 'Pets que cuido',
-    sub: 'Compartilhados comigo',
-    tint: '#DCFCE7',
-    tintText: '#166534',
-  },
   {
     href: '/(app)/messages',
     icon: 'chatbubbles',
@@ -67,46 +45,6 @@ const ITEMS: LinkItem[] = [
     tintText: '#9A3412',
   },
   {
-    href: '/(app)/lost-found',
-    emoji: '🦴',
-    label: 'Lost & Found',
-    sub: 'Pets perdidos/achados',
-    tint: '#FEE2E2',
-    tintText: '#991B1B',
-  },
-  {
-    href: '/(app)/adoption',
-    emoji: '🏠',
-    label: 'Adoção',
-    sub: 'Pets esperando um lar',
-    tint: '#FEF2F2',
-    tintText: '#9F1239',
-  },
-  {
-    href: '/(app)/places',
-    icon: 'map',
-    label: 'Pet Map',
-    sub: 'Vets, shops, parques',
-    tint: '#DBEAFE',
-    tintText: '#1E40AF',
-  },
-  {
-    href: '/(app)/achievements',
-    emoji: '🏆',
-    label: 'Conquistas',
-    sub: 'Medalhas e progresso',
-    tint: '#FEF3C7',
-    tintText: '#92400E',
-  },
-  {
-    href: '/(app)/offers',
-    emoji: '🎁',
-    label: 'Vantagens',
-    sub: 'Cupons e descontos de parceiros',
-    tint: '#DCFCE7',
-    tintText: '#166534',
-  },
-  {
     href: '/(app)/account',
     icon: 'settings',
     label: 'Conta',
@@ -117,8 +55,8 @@ const ITEMS: LinkItem[] = [
 ];
 
 /**
- * Grid 2 colunas dos atalhos do perfil. Inclui Mensagens, Notificações,
- * Salvos, Lost&Found, Pet Map, Conquistas, Conta. Cores tonais consistentes.
+ * Grid 2 colunas dos atalhos SOCIAIS do perfil: Mensagens, Notificações,
+ * Salvos e Conta. Cores tonais consistentes.
  */
 export function ProfileQuickLinks() {
   // Distribui itens em pares pra renderizar como grade 2 colunas
