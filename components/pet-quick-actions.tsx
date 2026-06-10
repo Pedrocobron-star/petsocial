@@ -369,14 +369,6 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
             <>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <QuickCard
-                  href={`/pet/${petId}/avatar`}
-                  emoji="🎨"
-                  label="Avatar 2D"
-                  sub="Crie a versão fofa"
-                  tint="#FCE7F3"
-                  tintText="#9D174D"
-                />
-                <QuickCard
                   href={`/pet/${petId}/time-capsule`}
                   emoji="📼"
                   label="Retrospectiva"

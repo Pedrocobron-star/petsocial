@@ -98,7 +98,6 @@ export function MyPetsSection({ pets, activePetId, onSelectPet }: Props) {
                       pet={pet}
                       size={52}
                       ring={active}
-                      animation={active ? 'pulse' : 'breathe'}
                     />
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

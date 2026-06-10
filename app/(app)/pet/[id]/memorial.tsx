@@ -180,7 +180,7 @@ export default function MemorialScreen() {
             }}
           >
             <View style={{ opacity: 0.7 }}>
-              <PetAvatar pet={pet} size={140} animation="float" />
+              <PetAvatar pet={pet} size={140} />
             </View>
           </View>
           <Text

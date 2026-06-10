@@ -81,7 +81,6 @@ export default function AppLayout() {
         <Stack.Screen name="pet/[id]/time-capsule" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="pet/[id]/recap" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="pet/[id]/ai-assistant" options={{ headerShown: true }} />
-        <Stack.Screen name="pet/[id]/avatar" options={{ headerShown: true, title: 'Avatar' }} />
         <Stack.Screen name="pet/[id]/id-card" options={{ headerShown: true, title: 'Carteirinha' }} />
         <Stack.Screen name="pet/[id]/caretakers" options={{ headerShown: true, title: 'Cuidadores' }} />
         <Stack.Screen name="pet/[id]/agenda" options={{ headerShown: true, title: 'Agenda' }} />

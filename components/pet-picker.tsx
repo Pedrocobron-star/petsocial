@@ -37,7 +37,6 @@ export function PetPicker({ pets, selectedId, onSelect }: Props) {
               size={38}
               ring={active}
               pulse={active}
-              animation={active ? 'pulse' : 'breathe'}
             />
             <Text
               numberOfLines={1}

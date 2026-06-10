@@ -168,7 +168,6 @@ function PodiumCard({
               <PetAvatar
                 pet={post.pet}
                 size={16}
-                animation={rank === 1 ? 'bob' : 'breathe'}
               />
               <Text
                 style={{

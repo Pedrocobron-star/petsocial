@@ -185,7 +185,7 @@ export default function LostReportDetailScreen() {
               justifyContent: 'center',
             }}
           >
-            <PetAvatar pet={linkedPet} size={220} animation="breathe" />
+            <PetAvatar pet={linkedPet} size={220} />
           </View>
         ) : (
           <View

@@ -260,7 +260,7 @@ function NotificationRow({ notification: n }: { notification: NotificationWithDe
       <View className="relative">
         <Link href={{ pathname: '/pet/[id]', params: { id: n.actor.id } }} asChild>
           <Pressable>
-            <PetAvatar pet={n.actor} size={44} animation={!n.read ? 'wag' : undefined} />
+            <PetAvatar pet={n.actor} size={44} />
           </Pressable>
         </Link>
         <View

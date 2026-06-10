@@ -40,7 +40,7 @@ export function ComposeBar({ pet }: Props) {
           borderColor: theme.borderLight,
         }}
       >
-        <PetAvatar pet={pet} size={30} animation="bob" />
+        <PetAvatar pet={pet} size={30} />
         <Text
           numberOfLines={1}
           style={{

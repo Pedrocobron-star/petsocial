@@ -69,7 +69,7 @@ export default function TimeCapsuleScreen() {
             <Text style={{ color: '#F59E0B' }}>{pet.name}</Text>
           </Text>
           <View style={{ marginTop: 8 }}>
-            <PetAvatar pet={pet} size={120} ring animation="float" />
+            <PetAvatar pet={pet} size={120} ring />
           </View>
         </View>
 

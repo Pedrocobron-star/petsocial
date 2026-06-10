@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -17,8 +17,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { AnimatedPetAvatar } from '@/components/avatar/animated-pet-avatar';
-import { PetAvatarSvg } from '@/components/avatar/pet-avatar-svg';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PressScale } from '@/components/ui/press-scale';
@@ -121,16 +119,6 @@ export function EventMoodLog({
     transform: [{ scale: avatarScale.value }],
   }));
 
-  // Decide expressão do avatar baseada no mood selecionado
-  const avatarExpression = useMemo<'happy' | 'sad' | 'surprised' | 'love' | 'cry' | null>(() => {
-    if (mood === null) return null;
-    if (mood === 5) return 'love';     // amou muito → corações
-    if (mood === 4) return 'happy';    // gostou
-    if (mood === 3) return 'surprised'; // curioso/neutro
-    if (mood === 2) return 'sad';      // não gostou
-    if (mood === 1) return 'cry';      // detestou → lágrimas
-    return null;
-  }, [mood]);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -239,8 +227,8 @@ export function EventMoodLog({
             }}
           >
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              {/* Avatar customizado do pet com expressão reativa ao mood + jump quando AMOU */}
-              {pet?.avatar_config ? (
+              {/* Avatar do pet com micro-animação reativa ao mood */}
+              <Animated.View style={avatarAnimStyle}>
                 <View
                   style={{
                     width: 56,
@@ -249,46 +237,11 @@ export function EventMoodLog({
                     backgroundColor: meta.tint.bg,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    overflow: 'hidden',
                   }}
                 >
-                  <AnimatedPetAvatar
-                    config={pet.avatar_config}
-                    size={56}
-                    showBackground={false}
-                    expression={avatarExpression}
-                    animation={
-                      mood === 5
-                        ? 'heart_burst'
-                        : mood === 4
-                        ? 'jump'
-                        : mood === 3
-                        ? 'head_tilt'
-                        : mood === 2
-                        ? 'shake'
-                        : mood === 1
-                        ? 'wiggle'
-                        : 'breathe'
-                    }
-                    triggerKey={`mood-${mood ?? 'idle'}`}
-                  />
+                  <Text style={{ fontSize: 28 }}>{meta.emoji}</Text>
                 </View>
-              ) : (
-                <Animated.View style={avatarAnimStyle}>
-                  <View
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 16,
-                      backgroundColor: meta.tint.bg,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text style={{ fontSize: 28 }}>{meta.emoji}</Text>
-                  </View>
-                </Animated.View>
-              )}
+              </Animated.View>
               <View style={{ flex: 1 }}>
                 <Text
                   style={{

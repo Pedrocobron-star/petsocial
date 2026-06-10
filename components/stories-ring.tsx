@@ -50,7 +50,7 @@ export function StoriesRing() {
           <Link href="/(app)/(tabs)/create" asChild>
             <Pressable style={{ alignItems: 'center', gap: 4, width: 54 }}>
               <View style={{ position: 'relative' }}>
-                <PetAvatar pet={yourPet} size={44} animation="pulse" />
+                <PetAvatar pet={yourPet} size={44} />
                 <View
                   style={{
                     position: 'absolute',
@@ -81,7 +81,7 @@ export function StoriesRing() {
           {pets.map((p) => (
             <Link key={p.id} href={{ pathname: '/pet/[id]', params: { id: p.id } }} asChild>
               <Pressable style={{ alignItems: 'center', gap: 4, width: 54 }}>
-                <PetAvatar pet={p} size={44} rainbow animation="breathe" />
+                <PetAvatar pet={p} size={44} rainbow />
                 <Text
                   style={{ fontFamily: FONTS.body, fontSize: 10.5, color: theme.textDim, maxWidth: 52 }}
                   numberOfLines={1}

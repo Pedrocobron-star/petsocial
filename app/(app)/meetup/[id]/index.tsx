@@ -253,7 +253,7 @@ function MeetupDetailInner() {
           </Text>
         ) : null}
         <View className="mt-4 flex-row items-center gap-2 rounded-2xl bg-neutral-50 p-3">
-          <PetAvatar pet={m.host_pet} size={36} animation="wag" />
+          <PetAvatar pet={m.host_pet} size={36} />
           <View>
             <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>Host</Text>
             <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#1A1410' }}>
@@ -358,7 +358,7 @@ function MeetupDetailInner() {
           <View className="flex-row flex-wrap gap-3">
             {going.map((r) => (
               <View key={r.pet_id} className="items-center">
-                <PetAvatar pet={r.pet} size={52} animation="breathe" />
+                <PetAvatar pet={r.pet} size={52} />
                 <Text
                   style={{
                     fontFamily: FONTS.bodyMedium,

@@ -128,7 +128,7 @@ export default function PetRecapScreen() {
                   {recap.monthShort} do{'\n'}
                   <Text style={{ color: '#F59E0B' }}>{pet.name}</Text>
                 </Text>
-                <PetAvatar pet={pet} size={104} ring animation="float" />
+                <PetAvatar pet={pet} size={104} ring />
                 <Text style={{ fontFamily: FONTS.body, fontSize: 14, color: '#D4D4D4', textAlign: 'center' }}>
                   {recapVibe(recap, pet.name)}
                 </Text>

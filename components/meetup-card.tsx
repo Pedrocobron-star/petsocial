@@ -105,7 +105,7 @@ export function MeetupCard({ meetup }: { meetup: MeetupWithDetails }) {
         </View>
         <View className="mt-3 flex-row items-center justify-between">
           <View className="flex-row items-center gap-2">
-            <PetAvatar pet={meetup.host_pet} size={28} animation="wag" />
+            <PetAvatar pet={meetup.host_pet} size={28} />
             <View>
               <Text style={{ fontFamily: FONTS.body, fontSize: 12.5, color: theme.textMuted }}>
                 Host:{' '}

@@ -72,7 +72,7 @@ export function PopularPetCard({ pet, rank }: Props) {
           </View>
         ) : null}
 
-        <PetAvatar pet={pet} size={56} animation="breathe" />
+        <PetAvatar pet={pet} size={56} />
 
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

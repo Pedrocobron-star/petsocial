@@ -37,7 +37,6 @@ import { useIsPro } from '@/providers/subscription-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
-import { animationForPersonality, type AvatarAnimation } from './avatar/animated-pet-avatar';
 import { EditPostModal } from './edit-post-modal';
 import { PostEditHistoryModal } from './post-edit-history-modal';
 import { FloatPlusOne } from './float-plus-one';
@@ -119,28 +118,6 @@ function PostCardComponent({
   const wasEdited =
     !!post.updated_at &&
     new Date(post.updated_at).getTime() - new Date(post.created_at).getTime() > 60_000;
-  // Anima o avatar do pet do post quando uma ação é disparada (like, comment).
-  // `null` = volta pro estado base (breathe). One-shot dura ~700ms.
-  const [petOneShot, setPetOneShot] = useState<AvatarAnimation>(null);
-  const [petAnimTrigger, setPetAnimTrigger] = useState(0);
-  const petOneShotTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const triggerPetOneShot = (anim: AvatarAnimation, duration = 700) => {
-    if (petOneShotTimeout.current) clearTimeout(petOneShotTimeout.current);
-    setPetOneShot(anim);
-    setPetAnimTrigger((k) => k + 1);
-    petOneShotTimeout.current = setTimeout(() => {
-      setPetOneShot(null);
-      petOneShotTimeout.current = null;
-    }, duration);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (petOneShotTimeout.current) clearTimeout(petOneShotTimeout.current);
-    };
-  }, []);
-
   const heartScale = useSharedValue(1);
   const heartStyle = useAnimatedStyle(() => ({
     transform: [{ scale: heartScale.value }],
@@ -176,7 +153,6 @@ function PostCardComponent({
       haptic.light();
       animateHeart();
       setPlusOneVisible(true);
-      triggerPetOneShot('heart_burst', 700);
     }
     setLiked(next);
     setLikesCount((c) => c + (next ? 1 : -1));
@@ -301,13 +277,7 @@ function PostCardComponent({
       >
         <Link href={{ pathname: '/pet/[id]', params: { id: post.pet.id } }} asChild>
           <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 9, flex: 1 }}>
-            <PetAvatar
-              pet={post.pet}
-              size={36}
-              animation={petOneShot ?? animationForPersonality(post.pet.personality_type)}
-              triggerKey={petAnimTrigger}
-              showMascot
-            />
+            <PetAvatar pet={post.pet} size={36} />
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Text

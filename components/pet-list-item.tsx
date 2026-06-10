@@ -29,7 +29,7 @@ export function PetListItem({ pet, subtitle }: Props) {
           paddingVertical: 12,
         }}
       >
-        <PetAvatar pet={pet} size={48} animation="breathe" />
+        <PetAvatar pet={pet} size={48} />
         <View className="flex-1">
           <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}>
             {pet.name}

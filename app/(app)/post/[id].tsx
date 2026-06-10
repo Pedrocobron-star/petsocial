@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -20,7 +20,6 @@ import {
 
 import { MediaCarousel } from '@/components/media-carousel';
 import { MetaTags } from '@/components/meta-tags';
-import type { AvatarAnimation } from '@/components/avatar/animated-pet-avatar';
 import { PetAvatar } from '@/components/pet-avatar';
 import { Button } from '@/components/ui/button';
 import { TextArea } from '@/components/ui/text-area';
@@ -59,26 +58,6 @@ export default function PostDetailScreen() {
   // Quando user clica "Responder" num comentário, registra o pai pra próximo addComment
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyingToName, setReplyingToName] = useState<string | null>(null);
-  // Anima o avatar do pet do post quando ação ocorre.
-  const [petOneShot, setPetOneShot] = useState<AvatarAnimation>(null);
-  const [petAnimTrigger, setPetAnimTrigger] = useState(0);
-  const petOneShotTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const triggerPetOneShot = (anim: AvatarAnimation, duration = 700) => {
-    if (petOneShotTimeout.current) clearTimeout(petOneShotTimeout.current);
-    setPetOneShot(anim);
-    setPetAnimTrigger((k) => k + 1);
-    petOneShotTimeout.current = setTimeout(() => {
-      setPetOneShot(null);
-      petOneShotTimeout.current = null;
-    }, duration);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (petOneShotTimeout.current) clearTimeout(petOneShotTimeout.current);
-    };
-  }, []);
 
   const postQuery = useQuery({
     queryKey: qk.post(id),
@@ -95,8 +74,6 @@ export default function PostDetailScreen() {
     mutationFn: () => toggleLike(id, activePet!.id, !!postQuery.data?.liked_by_me),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.post(id) });
-      // Anima só quando o resultado é "curtir" (não descurtir)
-      if (!postQuery.data?.liked_by_me) triggerPetOneShot('heart_burst', 700);
     },
   });
   const commentMutation = useMutation({
@@ -108,7 +85,6 @@ export default function PostDetailScreen() {
       setReplyingToName(null);
       qc.invalidateQueries({ queryKey: qk.comments(id) });
       qc.invalidateQueries({ queryKey: qk.post(id) });
-      triggerPetOneShot('bob', 1000);
     },
   });
   // Curtir / descurtir comentário (toggle)
@@ -330,12 +306,7 @@ export default function PostDetailScreen() {
         ) : null}
 
         <View className="flex-row items-center gap-3 px-4 py-3">
-          <PetAvatar
-            pet={post.pet}
-            size={36}
-            animation={petOneShot ?? 'breathe'}
-            triggerKey={petAnimTrigger}
-          />
+          <PetAvatar pet={post.pet} size={36} />
           <View>
             <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#1A1410' }}>
               {post.pet.name}

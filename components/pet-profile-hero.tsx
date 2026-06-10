@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Text, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { speciesLabel, temperamentEmoji, temperamentLabel } from '@/lib/constants';
@@ -12,7 +12,6 @@ import type { Pet } from '@/lib/types';
 import { useTheme } from '@/providers/theme-provider';
 
 import { ImageViewer } from './image-viewer';
-import { animationForPersonality, type AvatarAnimation } from './avatar/animated-pet-avatar';
 import { PetAvatar } from './pet-avatar';
 import { Button } from './ui/button';
 import { CenteredColumn } from './ui/centered-column';
@@ -55,28 +54,6 @@ export function PetProfileHero({
   const ageText = petAgeText(pet.birthdate);
   const personality = pet.personality_type ? PERSONALITY_INFO[pet.personality_type] : null;
 
-  // Anima o avatar quando o user começa a seguir.
-  const [petOneShot, setPetOneShot] = useState<AvatarAnimation>(null);
-  const [petAnimTrigger, setPetAnimTrigger] = useState(0);
-  const prevFollowing = useRef(isFollowing);
-  const oneShotTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    // Trigger jump quando isFollowing passa de false → true
-    if (isFollowing && !prevFollowing.current) {
-      if (oneShotTimeout.current) clearTimeout(oneShotTimeout.current);
-      setPetOneShot('jump');
-      setPetAnimTrigger((k) => k + 1);
-      oneShotTimeout.current = setTimeout(() => {
-        setPetOneShot(null);
-        oneShotTimeout.current = null;
-      }, 1200);
-    }
-    prevFollowing.current = isFollowing;
-    return () => {
-      if (oneShotTimeout.current) clearTimeout(oneShotTimeout.current);
-    };
-  }, [isFollowing]);
 
   return (
     <View style={{ backgroundColor: theme.surface, paddingBottom: 16 }}>
@@ -147,13 +124,7 @@ export function PetProfileHero({
               shadowOffset: { width: 0, height: 6 },
             }}
           >
-            <PetAvatar
-              pet={pet}
-              size={108}
-              animation={petOneShot ?? animationForPersonality(pet.personality_type)}
-              triggerKey={petAnimTrigger}
-              showMascot
-            />
+            <PetAvatar pet={pet} size={108} />
           </PressScale>
         </Animated.View>
 

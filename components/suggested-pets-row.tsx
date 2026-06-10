@@ -87,7 +87,7 @@ export function SuggestedPetsRow() {
                   backgroundColor: theme.brandLight,
                 }}
               >
-                <PetAvatar pet={pet} size={66} animation="bob" />
+                <PetAvatar pet={pet} size={66} />
               </View>
 
               <Text

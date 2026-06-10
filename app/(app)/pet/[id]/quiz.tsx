@@ -143,7 +143,7 @@ export default function QuizScreen() {
             </View>
 
             <View style={{ marginTop: 12, alignItems: 'center', gap: 6 }}>
-              <PetAvatar pet={pet} size={88} animation="head_tilt" />
+              <PetAvatar pet={pet} size={88} />
               <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: info.color }}>
                 {pet.name}
               </Text>

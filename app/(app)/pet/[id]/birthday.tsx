@@ -198,7 +198,7 @@ export default function BirthdayScreen() {
               shadowOffset: { width: 0, height: 6 },
             }}
           >
-            <PetAvatar pet={pet} size={120} animation="dance" />
+            <PetAvatar pet={pet} size={120} />
           </View>
           <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: '#1A1410' }}>
             {pet.name}

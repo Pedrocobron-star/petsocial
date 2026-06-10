@@ -118,30 +118,6 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Entrou no pódio (top 10) de um Torneio de Cassino',
     tier: 3,
   },
-  // ============================================================================
-  // Conquistas Pro — só desbloqueiam com features exclusivas (Pet Pro)
-  // ============================================================================
-  {
-    id: 'avatar_artist',
-    emoji: '🎨',
-    title: 'Artista do avatar',
-    description: 'Personalizou um pet com customizações Pro (charm, cor custom, cenário ou heterocromia)',
-    tier: 2,
-  },
-  {
-    id: 'scene_traveler',
-    emoji: '🌍',
-    title: 'Pet viajado',
-    description: 'Usou cenários diferentes em pelo menos 2 pets',
-    tier: 3,
-  },
-  {
-    id: 'bling_master',
-    emoji: '💎',
-    title: 'Realeza',
-    description: 'Pet com coleira dourada e pingente — visual de luxo',
-    tier: 3,
-  },
 ];
 
 export interface AchievementUnlockState {
@@ -244,39 +220,6 @@ export function computeAchievements(input: ComputeInput): AchievementUnlockState
         unlocked = tournamentWins >= 1;
         if (!unlocked) progress = { current: tournamentWins, target: 1 };
         break;
-      case 'avatar_artist': {
-        // Pelo menos 1 pet com customização Pro
-        const hasProCustomization = myPets.some((p) => {
-          const c = p.avatar_config;
-          if (!c) return false;
-          return (
-            !!c.collar_charm ||
-            !!c.background_scene ||
-            !!c.hair_accent ||
-            !!c.eye_color_right
-          );
-        });
-        unlocked = hasProCustomization;
-        if (!unlocked) progress = { current: 0, target: 1 };
-        break;
-      }
-      case 'scene_traveler': {
-        // 2+ pets distintos com background_scene definido (qualquer)
-        const petsWithScene = myPets.filter((p) => !!p.avatar_config?.background_scene).length;
-        unlocked = petsWithScene >= 2;
-        progress = { current: Math.min(petsWithScene, 2), target: 2 };
-        break;
-      }
-      case 'bling_master': {
-        // Pet com coleira gold + qualquer collar_charm
-        const hasBling = myPets.some((p) => {
-          const c = p.avatar_config;
-          return c?.collar === 'gold' && c?.collar_charm && c.collar_charm !== 'none';
-        });
-        unlocked = hasBling;
-        if (!unlocked) progress = { current: 0, target: 1 };
-        break;
-      }
     }
 
     return { def, unlocked, progress };
