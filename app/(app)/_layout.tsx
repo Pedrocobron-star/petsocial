@@ -152,6 +152,7 @@ export default function AppLayout() {
           <Stack.Screen name="admin/adoption" options={{ headerShown: true, title: 'Adoção · Moderação' }} />
           <Stack.Screen name="admin/notifications" options={{ headerShown: true, title: 'Notificações · Admin' }} />
           <Stack.Screen name="admin/ratings" options={{ headerShown: true, title: 'Avaliações' }} />
+          <Stack.Screen name="admin/mozart" options={{ headerShown: true, title: 'Mozart · Admin' }} />
         </Stack>
         </RealtimeProvider>
       </ActivePetProvider>

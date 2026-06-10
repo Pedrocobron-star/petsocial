@@ -257,6 +257,14 @@ export default function AdminScreen() {
             color="#B45309"
             bg="#FEF3C7"
           />
+          <NavCard
+            href="/(app)/admin/mozart"
+            icon="paw"
+            label="Mozart"
+            sub="Mensagens de boas-vindas"
+            color="#7C3AED"
+            bg="#EDE9FE"
+          />
         </View>
 
         {/* Loading */}
