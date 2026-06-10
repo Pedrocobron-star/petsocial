@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { HeaderHomeIcon } from '@/components/header-home-logo';
 import { MyPetsSection } from '@/components/my-pets-section';
 import { PremiumBadge } from '@/components/premium-badge';
 import { ProfileQuickLinks } from '@/components/profile-quick-links';
@@ -50,6 +51,10 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+        {/* Botão home (Mozart) no topo, igual às outras telas */}
+        <View style={{ paddingHorizontal: 8, paddingTop: 2, paddingBottom: 2 }}>
+          <HeaderHomeIcon />
+        </View>
         {/* Hero — banner + avatar + nome + stats + editar */}
         <TutorProfileHero
           profile={profile}

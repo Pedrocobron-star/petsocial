@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
+import { MOZART } from '@/lib/mozart';
 import { useTheme } from '@/providers/theme-provider';
 
 import { AnimatedBell } from './animated-bell';
@@ -37,31 +38,15 @@ export function FeedHeader({ unreadMessages, unreadNotifications }: Props) {
         onPress={() => router.replace('/(app)/phone' as never)}
         accessibilityRole="button"
         accessibilityLabel="Voltar pro celular do pet"
-        hitSlop={6}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}
+        hitSlop={8}
+        style={{ flexDirection: 'row', alignItems: 'center' }}
       >
-        <View
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: 8,
-            backgroundColor: '#FFEDD5',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Text style={{ fontSize: 15 }}>🏠</Text>
-        </View>
-        <Text
-          style={{
-            fontFamily: FONTS.display,
-            fontSize: 18,
-            color: theme.brand,
-            letterSpacing: -0.5,
-          }}
-        >
-          Maestro Pet
-        </Text>
+        <Image
+          source={{ uri: MOZART.rosto }}
+          style={{ width: 34, height: 34 }}
+          resizeMode="contain"
+          accessibilityLabel=""
+        />
       </Pressable>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

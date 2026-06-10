@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { HeaderHomeIcon } from '@/components/header-home-logo';
 import { PetAvatar } from '@/components/pet-avatar';
 import { PetPicker } from '@/components/pet-picker';
 import { PetTagsPicker } from '@/components/pet-tags-picker';
@@ -267,7 +268,10 @@ export default function CreatePostScreen() {
         style={{ borderColor: theme.border, backgroundColor: theme.surface }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>Novo post</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -8 }}>
+            <HeaderHomeIcon />
+            <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>Novo post</Text>
+          </View>
           {/* Contador de posts/dia — só pra free */}
           {!isPro ? (
             <Pressable

@@ -3,7 +3,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { AppQuickActions } from '@/components/app-quick-actions';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { HeaderBackAndHome } from '@/components/header-home-logo';
+import { HeaderHomeIcon } from '@/components/header-home-logo';
 import { HealthNotificationHandler } from '@/components/health-notification-handler';
 import { ActivePetProvider } from '@/providers/active-pet-provider';
 import { RealtimeProvider } from '@/providers/realtime-provider';
@@ -41,10 +41,9 @@ export default function AppLayout() {
             headerTitleStyle: { fontFamily: 'Fredoka_600SemiBold', fontSize: 17 },
             headerBackTitle: '',
             contentStyle: { backgroundColor: '#FFFBF5' },
-            // headerLeft custom: combina back button (volta uma tela)
-            // + logo "🐾 Maestro Pet" (volta pra home).
+            // headerLeft = só o Mozart pequeno (volta pra home /phone).
             // Funciona mesmo se histórico vazio (caso de entrar direto pela URL no web).
-            headerLeft: () => <HeaderBackAndHome />,
+            headerLeft: () => <HeaderHomeIcon />,
             headerBackVisible: false, // desabilita o back automático pra evitar duplicação
           }}
         >

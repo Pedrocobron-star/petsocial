@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/empty-state';
 import { ExploreSearchBar } from '@/components/explore-search-bar';
+import { HeaderHomeIcon } from '@/components/header-home-logo';
 import { PopularPetCard } from '@/components/popular-pet-card';
 import { SuggestedPetsRow } from '@/components/suggested-pets-row';
 import { TrendingHashtags } from '@/components/trending-hashtags';
@@ -123,6 +124,9 @@ export default function ExploreScreen() {
         }}
       >
         <CenteredColumn maxWidth={720} withMargin={false} style={{ paddingHorizontal: 16 }}>
+          <View style={{ alignSelf: 'flex-start', marginLeft: -8, marginBottom: 2 }}>
+            <HeaderHomeIcon />
+          </View>
           <Text
             style={{
               fontFamily: FONTS.display,

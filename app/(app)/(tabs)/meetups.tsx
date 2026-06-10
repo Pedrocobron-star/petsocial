@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
+import { HeaderHomeIcon } from '@/components/header-home-logo';
 import { MeetupCard } from '@/components/meetup-card';
 import { Button } from '@/components/ui/button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
@@ -71,7 +72,7 @@ function MeetupsInner() {
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
           gap: 8,
           borderBottomWidth: 1,
           borderBottomColor: theme.border,
@@ -80,6 +81,10 @@ function MeetupsInner() {
           paddingVertical: 12,
         }}
       >
+        <View style={{ marginLeft: -8 }}>
+          <HeaderHomeIcon />
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Link href="/(app)/agenda" asChild>
           <Pressable
             hitSlop={6}
@@ -98,6 +103,7 @@ function MeetupsInner() {
             <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.accent.onAccent }}>Criar</Text>
           </Pressable>
         </Link>
+        </View>
       </View>
 
       {featured.length >= 3 ? <FeaturedStrip events={featured} /> : null}
