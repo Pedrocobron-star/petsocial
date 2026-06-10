@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Clube de vantagens (ofertas dos patrocinadores)
+-- Maestro Pet — Clube de vantagens (ofertas dos patrocinadores)
 --
 -- Segundo motor de receita além do anúncio no feed: marcas/petshops pagam pra
 -- aparecer com cupom/desconto numa aba dedicada. O usuário vê as ofertas ativas,

@@ -26,7 +26,7 @@ create table if not exists public.news_articles (
   dek text,                              -- linha de apoio / subtitulo
   cover_url text,
   body text not null default '',         -- paragrafos separados por linha em branco
-  author_name text not null default 'Redacao Pet Social',
+  author_name text not null default 'Redacao Maestro Pet',
   status text not null default 'draft' check (status in ('draft', 'published')),
   is_featured boolean not null default false,
   affiliate_products jsonb not null default '[]'::jsonb,  -- [{label,url,store,price,image_url}]

@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Cron diário de lembretes via Web Push
+-- Maestro Pet — Cron diário de lembretes via Web Push
 --
 -- Roda 1x/dia, encontra usuários com cuidados a vencer (vacinas / remédios nos
 -- próximos 3 dias) que TÊM push web ativo, e dispara a edge function

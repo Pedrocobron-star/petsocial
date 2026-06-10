@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Carteira de exames & laudos (documentos de saúde do pet)
+-- Maestro Pet — Carteira de exames & laudos (documentos de saúde do pet)
 --
 -- O tutor guarda exames, laudos, receitas, atestados e scans da carteirinha de
 -- vacinação numa timeline por pet. Pura guarda/organização do que é DELE — sem

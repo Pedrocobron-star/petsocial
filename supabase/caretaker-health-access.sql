@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Co-tutores: acesso de LEITURA à saúde + lista "pets que cuido"
+-- Maestro Pet — Co-tutores: acesso de LEITURA à saúde + lista "pets que cuido"
 --
 -- O feature de caretakers (pet-caretakers.sql) já existe: convite, aceite, papéis
 -- e RLS da AGENDA. Aqui completamos o loop pro co-tutor:

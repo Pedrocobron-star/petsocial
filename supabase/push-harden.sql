@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Endurecer o canal de Web Push (segredo interno)
+-- Maestro Pet — Endurecer o canal de Web Push (segredo interno)
 --
 -- Problema: a edge `send-web-push` e --no-verify-jwt e aceita POST anonimo,
 -- entao qualquer um que descubra a URL poderia disparar push pra qualquer user.

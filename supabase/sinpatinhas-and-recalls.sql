@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — SinPatinhas (RG federal) + Alertas de Recall
+-- Maestro Pet — SinPatinhas (RG federal) + Alertas de Recall
 --
 -- Feature 1: SinPatinhas
 --   RG federal de cães/gatos lançado pelo MMA em 17/04/2025 (Decreto 12.439).

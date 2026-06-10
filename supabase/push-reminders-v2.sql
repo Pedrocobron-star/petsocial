@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Lembretes por Web Push v2 (dedup + 3 categorias)
+-- Maestro Pet — Lembretes por Web Push v2 (dedup + 3 categorias)
 --
 -- Melhora o cron diario: alem de VACINAS, cobre ANTIPARASITARIOS e CONSULTAS,
 -- e adiciona DEDUP (nao repete o mesmo aviso todo dia). Roda 1x/dia e dispara a

@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Free tier: limite de 1 post por dia
+-- Maestro Pet — Free tier: limite de 1 post por dia
 --
 -- Free → 1 post/dia (qualquer pet do user).
 -- Pro  → ilimitado.

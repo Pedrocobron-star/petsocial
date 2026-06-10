@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Adoção responsável
+-- Maestro Pet — Adoção responsável
 --
 -- Mural de pets pra adoção: ONGs e tutores anunciam, a comunidade descobre e
 -- entra em contato (WhatsApp). Diferencial social forte + engajamento.

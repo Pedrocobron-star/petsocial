@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Schema completo
+-- Maestro Pet — Schema completo
 -- Cole o arquivo INTEIRO no SQL Editor do Supabase e clique em "Run".
 -- ============================================================================
 

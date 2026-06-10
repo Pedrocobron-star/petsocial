@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Controle de gastos do pet
+-- Maestro Pet — Controle de gastos do pet
 --
 -- Todo dono se pergunta "quanto custa meu pet?" e ninguém tem onde anotar.
 -- Aqui o tutor registra ração, vet, banho, remédio, acessório, etc., e vê um

@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Endosso veterinário (co-assinatura da carteirinha/prontuário)
+-- Maestro Pet — Endosso veterinário (co-assinatura da carteirinha/prontuário)
 --
 -- Fluxo:
 --   1. Tutor (autenticado) gera um pedido de endosso → recebe um token único

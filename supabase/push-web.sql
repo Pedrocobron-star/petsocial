@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Push web (PWA): subscriptions + helper de envio
+-- Maestro Pet — Push web (PWA): subscriptions + helper de envio
 --
 -- Push web funciona via Web Push API (service worker + VAPID), diferente do
 -- push nativo (Expo) que já existe. Aqui guardamos as subscriptions do navegador

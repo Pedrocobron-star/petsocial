@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Moderacao de anuncios de adocao
+-- Maestro Pet — Moderacao de anuncios de adocao
 --
 -- Objetivo: marcar automaticamente anuncios suspeitos (link externo, descricao
 -- muito curta, possivel VENDA de animal) pra revisao do admin, sem esconder o

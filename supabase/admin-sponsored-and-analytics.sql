@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Admin: Sponsored Posts + Analytics profundas
+-- Maestro Pet — Admin: Sponsored Posts + Analytics profundas
 --
 -- Adiciona tudo que falta pro painel admin ser completo:
 --  - Posts patrocinados (totalmente customizáveis) misturados no feed

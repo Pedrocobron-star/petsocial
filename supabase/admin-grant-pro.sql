@@ -1,5 +1,5 @@
 -- ============================================================================
--- Pet Social — Admin pode conceder Pet Pro manualmente + selo verificado
+-- Maestro Pet — Admin pode conceder Pet Pro manualmente + selo verificado
 --
 -- O que esse SQL faz:
 --   1. Adiciona `profiles.is_pro` (denormalized) → leitura rápida pra renderizar
