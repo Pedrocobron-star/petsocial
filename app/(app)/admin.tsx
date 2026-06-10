@@ -265,6 +265,14 @@ export default function AdminScreen() {
             color="#7C3AED"
             bg="#EDE9FE"
           />
+          <NavCard
+            href="/(app)/admin/mozart-posts"
+            icon="megaphone"
+            label="Posts Mozart"
+            sub="Feed do mascote oficial"
+            color="#9D174D"
+            bg="#FCE7F3"
+          />
         </View>
 
         {/* Loading */}
