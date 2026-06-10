@@ -39,6 +39,7 @@ export default function AccountScreen() {
   const userId = session?.user.id;
 
   const [showDelete, setShowDelete] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const cancelMut = useMutation({
     mutationFn: () => cancelSubscription(userId!),
@@ -350,6 +351,43 @@ export default function AccountScreen() {
             </Pressable>
           </Link>
 
+          <Pressable
+            onPress={() => setShowPassword(true)}
+            style={{
+              backgroundColor: theme.surface,
+              borderRadius: 12,
+              padding: 14,
+              marginTop: 8,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+              borderWidth: 1,
+              borderColor: theme.borderLight,
+            }}
+          >
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: '#E0E7FF',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="key-outline" size={18} color="#4338CA" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }}>
+                Alterar senha
+              </Text>
+              <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim, marginTop: 2 }}>
+                Defina uma nova senha de acesso
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={theme.textDim} />
+          </Pressable>
+
           <Link href={'/(app)/language' as never} asChild>
             <Pressable
               style={{
@@ -505,7 +543,122 @@ export default function AccountScreen() {
           router.replace('/welcome' as never);
         }}
       />
+
+      <ChangePasswordModal visible={showPassword} onClose={() => setShowPassword(false)} />
     </View>
+  );
+}
+
+// ============================================================================
+// ChangePasswordModal — define nova senha (usuário já autenticado)
+// ============================================================================
+
+function ChangePasswordModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const { theme } = useTheme();
+  const toast = useToast();
+  const [pw, setPw] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  function handleClose() {
+    if (saving) return;
+    setPw('');
+    setPw2('');
+    onClose();
+  }
+
+  async function handleSave() {
+    if (pw.length < 8) {
+      toast.error('Senha muito curta', 'Use pelo menos 8 caracteres');
+      return;
+    }
+    if (pw !== pw2) {
+      toast.error('As senhas não batem', 'Confira os dois campos');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: pw });
+      if (error) throw error;
+      toast.success('Senha alterada', 'Use a nova senha no próximo login');
+      setPw('');
+      setPw2('');
+      onClose();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Tenta de novo em uns minutos';
+      toast.error('Não consegui alterar', msg);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 24 }}
+      >
+        <View style={{ backgroundColor: theme.surface, borderRadius: 16, padding: 20 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: '#E0E7FF',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="key-outline" size={20} color="#4338CA" />
+            </View>
+            <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: theme.text, flex: 1 }}>
+              Alterar senha
+            </Text>
+          </View>
+
+          <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.textDim, marginBottom: 14 }}>
+            Escolha uma nova senha com pelo menos 8 caracteres. Você seguirá conectado.
+          </Text>
+
+          <Input
+            value={pw}
+            onChangeText={setPw}
+            placeholder="Nova senha"
+            secureTextEntry
+            autoCapitalize="none"
+            editable={!saving}
+            style={{ marginBottom: 10 }}
+          />
+          <Input
+            value={pw2}
+            onChangeText={setPw2}
+            placeholder="Repita a nova senha"
+            secureTextEntry
+            autoCapitalize="none"
+            editable={!saving}
+            onSubmitEditing={handleSave}
+          />
+
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
+            <Button
+              title="Cancelar"
+              variant="ghost"
+              onPress={handleClose}
+              disabled={saving}
+              style={{ flex: 1 }}
+            />
+            <Button
+              title="Salvar"
+              onPress={handleSave}
+              loading={saving}
+              disabled={saving}
+              style={{ flex: 1 }}
+            />
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 }
 
