@@ -92,31 +92,24 @@ function titleFor(pathname: string): string {
   return SITE_NAME;
 }
 
-// Favicon SVG inline (paw print laranja). Substitui o ícone default do Expo.
-const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" ry="14" fill="#F97316"/>
-  <ellipse cx="32" cy="40" rx="11" ry="9" fill="#FFFFFF"/>
-  <ellipse cx="20" cy="26" rx="4.5" ry="6" fill="#FFFFFF"/>
-  <ellipse cx="28" cy="20" rx="4.5" ry="6.5" fill="#FFFFFF"/>
-  <ellipse cx="36" cy="20" rx="4.5" ry="6.5" fill="#FFFFFF"/>
-  <ellipse cx="44" cy="26" rx="4.5" ry="6" fill="#FFFFFF"/>
-</svg>`;
+// Favicon = a cara do Mozart (mascote oficial) na aba do navegador.
+// `?v=` força o navegador a rebuscar e furar o ícone antigo (pata) em cache.
+const FAVICON_HREF = '/mozart/rosto.png?v=mozart3';
 
 function injectBrandedFavicon() {
   if (typeof document === 'undefined') return;
-  const dataUri = `data:image/svg+xml,${encodeURIComponent(FAVICON_SVG)}`;
-  // Remove favicons antigos (Expo bota o default)
+  // Remove favicons antigos (o default do Expo + qualquer pata anterior)
   document.querySelectorAll('link[rel*="icon"]').forEach((link) => link.remove());
-  // Adiciona o nosso
+  // Favicon da aba — Mozart
   const link = document.createElement('link');
   link.rel = 'icon';
-  link.type = 'image/svg+xml';
-  link.href = dataUri;
+  link.type = 'image/png';
+  link.href = FAVICON_HREF;
   document.head.appendChild(link);
-  // Apple touch fallback
+  // Apple touch icon (instalar em iOS) — ícone opaco dedicado do Mozart
   const apple = document.createElement('link');
   apple.rel = 'apple-touch-icon';
-  apple.href = dataUri;
+  apple.href = '/apple-touch-icon.png';
   document.head.appendChild(apple);
 }
 
