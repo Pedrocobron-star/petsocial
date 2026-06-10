@@ -132,38 +132,6 @@ function Wallpaper({
   );
 }
 
-/** Bateria da barra de status = score de saúde do pet (gracinha). */
-function BatteryGlyph({ score }: { score: number | null }) {
-  const pct = score == null ? 1 : Math.max(0.06, Math.min(1, score / 100));
-  const fill = score == null ? '#fff' : score >= 70 ? '#34C759' : score >= 40 ? '#FFD60A' : '#FF453A';
-  const innerW = 17;
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-      {score != null ? (
-        <Text style={[{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#fff' }, LABEL_SHADOW]}>{score}</Text>
-      ) : null}
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View
-          style={{
-            width: 24,
-            height: 12,
-            borderRadius: 3,
-            borderWidth: 1.5,
-            borderColor: 'rgba(255,255,255,0.9)',
-            paddingHorizontal: 1.5,
-            justifyContent: 'center',
-          }}
-        >
-          <View style={{ width: innerW * pct, height: 6, borderRadius: 1.5, backgroundColor: fill }} />
-        </View>
-        <View
-          style={{ width: 2, height: 5, borderRadius: 1, backgroundColor: 'rgba(255,255,255,0.9)', marginLeft: 1 }}
-        />
-      </View>
-    </View>
-  );
-}
-
 function Badge({ count }: { count: number }) {
   return (
     <View
@@ -465,8 +433,6 @@ export default function PetPhoneScreen() {
   const summary = summaryQuery.data;
   const parasite = parasiteQuery.data;
   const computedScore = summary ? computeHealthScore(summary, parasite) : null;
-  const hasHealthData = computedScore?.components.some((c) => c.status !== 'na') ?? false;
-  const batteryScore = hasHealthData && computedScore ? computedScore.score : null;
   const healthAlerts = computedScore
     ? computedScore.components.filter((c) => c.status === 'warn' || c.status === 'bad').length
     : 0;
@@ -583,12 +549,9 @@ export default function PetPhoneScreen() {
           >
             <PetAvatar pet={activePet} size={56} />
             <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-                <Text style={[{ fontFamily: FONTS.body, fontSize: 12.5, color: 'rgba(255,255,255,0.9)' }, LABEL_SHADOW]}>
-                  {greeting} {greetEmoji}
-                </Text>
-                {batteryScore != null ? <BatteryGlyph score={batteryScore} /> : null}
-              </View>
+              <Text style={[{ fontFamily: FONTS.body, fontSize: 12.5, color: 'rgba(255,255,255,0.9)' }, LABEL_SHADOW]}>
+                {greeting} {greetEmoji}
+              </Text>
               <Text numberOfLines={1} style={[{ fontFamily: FONTS.bodyBold, fontSize: 19, color: '#fff' }, LABEL_SHADOW]}>
                 {activePet.name}
               </Text>

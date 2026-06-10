@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION ao mudar assets — força refresh do cache.
  */
 
-const CACHE_VERSION = 'pet-social-v93';
+const CACHE_VERSION = 'pet-social-v94';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -106,8 +106,11 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Maestro Pet 🐾';
   const options = {
     body: data.body || '',
+    // icon = imagem grande colorida do Mozart (aparece na notificação expandida)
     icon: data.icon || '/icon-192.png',
-    badge: '/icon-192.png',
+    // badge = ícone pequeno da barra de status. O Android FORÇA monocromático:
+    // precisa ser silhueta branca em fundo transparente (senão vira quadrado branco).
+    badge: '/badge-96.png',
     data: { url: data.url || '/' },
     tag: data.tag,
     renotify: !!data.tag,
