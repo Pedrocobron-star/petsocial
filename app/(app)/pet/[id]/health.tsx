@@ -12,6 +12,7 @@ import { HealthRecordPdfButton } from '@/components/health/health-record-pdf-but
 import { HealthScoreTrend } from '@/components/health/health-score-trend';
 import { HealthShareButton } from '@/components/health/health-share-button';
 import { HealthTimeline } from '@/components/health/health-timeline';
+import { PaywallCard } from '@/components/paywall-card';
 import { AI_ASSISTANT_ENABLED } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
 import { monthlyDietCost } from '@/lib/diet-brands';
@@ -33,6 +34,7 @@ import {
 } from '@/lib/queries';
 import type { PetSymptom } from '@/lib/types';
 import { AppThemeProvider } from '@/providers/app-theme-provider';
+import { useIsPro } from '@/providers/subscription-provider';
 import { useTheme } from '@/providers/theme-provider';
 
 export default function HealthHubScreen() {
@@ -366,6 +368,7 @@ function AlertsPreview({
   parasiteSummary: ParasiteSummary | undefined;
 }) {
   const { theme } = useTheme();
+  const isPro = useIsPro();
   // Adiciona alertas de parasitas inline (parasiteSummary tem dados resumidos
   // que o computeHealthAlerts não recebe nessa preview pra evitar query extra)
   const parasiteAlerts: HealthAlert[] = [];
@@ -408,8 +411,11 @@ function AlertsPreview({
 
   if (combined.length === 0) return null;
 
-  const preview = combined.slice(0, 3);
-  const hasMore = combined.length > 3;
+  // Alertas preventivos (info) = coaching do Pet Pro. Urgentes/atenção sempre livres.
+  const rendered = isPro ? combined : combined.filter((a) => a.severity !== 'info');
+  const lockedInfo = combined.length - rendered.length;
+  const preview = rendered.slice(0, 3);
+  const hasMore = combined.length > preview.length;
 
   return (
     <View style={{ gap: 8 }}>
@@ -426,6 +432,15 @@ function AlertsPreview({
       {preview.map((a) => (
         <AlertRow key={a.id} alert={a} />
       ))}
+      {preview.length === 0 && lockedInfo > 0 ? (
+        <PaywallCard
+          intent="health-coach"
+          emoji="🩺"
+          title="Coach de prevenção no Pet Pro"
+          description={`${lockedInfo} dica${lockedInfo === 1 ? '' : 's'} de prevenção esperando (check-up, pesagem, fase da vida). Urgências e atenções você sempre vê de graça.`}
+          compact
+        />
+      ) : null}
       {hasMore ? (
         <Link href={`/pet/${petId}/health-alerts` as never} asChild>
           <Pressable
@@ -437,7 +452,8 @@ function AlertsPreview({
             }}
           >
             <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#475569' }}>
-              + {combined.length - 3} {combined.length - 3 === 1 ? 'alerta' : 'alertas'}
+              + {combined.length - preview.length}{' '}
+              {combined.length - preview.length === 1 ? 'alerta' : 'alertas'}
             </Text>
           </Pressable>
         </Link>

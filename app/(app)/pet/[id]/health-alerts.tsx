@@ -6,6 +6,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { HealthListSkeleton } from '@/components/health/health-list-skeleton';
+import { PaywallCard } from '@/components/paywall-card';
 import { FONTS } from '@/lib/fonts';
 import {
   computeHealthAlerts,
@@ -23,6 +24,7 @@ import {
   fetchWeightRecords,
   qk,
 } from '@/lib/queries';
+import { useIsPro } from '@/providers/subscription-provider';
 import { useTheme } from '@/providers/theme-provider';
 
 const SEVERITY_META: Record<
@@ -47,6 +49,7 @@ const CATEGORY_LABELS: Record<AlertCategory, string> = {
 export default function HealthAlertsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
+  const isPro = useIsPro();
 
   const petQuery = useQuery({ queryKey: qk.pet(id), queryFn: () => fetchPet(id), enabled: !!id });
   const summaryQuery = useQuery({
@@ -95,6 +98,10 @@ export default function HealthAlertsScreen() {
   ]);
 
   const counts = countAlertsBySeverity(alerts);
+  // Alertas preventivos (info) = coaching exclusivo do Pet Pro. Urgentes e de
+  // atenção continuam SEMPRE livres — nunca escondemos saúde essencial.
+  const visibleAlerts = isPro ? alerts : alerts.filter((a) => a.severity !== 'info');
+  const lockedPreventive = isPro ? 0 : alerts.length - visibleAlerts.length;
   const isLoading =
     petQuery.isLoading ||
     summaryQuery.isLoading ||
@@ -125,9 +132,19 @@ export default function HealthAlertsScreen() {
           </View>
         ) : null}
 
-        {alerts.map((alert) => (
+        {visibleAlerts.map((alert) => (
           <AlertCard key={alert.id} alert={alert} />
         ))}
+
+        {lockedPreventive > 0 ? (
+          <PaywallCard
+            intent="health-coach"
+            emoji="🩺"
+            title="Coach de prevenção no Pet Pro"
+            description={`${lockedPreventive} dica${lockedPreventive === 1 ? '' : 's'} de prevenção pra ${petQuery.data?.name ?? 'seu pet'} (check-up na hora certa, pesagem, fase da vida) — antecipe problemas antes de virarem urgência. Urgências e atenções você sempre vê de graça.`}
+            style={{ marginTop: 4 }}
+          />
+        ) : null}
 
         {alerts.length > 0 ? <DisclaimerFooter /> : null}
       </ScrollView>
