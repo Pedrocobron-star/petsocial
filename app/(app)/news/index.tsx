@@ -21,28 +21,19 @@ import { fetchActiveSponsoredPosts } from '@/lib/sponsored';
 import { useTheme } from '@/providers/theme-provider';
 
 /**
- * PORTAL HOME — "Redação Maestro Pet".
- * Masthead + matéria de destaque + slot publicitário + pílulas de categoria +
- * lista de últimas. Tudo theme-aware e pt-BR.
+ * JORNAL MAESTRO PET — primeira página estilo jornal de verdade.
+ * Nameplate + data da edição · manchete · chamadas secundárias · editorias
+ * (com "ver tudo") · mais lidas · publicidade. Theme-aware e pt-BR.
  */
 export default function NewsPortalScreen() {
   const { theme } = useTheme();
 
-  const categoriesQuery = useQuery({
-    queryKey: qkNews.categories(),
-    queryFn: fetchCategories,
-  });
-
-  const articlesQuery = useQuery({
-    queryKey: qkNews.articles(),
-    queryFn: () => fetchArticles(),
-  });
-
+  const categoriesQuery = useQuery({ queryKey: qkNews.categories(), queryFn: fetchCategories });
+  const articlesQuery = useQuery({ queryKey: qkNews.articles(), queryFn: () => fetchArticles({ limit: 30 }) });
   const featuredQuery = useQuery({
     queryKey: qkNews.articles(undefined, true),
     queryFn: () => fetchArticles({ featured: true, limit: 1 }),
   });
-
   const sponsoredQuery = useQuery({
     queryKey: ['news-sponsored-slot'],
     queryFn: () => fetchActiveSponsoredPosts(1),
@@ -52,52 +43,73 @@ export default function NewsPortalScreen() {
   const categories = categoriesQuery.data ?? [];
   const sponsored = sponsoredQuery.data?.[0] ?? null;
 
-  // Hero: a 1a featured OU a matéria mais recente.
-  const hero: NewsArticle | null = featuredQuery.data?.[0] ?? articles[0] ?? null;
-  // Lista "Últimas": exclui a do hero pra não duplicar.
-  const latest = hero ? articles.filter((a) => a.id !== hero.id) : articles;
+  const lead: NewsArticle | null = featuredQuery.data?.[0] ?? articles[0] ?? null;
+  const rest = lead ? articles.filter((a) => a.id !== lead.id) : articles;
+  const secondary = rest.slice(0, 2);
+  const mostRead = [...articles].sort((a, b) => b.view_count - a.view_count).slice(0, 5);
+
+  // Editorias: categorias que têm matéria (fora a manchete), com até 3 cada.
+  const editorias = categories
+    .map((c) => ({ category: c, items: rest.filter((a) => a.category_id === c.id).slice(0, 3) }))
+    .filter((e) => e.items.length > 0);
 
   const loading = articlesQuery.isLoading || featuredQuery.isLoading;
 
+  const today = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const todayCap = today.charAt(0).toUpperCase() + today.slice(1);
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <Stack.Screen options={{ title: '📰 Notícias Pet', headerShown: true }} />
+      <Stack.Screen options={{ title: '📰 Jornal Pet', headerShown: true }} />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
-        <CenteredColumn maxWidth={620}>
-          {/* Masthead */}
-          <View
-            style={{
-              paddingTop: 18,
-              paddingBottom: 16,
-              paddingHorizontal: 16,
-              alignItems: 'center',
-              borderBottomWidth: 2,
-              borderBottomColor: theme.brand,
-            }}
-          >
+      <ScrollView contentContainerStyle={{ paddingBottom: 56 }}>
+        <CenteredColumn maxWidth={640}>
+          {/* ===== NAMEPLATE ===== */}
+          <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
+            <View style={{ height: 2, backgroundColor: theme.text, opacity: 0.85 }} />
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingVertical: 5,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 9.5, letterSpacing: 1.5, color: theme.brand }}>
+                JORNAL
+              </Text>
+              <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 9.5, letterSpacing: 0.3, color: theme.textDim }}>
+                {todayCap}
+              </Text>
+            </View>
+            <View style={{ height: 1, backgroundColor: theme.borderLight }} />
+
             <Text
               style={{
                 fontFamily: FONTS.display,
-                fontSize: 27,
+                fontSize: 38,
                 color: theme.text,
-                letterSpacing: -0.5,
+                letterSpacing: -1,
                 textAlign: 'center',
+                marginTop: 10,
               }}
             >
-              Redação Maestro Pet
+              Maestro Pet
             </Text>
             <Text
               style={{
                 fontFamily: FONTS.bodyMedium,
-                fontSize: 13,
+                fontSize: 11.5,
                 color: theme.textDim,
-                marginTop: 4,
                 textAlign: 'center',
+                marginTop: 2,
+                letterSpacing: 0.2,
               }}
             >
-              Notícias do mundo pet, todo dia
+              Saúde, comportamento e a vida dos bichos — todo dia
             </Text>
+            <View style={{ height: 3, backgroundColor: theme.brand, marginTop: 12 }} />
+            <View style={{ height: 1, backgroundColor: theme.text, opacity: 0.6, marginTop: 2 }} />
           </View>
 
           <View style={{ paddingHorizontal: 16 }}>
@@ -106,26 +118,40 @@ export default function NewsPortalScreen() {
             ) : articles.length === 0 ? (
               <EmptyState
                 emoji="📰"
+                mozart="megafone"
                 title="Em breve, notícias!"
-                description="A redação está preparando as primeiras matérias."
+                description="A redação está preparando as primeiras matérias do Jornal Maestro Pet."
               />
             ) : (
               <>
-                {/* HERO */}
-                {hero ? <HeroCard article={hero} /> : null}
+                {/* ===== MANCHETE ===== */}
+                {lead ? (
+                  <View style={{ marginTop: 16 }}>
+                    <Eyebrow color={theme.brand}>● MANCHETE</Eyebrow>
+                    <HeroCard article={lead} />
+                  </View>
+                ) : null}
 
-                {/* AD SLOT */}
+                {/* ===== CHAMADAS SECUNDÁRIAS ===== */}
+                {secondary.length > 0 ? (
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 18 }}>
+                    {secondary.map((a) => (
+                      <SecondaryCard key={a.id} article={a} />
+                    ))}
+                  </View>
+                ) : null}
+
+                {/* ===== PUBLICIDADE ===== */}
                 {sponsored ? (
-                  <View style={{ marginTop: 20 }}>
+                  <View style={{ marginTop: 22 }}>
                     <AdLabel />
                     <SponsoredPostCard post={sponsored} />
                   </View>
                 ) : null}
 
-                {/* CATEGORIAS */}
+                {/* ===== EDITORIAS (nav rápida) ===== */}
                 {categories.length > 0 ? (
-                  <View style={{ marginTop: 24 }}>
-                    <SectionTitle>Categorias</SectionTitle>
+                  <View style={{ marginTop: 22 }}>
                     <ScrollView
                       horizontal
                       showsHorizontalScrollIndicator={false}
@@ -138,13 +164,18 @@ export default function NewsPortalScreen() {
                   </View>
                 ) : null}
 
-                {/* ÚLTIMAS */}
-                {latest.length > 0 ? (
-                  <View style={{ marginTop: 24 }}>
-                    <SectionTitle>Últimas</SectionTitle>
-                    <View style={{ gap: 12 }}>
-                      {latest.map((a) => (
-                        <ArticleListCard key={a.id} article={a} />
+                {/* ===== SEÇÕES POR EDITORIA ===== */}
+                {editorias.map(({ category, items }) => (
+                  <EditoriaSection key={category.id} category={category} items={items} />
+                ))}
+
+                {/* ===== MAIS LIDAS ===== */}
+                {mostRead.length >= 3 ? (
+                  <View style={{ marginTop: 28 }}>
+                    <RuledHeader label="Mais lidas" color={theme.brand} />
+                    <View style={{ marginTop: 10 }}>
+                      {mostRead.map((a, i) => (
+                        <MostReadRow key={a.id} article={a} rank={i + 1} />
                       ))}
                     </View>
                   </View>
@@ -158,20 +189,23 @@ export default function NewsPortalScreen() {
   );
 }
 
-function SectionTitle({ children }: { children: string }) {
-  const { theme } = useTheme();
+function Eyebrow({ children, color }: { children: string; color: string }) {
   return (
-    <Text
-      style={{
-        fontFamily: FONTS.display,
-        fontSize: 18,
-        color: theme.text,
-        marginBottom: 12,
-        letterSpacing: -0.3,
-      }}
-    >
+    <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10.5, letterSpacing: 1, color, marginBottom: 6 }}>
       {children}
     </Text>
+  );
+}
+
+function RuledHeader({ label, color }: { label: string; color: string }) {
+  const { theme } = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <Text style={{ fontFamily: FONTS.display, fontSize: 19, color: theme.text, letterSpacing: -0.3 }}>
+        {label}
+      </Text>
+      <View style={{ flex: 1, height: 2, backgroundColor: color, opacity: 0.85 }} />
+    </View>
   );
 }
 
@@ -206,9 +240,8 @@ function HeroCard({ article }: { article: NewsArticle }) {
         accessibilityRole="link"
         accessibilityLabel={article.title}
         style={({ pressed }) => ({
-          marginTop: 20,
           backgroundColor: theme.surface,
-          borderRadius: 20,
+          borderRadius: 18,
           borderWidth: 1,
           borderColor: theme.borderLight,
           overflow: 'hidden',
@@ -237,39 +270,18 @@ function HeroCard({ article }: { article: NewsArticle }) {
         )}
 
         <View style={{ padding: 16, gap: 8 }}>
-          {cat ? (
-            <View style={{ flexDirection: 'row' }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 5,
-                  backgroundColor: `${cat.color}1A`,
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  borderRadius: 999,
-                }}
-              >
-                <Text style={{ fontSize: 12 }}>{cat.emoji}</Text>
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11.5, color: cat.color }}>
-                  {cat.name}
-                </Text>
-              </View>
-            </View>
-          ) : null}
-
+          {cat ? <CatChip cat={cat} /> : null}
           <Text
             style={{
               fontFamily: FONTS.display,
-              fontSize: 23,
+              fontSize: 26,
               color: theme.text,
-              lineHeight: 29,
-              letterSpacing: -0.4,
+              lineHeight: 31,
+              letterSpacing: -0.5,
             }}
           >
             {article.title}
           </Text>
-
           {article.dek ? (
             <Text
               style={{ fontFamily: FONTS.body, fontSize: 14.5, color: theme.textMuted, lineHeight: 21 }}
@@ -278,7 +290,6 @@ function HeroCard({ article }: { article: NewsArticle }) {
               {article.dek}
             </Text>
           ) : null}
-
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
             <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: theme.textDim }}>
               {article.author_name}
@@ -286,12 +297,148 @@ function HeroCard({ article }: { article: NewsArticle }) {
             {dateLabel ? (
               <>
                 <Text style={{ color: theme.textDim, fontSize: 12 }}>·</Text>
-                <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
-                  {dateLabel}
-                </Text>
+                <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>{dateLabel}</Text>
               </>
             ) : null}
           </View>
+        </View>
+      </Pressable>
+    </Link>
+  );
+}
+
+function SecondaryCard({ article }: { article: NewsArticle }) {
+  const { theme } = useTheme();
+  const cat = article.category;
+  return (
+    <Link href={{ pathname: '/(app)/news/[slug]', params: { slug: article.slug } }} asChild>
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel={article.title}
+        style={({ pressed }) => ({
+          flexGrow: 1,
+          flexBasis: 150,
+          minWidth: 150,
+          backgroundColor: theme.surface,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: theme.borderLight,
+          overflow: 'hidden',
+          opacity: pressed ? 0.95 : 1,
+        })}
+      >
+        {article.cover_url ? (
+          <Image
+            source={{ uri: article.cover_url }}
+            style={{ width: '100%', aspectRatio: 16 / 9, backgroundColor: theme.brandSurface }}
+            contentFit="cover"
+            transition={200}
+          />
+        ) : (
+          <View
+            style={{
+              width: '100%',
+              aspectRatio: 16 / 9,
+              backgroundColor: cat?.color ? `${cat.color}1A` : theme.brandSurface,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 34 }}>{cat?.emoji ?? '📰'}</Text>
+          </View>
+        )}
+        <View style={{ padding: 11, gap: 5 }}>
+          {cat ? (
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10, color: cat.color, letterSpacing: 0.3 }}>
+              {cat.emoji} {cat.name.toUpperCase()}
+            </Text>
+          ) : null}
+          <Text
+            style={{ fontFamily: FONTS.displayMedium, fontSize: 15, color: theme.text, lineHeight: 19 }}
+            numberOfLines={3}
+          >
+            {article.title}
+          </Text>
+        </View>
+      </Pressable>
+    </Link>
+  );
+}
+
+function CatChip({ cat }: { cat: NewsCategory }) {
+  return (
+    <View style={{ flexDirection: 'row' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 5,
+          backgroundColor: `${cat.color}1A`,
+          paddingHorizontal: 10,
+          paddingVertical: 4,
+          borderRadius: 999,
+        }}
+      >
+        <Text style={{ fontSize: 12 }}>{cat.emoji}</Text>
+        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11.5, color: cat.color }}>{cat.name}</Text>
+      </View>
+    </View>
+  );
+}
+
+function EditoriaSection({ category, items }: { category: NewsCategory; items: NewsArticle[] }) {
+  const { theme } = useTheme();
+  return (
+    <View style={{ marginTop: 26 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Text style={{ fontSize: 16 }}>{category.emoji}</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: theme.text, letterSpacing: -0.3 }}>
+          {category.name}
+        </Text>
+        <View style={{ flex: 1, height: 2, backgroundColor: category.color, opacity: 0.7 }} />
+        <Link href={{ pathname: '/(app)/news/category/[slug]', params: { slug: category.slug } }} asChild>
+          <Pressable hitSlop={6}>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11.5, color: category.color }}>ver tudo →</Text>
+          </Pressable>
+        </Link>
+      </View>
+      <View style={{ gap: 12, marginTop: 12 }}>
+        {items.map((a) => (
+          <ArticleListCard key={a.id} article={a} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function MostReadRow({ article, rank }: { article: NewsArticle; rank: number }) {
+  const { theme } = useTheme();
+  return (
+    <Link href={{ pathname: '/(app)/news/[slug]', params: { slug: article.slug } }} asChild>
+      <Pressable
+        accessibilityRole="link"
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          paddingVertical: 10,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.borderLight,
+          opacity: pressed ? 0.7 : 1,
+        })}
+      >
+        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.brand, width: 30, textAlign: 'center' }}>
+          {rank}
+        </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 14, color: theme.text, lineHeight: 19 }} numberOfLines={2}>
+            {article.title}
+          </Text>
+          {article.category ? (
+            <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim, marginTop: 2 }}>
+              {article.category.emoji} {article.category.name}
+            </Text>
+          ) : null}
         </View>
       </Pressable>
     </Link>
@@ -318,9 +465,7 @@ function CategoryPill({ category }: { category: NewsCategory }) {
         })}
       >
         <Text style={{ fontSize: 14 }}>{category.emoji}</Text>
-        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: category.color }}>
-          {category.name}
-        </Text>
+        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: category.color }}>{category.name}</Text>
       </Pressable>
     </Link>
   );
