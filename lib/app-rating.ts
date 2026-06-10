@@ -11,6 +11,7 @@ export interface AppRatingRow {
   comment: string | null;
   trigger_reason: string | null;
   created_at: string;
+  user_id: string;
   user_email: string | null;
   user_name: string | null;
 }
@@ -48,6 +49,12 @@ export async function adminAppRatingsSummary(): Promise<AppRatingsSummary> {
   if (error) throw error;
   const row = (Array.isArray(data) ? data[0] : data) as AppRatingsSummary | undefined;
   return row ?? { total: 0, avg_rating: null, c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+}
+
+/** Admin: o Mozart manda uma DM pro usuário (cria/reusa a conversa). */
+export async function adminMozartDm(userId: string, message: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_mozart_dm', { p_user: userId, p_message: message });
+  if (error) throw error;
 }
 
 export const qkRatings = {
