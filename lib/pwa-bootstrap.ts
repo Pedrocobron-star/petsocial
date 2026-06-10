@@ -90,8 +90,18 @@ export function bootstrapPwaWeb(): void {
     });
   }
 
-  // 6) Service worker — necessário pra installability (e offline-first)
+  // 6) Service worker — necessário pra installability (e offline-first).
+  //    Auto-update: quando um SW NOVO assume o controle (deploy novo), recarrega
+  //    uma vez pra puxar o bundle atual. Assim o PWA instalado não fica preso numa
+  //    versão velha. Só recarrega em ATUALIZAÇÃO (já havia controller), não na 1a vez.
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    const hadController = !!navigator.serviceWorker.controller;
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing || !hadController) return;
+      refreshing = true;
+      window.location.reload();
+    });
     navigator.serviceWorker.register('/sw.js').catch(() => undefined);
   }
 }
