@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { differenceInDays, formatDistanceToNow, isToday, isYesterday, parseISO } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -8,63 +8,60 @@ import { FlatList, Pressable, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { PetAvatar } from '@/components/pet-avatar';
-import { Button } from '@/components/ui/button';
 import { PawRefreshControl, PawRefreshOverlay } from '@/components/ui/paw-refresh-control';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { FONTS } from '@/lib/fonts';
-import {
-  fetchNotifications,
-  markAllNotificationsRead,
-  qk,
-} from '@/lib/queries';
-import type { NotificationKind, NotificationWithDetails } from '@/lib/types';
+import { fetchArticles, type NewsArticle } from '@/lib/news';
+import { fetchNotifications, markAllNotificationsRead, qk } from '@/lib/queries';
+import type { NotificationWithDetails } from '@/lib/types';
+import { useHealthAlerts, type PetAlert } from '@/lib/use-health-alerts';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 
-type FilterKind = 'all' | NotificationKind;
+type Category = 'all' | 'social' | 'health' | 'news';
 
-const FILTERS: { value: FilterKind; label: string }[] = [
+const FILTERS: { value: Category; label: string }[] = [
   { value: 'all', label: 'Todas' },
-  { value: 'like', label: 'Curtidas' },
-  { value: 'comment', label: 'Comentários' },
-  { value: 'follow', label: 'Seguidores' },
-  { value: 'mention', label: 'Menções' },
-  { value: 'pet_tagged', label: 'Marcações' },
+  { value: 'social', label: 'Social' },
+  { value: 'health', label: 'Saúde' },
+  { value: 'news', label: 'Novidades' },
 ];
 
-type Section = 'today' | 'yesterday' | 'this_week' | 'older';
-const SECTION_LABEL: Record<Section, string> = {
-  today: 'Hoje',
-  yesterday: 'Ontem',
-  this_week: 'Esta semana',
-  older: 'Mais antigas',
+const CATEGORY_META: Record<Exclude<Category, 'all'>, { label: string; emoji: string }> = {
+  health: { label: 'Saúde', emoji: '🩺' },
+  social: { label: 'Social', emoji: '💬' },
+  news: { label: 'Novidades', emoji: '📰' },
 };
 
-function sectionFor(date: Date): Section {
-  if (isToday(date)) return 'today';
-  if (isYesterday(date)) return 'yesterday';
-  const days = differenceInDays(new Date(), date);
-  if (days <= 7) return 'this_week';
-  return 'older';
-}
-
-type ListItem =
-  | { kind: 'header'; label: string; key: string }
-  | { kind: 'item'; notification: NotificationWithDetails; key: string };
+type Row =
+  | { type: 'header'; key: string; label: string; emoji: string }
+  | { type: 'social'; key: string; n: NotificationWithDetails }
+  | { type: 'health'; key: string; alert: PetAlert }
+  | { type: 'news'; key: string; article: NewsArticle };
 
 export default function NotificationsScreen() {
   const { session } = useSession();
   const { theme } = useTheme();
   const qc = useQueryClient();
   const userId = session?.user.id;
-  const [filter, setFilter] = useState<FilterKind>('all');
+  const [filter, setFilter] = useState<Category>('all');
   const [refreshing, setRefreshing] = useState(false);
 
-  const listQuery = useQuery({
+  // --- Fontes ---
+  const socialQuery = useQuery({
     queryKey: userId ? qk.notifications(userId) : ['notifications', 'anon'],
     queryFn: () => fetchNotifications(userId!),
     enabled: !!userId,
   });
+  const { alerts: healthAlerts } = useHealthAlerts(userId);
+  const newsQuery = useQuery({
+    queryKey: ['news', 'latest-notif'],
+    queryFn: () => fetchArticles({ limit: 8 }),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const social = useMemo(() => socialQuery.data ?? [], [socialQuery.data]);
+  const news = useMemo(() => newsQuery.data ?? [], [newsQuery.data]);
 
   const markAllMutation = useMutation({
     mutationFn: () => markAllNotificationsRead(userId!),
@@ -74,98 +71,101 @@ export default function NotificationsScreen() {
     },
   });
 
-  // Marca todas como lidas ao abrir
+  // Marca as sociais como lidas ao abrir
   useEffect(() => {
     if (userId) markAllMutation.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  const all = listQuery.data ?? [];
+  const counts = useMemo(
+    () => ({
+      all: social.length + healthAlerts.length + news.length,
+      social: social.length,
+      health: healthAlerts.length,
+      news: news.length,
+    }),
+    [social, healthAlerts, news],
+  );
 
-  // Contagens por filter (sempre o total, não o filtrado)
-  const counts = useMemo(() => {
-    const out: Record<FilterKind, number> = { all: all.length, like: 0, comment: 0, follow: 0, mention: 0, pet_tagged: 0 };
-    for (const n of all) out[n.kind] = (out[n.kind] ?? 0) + 1;
+  const buildCategoryRows = useMemo(
+    () =>
+      (cat: Exclude<Category, 'all'>): Row[] => {
+        if (cat === 'social') return social.map((n) => ({ type: 'social', key: `s-${n.id}`, n }));
+        if (cat === 'health')
+          return healthAlerts.map((a) => ({ type: 'health', key: `h-${a.pet.id}-${a.id}`, alert: a }));
+        return news.map((art) => ({ type: 'news', key: `n-${art.id}`, article: art }));
+      },
+    [social, healthAlerts, news],
+  );
+
+  const rows = useMemo<Row[]>(() => {
+    if (filter !== 'all') return buildCategoryRows(filter);
+    const out: Row[] = [];
+    (['health', 'social', 'news'] as const).forEach((cat) => {
+      const items = buildCategoryRows(cat);
+      if (!items.length) return;
+      const meta = CATEGORY_META[cat];
+      out.push({ type: 'header', key: `hdr-${cat}`, label: meta.label, emoji: meta.emoji });
+      out.push(...items);
+    });
     return out;
-  }, [all]);
-
-  // Lista filtrada + enriquecida com headers de seção
-  const items = useMemo<ListItem[]>(() => {
-    const filtered = filter === 'all' ? all : all.filter((n) => n.kind === filter);
-    const result: ListItem[] = [];
-    let lastSection: Section | null = null;
-    for (const n of filtered) {
-      const s = sectionFor(parseISO(n.created_at));
-      if (s !== lastSection) {
-        result.push({ kind: 'header', label: SECTION_LABEL[s], key: `header-${s}` });
-        lastSection = s;
-      }
-      result.push({ kind: 'item', notification: n, key: n.id });
-    }
-    return result;
-  }, [all, filter]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await qc.invalidateQueries({ queryKey: qk.notifications(userId!) });
-    setRefreshing(false);
-  };
+  }, [filter, buildCategoryRows]);
 
   const filtersWithCount = FILTERS.map((f) => ({
     ...f,
     label: counts[f.value] > 0 ? `${f.label} ${counts[f.value]}` : f.label,
   }));
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.allSettled([
+      qc.invalidateQueries({ queryKey: qk.notifications(userId!) }),
+      qc.invalidateQueries({ queryKey: ['news', 'latest-notif'] }),
+    ]);
+    setRefreshing(false);
+  };
+
+  const loading = socialQuery.isLoading && rows.length === 0;
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      {all.length > 0 ? (
-        <View
-          style={{
-            backgroundColor: theme.surface,
-            borderBottomWidth: 1,
-            borderBottomColor: theme.borderLight,
-            paddingTop: 4,
-          }}
-        >
-          <SegmentedControl options={filtersWithCount} value={filter} onChange={setFilter} />
-        </View>
-      ) : null}
+      <View
+        style={{
+          backgroundColor: theme.surface,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.borderLight,
+          paddingTop: 4,
+        }}
+      >
+        <SegmentedControl options={filtersWithCount} value={filter} onChange={setFilter} />
+      </View>
 
       <PawRefreshOverlay refreshing={refreshing} />
 
       <FlatList
-        data={items}
+        data={rows}
         keyExtractor={(it) => it.key}
         renderItem={({ item }) => {
-          if (item.kind === 'header') return <SectionHeader label={item.label} />;
-          return <NotificationRow notification={item.notification} />;
+          if (item.type === 'header') return <SectionHeader label={item.label} emoji={item.emoji} />;
+          if (item.type === 'social') return <SocialRow notification={item.n} />;
+          if (item.type === 'health') return <HealthRow alert={item.alert} />;
+          return <NewsRow article={item.article} />;
         }}
         refreshControl={<PawRefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ItemSeparatorComponent={({ leadingItem }) =>
-          (leadingItem as ListItem)?.kind === 'item' ? (
+          (leadingItem as Row)?.type !== 'header' ? (
             <View style={{ height: 1, backgroundColor: theme.borderLight }} />
           ) : null
         }
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+        ListHeaderComponent={<PushOptInBanner />}
         ListEmptyComponent={
-          listQuery.isLoading ? null : filter !== 'all' && all.length > 0 ? (
-            <EmptyState
-              emoji="🔕"
-              title={`Sem ${FILTERS.find((f) => f.value === filter)?.label.toLowerCase()}`}
-              description="Não tem nada nesse filtro ainda. Tenta outro ou volta pra 'Todas'."
-              action={<Button title="Ver todas" onPress={() => setFilter('all')} />}
-            />
-          ) : (
+          loading ? null : (
             <EmptyState
               emoji="🔔"
               mozart="dormindo"
-              title="Sem novidades"
-              description="Quando alguém curtir, comentar ou seguir um pet seu, aparece aqui."
-              action={
-                <Link href="/(app)/(tabs)/explore" asChild>
-                  <Button title="Explorar pets" />
-                </Link>
-              }
+              title="Sem notificações"
+              description="Quando rolar curtida, lembrete de saúde ou novidade do portal, tudo aparece aqui."
             />
           )
         }
@@ -174,22 +174,60 @@ export default function NotificationsScreen() {
   );
 }
 
-function SectionHeader({ label }: { label: string }) {
+/** CTA pra ativar push (notificações no celular mesmo com o app fechado). */
+function PushOptInBanner() {
+  const { theme } = useTheme();
+  return (
+    <Link href="/(app)/notification-settings" asChild>
+      <Pressable
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          backgroundColor: theme.brandSurface,
+          paddingHorizontal: 14,
+          paddingVertical: 11,
+          margin: 12,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: theme.brandLight,
+        }}
+      >
+        <Ionicons name="notifications" size={18} color={theme.brand} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.text }}>
+            Receber no celular
+          </Text>
+          <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim }}>
+            Ative pra ser avisado mesmo com o app fechado.
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
+      </Pressable>
+    </Link>
+  );
+}
+
+function SectionHeader({ label, emoji }: { label: string; emoji: string }) {
   const { theme } = useTheme();
   return (
     <View
       style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
         paddingHorizontal: 16,
         paddingTop: 16,
         paddingBottom: 6,
         backgroundColor: theme.bg,
       }}
     >
+      <Text style={{ fontSize: 13 }}>{emoji}</Text>
       <Text
         style={{
           fontFamily: FONTS.bodyBold,
           fontSize: 11,
-          letterSpacing: 1.4,
+          letterSpacing: 1.2,
           color: theme.brand,
           textTransform: 'uppercase',
         }}
@@ -200,11 +238,10 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
-function NotificationRow({ notification: n }: { notification: NotificationWithDetails }) {
+function SocialRow({ notification: n }: { notification: NotificationWithDetails }) {
   const router = useRouter();
   const { theme } = useTheme();
   if (!n.actor) return null;
-  // Mention e pet_tagged não exigem target_pet diferente, mas as outras precisam
   if (n.kind !== 'mention' && n.kind !== 'pet_tagged' && !n.target_pet) return null;
 
   const verb =
@@ -231,16 +268,11 @@ function NotificationRow({ notification: n }: { notification: NotificationWithDe
 
   const onPress = () => {
     if (
-      (n.kind === 'like' ||
-        n.kind === 'comment' ||
-        n.kind === 'mention' ||
-        n.kind === 'pet_tagged') &&
+      (n.kind === 'like' || n.kind === 'comment' || n.kind === 'mention' || n.kind === 'pet_tagged') &&
       n.post_id
     ) {
       router.push({ pathname: '/post/[id]', params: { id: n.post_id } });
-    } else if (n.kind === 'follow') {
-      router.push({ pathname: '/pet/[id]', params: { id: n.actor!.id } });
-    } else if (n.kind === 'mention') {
+    } else if (n.kind === 'follow' || n.kind === 'mention') {
       router.push({ pathname: '/pet/[id]', params: { id: n.actor!.id } });
     }
   };
@@ -298,6 +330,111 @@ function NotificationRow({ notification: n }: { notification: NotificationWithDe
           {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: ptBR })}
         </Text>
       </View>
+    </Pressable>
+  );
+}
+
+const SEVERITY_TINT: Record<PetAlert['severity'], { dot: string; bg: string }> = {
+  urgent: { dot: '#DC2626', bg: '#FEE2E2' },
+  warning: { dot: '#D97706', bg: '#FEF3C7' },
+  info: { dot: '#2563EB', bg: '#DBEAFE' },
+};
+
+function HealthRow({ alert }: { alert: PetAlert }) {
+  const { theme } = useTheme();
+  const href = alert.action?.href ?? `/pet/${alert.pet.id}/health`;
+  const tint = SEVERITY_TINT[alert.severity];
+  return (
+    <Link href={href as never} asChild>
+      <Pressable
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          backgroundColor: theme.surface,
+        }}
+      >
+        <View className="relative">
+          <PetAvatar pet={alert.pet} size={44} />
+          <View
+            style={{
+              position: 'absolute',
+              bottom: -4,
+              right: -4,
+              height: 20,
+              width: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 999,
+              backgroundColor: tint.bg,
+              borderWidth: 1.5,
+              borderColor: theme.bg,
+            }}
+          >
+            <Text style={{ fontSize: 10 }}>{alert.emoji}</Text>
+          </View>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }}
+            numberOfLines={1}
+          >
+            {alert.title}
+          </Text>
+          <Text
+            style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim, marginTop: 2 }}
+            numberOfLines={1}
+          >
+            {alert.pet.name} · {alert.description}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
+      </Pressable>
+    </Link>
+  );
+}
+
+function NewsRow({ article }: { article: NewsArticle }) {
+  const router = useRouter();
+  const { theme } = useTheme();
+  const emoji = article.category?.emoji ?? '📰';
+  const when = article.published_at ?? article.created_at;
+  return (
+    <Pressable
+      onPress={() => router.push({ pathname: '/news/[slug]', params: { slug: article.slug } })}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: theme.surface,
+      }}
+    >
+      <View
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 12,
+          backgroundColor: theme.brandLight,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Text style={{ fontSize: 20 }}>{emoji}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }} numberOfLines={2}>
+          {article.title}
+        </Text>
+        <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim, marginTop: 2 }}>
+          {article.category?.name ? `${article.category.name} · ` : ''}
+          {formatDistanceToNow(new Date(when), { addSuffix: true, locale: ptBR })}
+        </Text>
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
     </Pressable>
   );
 }

@@ -93,7 +93,7 @@ export default function AppLayout() {
           name="meetup/[id]/edit"
           options={{ presentation: 'modal', headerShown: true, title: 'Editar encontro' }}
         />
-        <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Atividade' }} />
+        <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notificações' }} />
         <Stack.Screen name="saved" options={{ headerShown: true, title: 'Posts salvos' }} />
         <Stack.Screen name="lost-found/index" options={{ headerShown: true }} />
         <Stack.Screen

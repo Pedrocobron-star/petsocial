@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQueries, useQuery } from '@tanstack/react-query';
 import { Link, Stack } from 'expo-router';
 import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
@@ -7,22 +6,11 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import { EmptyState } from '@/components/empty-state';
 import { PetAvatar } from '@/components/pet-avatar';
 import { CenteredColumn } from '@/components/ui/centered-column';
-import { computeHealthAlerts, type AlertSeverity, type HealthAlert } from '@/lib/health-alerts';
+import { type AlertSeverity } from '@/lib/health-alerts';
 import { FONTS } from '@/lib/fonts';
-import {
-  fetchHealthSummary,
-  fetchMyPets,
-  fetchParasiteSummary,
-  fetchPetSymptoms,
-  qk,
-} from '@/lib/queries';
-import type { Pet } from '@/lib/types';
+import { useHealthAlerts, type PetAlert } from '@/lib/use-health-alerts';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
-
-interface PetAlert extends HealthAlert {
-  pet: Pet;
-}
 
 const GROUPS: { key: AlertSeverity; label: string; sub: string; emoji: string; bg: string; fg: string }[] = [
   { key: 'urgent', label: 'Precisa de atenção agora', sub: 'Atrasado ou vencendo', emoji: '🚨', bg: '#FEE2E2', fg: '#991B1B' },
@@ -35,72 +23,7 @@ export default function RemindersScreen() {
   const { theme } = useTheme();
   const userId = session?.user.id;
 
-  const petsQuery = useQuery({
-    queryKey: userId ? qk.myPets(userId) : ['my-pets-noop'],
-    queryFn: () => (userId ? fetchMyPets(userId) : Promise.resolve([])),
-    enabled: !!userId,
-  });
-  const pets = useMemo(() => petsQuery.data ?? [], [petsQuery.data]);
-
-  const summaries = useQueries({
-    queries: pets.map((p) => ({ queryKey: qk.healthSummary(p.id), queryFn: () => fetchHealthSummary(p.id) })),
-  });
-  const parasites = useQueries({
-    queries: pets.map((p) => ({ queryKey: qk.parasiteSummary(p.id), queryFn: () => fetchParasiteSummary(p.id) })),
-  });
-  const symptoms = useQueries({
-    queries: pets.map((p) => ({ queryKey: qk.petSymptoms(p.id, 'active'), queryFn: () => fetchPetSymptoms(p.id, 'active') })),
-  });
-
-  const loading = petsQuery.isLoading || summaries.some((q) => q.isLoading);
-
-  const allAlerts = useMemo(() => {
-    const out: PetAlert[] = [];
-    pets.forEach((pet, i) => {
-      const summary = summaries[i]?.data;
-      if (!summary) return;
-      const alerts = computeHealthAlerts({ pet, summary, symptoms: symptoms[i]?.data ?? [] });
-      for (const a of alerts) out.push({ ...a, pet });
-
-      // Alertas de vermífugo/antipulga (vêm do parasiteSummary, não do computeHealthAlerts)
-      const ps = parasites[i]?.data;
-      if (ps?.next_due) {
-        const d = ps.next_due.days_until;
-        const name = ps.next_due.product_name;
-        if (d < 0) {
-          out.push({
-            id: `parasite-${pet.id}`,
-            severity: 'urgent',
-            category: 'parasite',
-            emoji: '🦟',
-            title: `${name} atrasado ${Math.abs(d)}d`,
-            description: 'Reaplique o antiparasitário',
-            action: { label: 'Ver', href: `/pet/${pet.id}/parasites` },
-            daysUntil: d,
-            pet,
-          });
-        } else if (d <= 7) {
-          out.push({
-            id: `parasite-${pet.id}`,
-            severity: 'warning',
-            category: 'parasite',
-            emoji: '💊',
-            title: d === 0 ? `${name} vence hoje` : `${name} em ${d}d`,
-            description: 'Programe a reaplicação',
-            action: { label: 'Ver', href: `/pet/${pet.id}/parasites` },
-            daysUntil: d,
-            pet,
-          });
-        }
-      }
-    });
-    // ordena por severidade depois por daysUntil
-    const sev = { urgent: 0, warning: 1, info: 2 } as const;
-    return out.sort((a, b) => {
-      if (sev[a.severity] !== sev[b.severity]) return sev[a.severity] - sev[b.severity];
-      return (a.daysUntil ?? Infinity) - (b.daysUntil ?? Infinity);
-    });
-  }, [pets, summaries, parasites, symptoms]);
+  const { alerts: allAlerts, pets, loading } = useHealthAlerts(userId);
 
   const grouped = useMemo(
     () => GROUPS.map((g) => ({ ...g, items: allAlerts.filter((a) => a.severity === g.key) })).filter((g) => g.items.length > 0),
