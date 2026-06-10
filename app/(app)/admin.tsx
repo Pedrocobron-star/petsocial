@@ -241,6 +241,14 @@ export default function AdminScreen() {
             color="#9F1239"
             bg="#FFE4E6"
           />
+          <NavCard
+            href="/(app)/admin/ratings"
+            icon="star"
+            label="Avaliações"
+            sub="Notas e comentários"
+            color="#B45309"
+            bg="#FEF3C7"
+          />
         </View>
 
         {/* Loading */}

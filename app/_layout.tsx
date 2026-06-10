@@ -32,6 +32,7 @@ import { I18nProvider } from '@/lib/i18n';
 import { initSentry } from '@/lib/sentry';
 import { MotionProvider } from '@/providers/motion-provider';
 import { QueryProvider } from '@/providers/query-provider';
+import { RatingPromptProvider } from '@/providers/rating-prompt-provider';
 import { SessionProvider } from '@/providers/session-provider';
 import { SessionTrackerProvider } from '@/providers/session-tracker-provider';
 import { SubscriptionProvider } from '@/providers/subscription-provider';
@@ -76,21 +77,23 @@ export default function RootLayout() {
                   <SessionTrackerProvider>
                   <SubscriptionProvider>
                     <ToastProvider>
-                      {/* Atualiza document.title conforme a rota (web only) */}
-                      <DocumentTitleManager />
-                      {/* Banner pra instalar como PWA quando user em mobile */}
-                      <MobileAppBanner />
-                      {/* Modal de confirmação estilizado (web) — usado pelo shim de Alert */}
-                      <ConfirmHost />
-                      <Stack screenOptions={{ headerShown: false }}>
-                        <Stack.Screen name="index" />
-                        <Stack.Screen name="welcome" />
-                        <Stack.Screen name="(auth)" />
-                        <Stack.Screen name="(app)" />
-                        <Stack.Screen name="id/[token]" />
-                        <Stack.Screen name="endorse/[token]" />
-                      </Stack>
-                      <StatusBar style="auto" />
+                      <RatingPromptProvider>
+                        {/* Atualiza document.title conforme a rota (web only) */}
+                        <DocumentTitleManager />
+                        {/* Banner pra instalar como PWA quando user em mobile */}
+                        <MobileAppBanner />
+                        {/* Modal de confirmação estilizado (web) — usado pelo shim de Alert */}
+                        <ConfirmHost />
+                        <Stack screenOptions={{ headerShown: false }}>
+                          <Stack.Screen name="index" />
+                          <Stack.Screen name="welcome" />
+                          <Stack.Screen name="(auth)" />
+                          <Stack.Screen name="(app)" />
+                          <Stack.Screen name="id/[token]" />
+                          <Stack.Screen name="endorse/[token]" />
+                        </Stack>
+                        <StatusBar style="auto" />
+                      </RatingPromptProvider>
                     </ToastProvider>
                   </SubscriptionProvider>
                   </SessionTrackerProvider>
