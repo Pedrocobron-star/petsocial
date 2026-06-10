@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Image } from 'expo-image';
-import { Redirect, Stack, useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Redirect, Stack, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -455,9 +455,12 @@ export default function PetPhoneScreen() {
 
   // PWA instalado: casa a barra de status do telefone com o topo do wallpaper
   // (em vez do laranja default), pra a barra se fundir com o app (estilo Instagram).
-  useEffect(() => {
-    setThemeColorMeta(wp.from);
-  }, [wp.from]);
+  // useFocusEffect: reaplica ao voltar de um app (a tela fica montada no Stack).
+  useFocusEffect(
+    useCallback(() => {
+      setThemeColorMeta(wp.from);
+    }, [wp.from]),
+  );
 
   const summary = summaryQuery.data;
   const parasite = parasiteQuery.data;
