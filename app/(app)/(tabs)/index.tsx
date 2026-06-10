@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '@/components/empty-state';
 import { EngagementNudge } from '@/components/engagement-nudge';
 import { Fab } from '@/components/fab';
+import { FeedEngagementNudge } from '@/components/feed-engagement-nudge';
 import { FeedHeader } from '@/components/feed-header';
 import { HealthRemindersBanner } from '@/components/health-reminders-banner';
 import { OnboardingTour } from '@/components/onboarding-tour';
@@ -178,6 +179,7 @@ export default function FeedScreen() {
           contentContainerStyle={{ paddingTop: 0, paddingBottom: 24, flexGrow: 1 }}
           ListHeaderComponent={
             <>
+              <FeedEngagementNudge />
               <EngagementNudge />
               <RecallBanner />
               <HealthRemindersBanner />
