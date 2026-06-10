@@ -347,7 +347,7 @@ export interface PostEditHistory {
   edited_at: string;
 }
 
-export type NotificationKind = 'like' | 'comment' | 'follow' | 'mention' | 'pet_tagged';
+export type NotificationKind = 'like' | 'comment' | 'follow' | 'mention' | 'pet_tagged' | 'broadcast';
 
 export interface Notification {
   id: string;
@@ -359,6 +359,10 @@ export interface Notification {
   comment_id: string | null;
   read: boolean;
   created_at: string;
+  /** Broadcast (admin): título/corpo/link da mensagem. */
+  title?: string | null;
+  body?: string | null;
+  url?: string | null;
 }
 
 export interface NotificationWithDetails extends Notification {

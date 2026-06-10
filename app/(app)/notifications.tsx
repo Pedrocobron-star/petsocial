@@ -241,6 +241,55 @@ function SectionHeader({ label, emoji }: { label: string; emoji: string }) {
 function SocialRow({ notification: n }: { notification: NotificationWithDetails }) {
   const router = useRouter();
   const { theme } = useTheme();
+
+  // Broadcast do admin (sem actor) — título/corpo/link próprios
+  if (n.kind === 'broadcast') {
+    return (
+      <Pressable
+        onPress={() => {
+          if (n.url) router.push(n.url as never);
+        }}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          backgroundColor: n.read ? theme.surface : theme.brandSurface,
+        }}
+      >
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: '#DBEAFE',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name="megaphone" size={20} color="#1D4ED8" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }} numberOfLines={2}>
+            {n.title || 'Maestro Pet'}
+          </Text>
+          {n.body ? (
+            <Text
+              style={{ fontFamily: FONTS.body, fontSize: 12.5, color: theme.textDim, marginTop: 1 }}
+              numberOfLines={3}
+            >
+              {n.body}
+            </Text>
+          ) : null}
+          <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim, marginTop: 2 }}>
+            {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: ptBR })}
+          </Text>
+        </View>
+      </Pressable>
+    );
+  }
+
   if (!n.actor) return null;
   if (n.kind !== 'mention' && n.kind !== 'pet_tagged' && !n.target_pet) return null;
 

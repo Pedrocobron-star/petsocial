@@ -317,6 +317,17 @@ begin
 end;
 $$;
 
+-- Admin: dispara o dispatch na hora (pro "enviar agora" não esperar o cron)
+create or replace function public.admin_run_dispatch_now()
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'forbidden' using errcode = '42501'; end if;
+  perform public.run_dispatch();
+end;
+$$;
+revoke all on function public.admin_run_dispatch_now() from public;
+grant execute on function public.admin_run_dispatch_now() to authenticated;
+
 select cron.unschedule('petsocial-dispatch')
 where exists (select 1 from cron.job where jobname = 'petsocial-dispatch');
 select cron.schedule('petsocial-dispatch', '*/5 * * * *', $$ select public.run_dispatch(); $$);

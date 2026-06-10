@@ -242,6 +242,14 @@ export default function AdminScreen() {
             bg="#FFE4E6"
           />
           <NavCard
+            href="/(app)/admin/notifications"
+            icon="notifications"
+            label="Notificações"
+            sub="Criar e agendar push"
+            color="#1D4ED8"
+            bg="#DBEAFE"
+          />
+          <NavCard
             href="/(app)/admin/ratings"
             icon="star"
             label="Avaliações"
