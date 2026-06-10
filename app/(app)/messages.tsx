@@ -116,12 +116,14 @@ function MessagesInner() {
           listQuery.isLoading ? null : showEmptySearch ? (
             <EmptyState
               emoji="🔍"
+              mozart="detetive"
               title="Nada encontrado"
               description={`Sem conversas que combinem com "${query}".`}
             />
           ) : (
             <EmptyState
               emoji="💬"
+              mozart="balao"
               title="Sem conversas ainda"
               description="Abra o perfil de outro pet e toque em 'Enviar mensagem' pra começar a conversar com o tutor."
             />

@@ -168,7 +168,7 @@ export default function RemindersScreen() {
           ) : pets.length === 0 ? (
             <EmptyState emoji="🐾" title="Sem pets ainda" description="Cadastre um pet pra ver os lembretes de saúde aqui." />
           ) : allAlerts.length === 0 ? (
-            <EmptyState emoji="✅" title="Nada pendente" description="Vacinas, vermífugos e remédios em dia. A gente te avisa quando chegar a hora." />
+            <EmptyState emoji="✅" mozart="comemorando" title="Nada pendente" description="Vacinas, vermífugos e remédios em dia. A gente te avisa quando chegar a hora." />
           ) : (
             <View style={{ gap: 18 }}>
               {grouped.map((g) => (

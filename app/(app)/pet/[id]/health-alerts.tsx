@@ -122,6 +122,7 @@ export default function HealthAlertsScreen() {
           <View style={{ marginTop: 24 }}>
             <EmptyState
               emoji="🎉"
+              mozart="comemorando"
               title="Tudo em ordem!"
               description={
                 petQuery.data

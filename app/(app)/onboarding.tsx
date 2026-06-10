@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
 
-import { AnimatedPet } from '@/components/animated-pet';
 import { PetForm } from '@/components/pet-form';
 import { Screen } from '@/components/ui/screen';
 import { FONTS } from '@/lib/fonts';
+import { MOZART } from '@/lib/mozart';
 import { markOnboardingSkipped } from '@/lib/onboarding-state';
 import { qk } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
@@ -49,13 +49,15 @@ export default function OnboardingScreen() {
               flexDirection: 'row',
               alignItems: 'center',
               gap: 4,
-              marginBottom: 16,
+              marginBottom: 12,
             }}
           >
-            <AnimatedPet kind="dog" size={42} delay={0} />
-            <AnimatedPet kind="cat" size={42} delay={200} />
-            <AnimatedPet kind="rabbit" size={42} delay={400} />
-            <AnimatedPet kind="parrot" size={42} delay={600} />
+            <Image
+              source={{ uri: MOZART.oi }}
+              style={{ width: 96, height: 96 }}
+              resizeMode="contain"
+              accessibilityLabel="Mozart acenando, dando boas-vindas"
+            />
           </View>
 
           <Text

@@ -1,4 +1,4 @@
-# Mapa de QA — Pet Social (sessão autônoma 2026-06-06)
+# Mapa de QA — Maestro Pet (sessão autônoma 2026-06-06)
 
 Sessão: populei o site com perfis interagindo, percorri ao vivo, auditei (manual + multiagente) e corrigi o que estava quebrado. Deploy contínuo no ar (https://petsocial-tawny.vercel.app).
 

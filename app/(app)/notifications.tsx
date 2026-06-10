@@ -158,6 +158,7 @@ export default function NotificationsScreen() {
           ) : (
             <EmptyState
               emoji="🔔"
+              mozart="dormindo"
               title="Sem novidades"
               description="Quando alguém curtir, comentar ou seguir um pet seu, aparece aqui."
               action={

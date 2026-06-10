@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
+import { MOZART } from '@/lib/mozart';
 
 /**
  * Header completo — combina back button (que volta UMA tela) + logo (volta pra home).
@@ -32,7 +33,12 @@ export function HeaderHomeLogo() {
         paddingVertical: 4,
       }}
     >
-      <Text style={{ fontSize: 18 }}>🐾</Text>
+      <Image
+        source={{ uri: MOZART.rosto }}
+        style={{ width: 24, height: 24 }}
+        resizeMode="contain"
+        accessibilityLabel=""
+      />
       <Text style={{ fontFamily: FONTS.display, fontSize: 16, color: '#1A1410' }}>
         Maestro Pet
       </Text>
@@ -60,7 +66,12 @@ export function HeaderHomeIcon() {
         alignItems: 'center',
       }}
     >
-      <Text style={{ fontSize: 22 }}>🐾</Text>
+      <Image
+        source={{ uri: MOZART.rosto }}
+        style={{ width: 28, height: 28 }}
+        resizeMode="contain"
+        accessibilityLabel=""
+      />
     </Pressable>
   );
 }

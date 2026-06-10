@@ -72,7 +72,7 @@ function buildMessage(n: Notif, actorPet: Pet | null, targetPet: Pet | null) {
         body: 'Em um post',
       };
     default:
-      return { title: 'Pet Social', body: 'Nova atividade' };
+      return { title: 'Maestro Pet', body: 'Nova atividade' };
   }
 }
 

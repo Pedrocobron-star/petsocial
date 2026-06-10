@@ -163,6 +163,7 @@ export default function WallOfFameScreen() {
           posts.length === 0 && !query.isLoading ? (
             <EmptyState
               emoji="🏆"
+              mozart="comemorando"
               title="Ainda sem destaques"
               description="Os posts mais curtidos da semana aparecem aqui. Convide os amigos pra postar!"
             />

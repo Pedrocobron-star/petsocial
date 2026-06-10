@@ -159,6 +159,7 @@ function LostFoundInner() {
           ) : (
             <EmptyState
               emoji={filter === 'found' ? '🐾' : '🔍'}
+              mozart="detetive"
               title={
                 filter === 'found'
                   ? 'Nenhum pet encontrado reportado'

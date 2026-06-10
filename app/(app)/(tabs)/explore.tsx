@@ -168,12 +168,14 @@ export default function ExploreScreen() {
           ) : isSearching ? (
             <EmptyState
               emoji="🔍"
+              mozart="detetive"
               title="Nada encontrado"
               description={`Nenhum pet com "${trimmed}" no nome. Tenta uma busca diferente.`}
             />
           ) : (
             <EmptyState
               emoji="🐾"
+              mozart="oi"
               title="Nenhum pet ainda"
               description="Convide amigos pra cadastrar os pets deles!"
             />

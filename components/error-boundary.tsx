@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
+import { MOZART } from '@/lib/mozart';
 import { captureError } from '@/lib/sentry';
 
 interface Props {
@@ -86,18 +86,12 @@ function DefaultFallback({
         gap: 16,
       }}
     >
-      <View
-        style={{
-          width: 80,
-          height: 80,
-          borderRadius: 24,
-          backgroundColor: '#FEE2E2',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Ionicons name="alert-circle" size={44} color="#DC2626" />
-      </View>
+      <Image
+        source={{ uri: MOZART.triste }}
+        style={{ width: 132, height: 132 }}
+        resizeMode="contain"
+        accessibilityLabel="Mozart triste"
+      />
       <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: '#1A1410', textAlign: 'center' }}>
         Ops, algo deu errado
       </Text>

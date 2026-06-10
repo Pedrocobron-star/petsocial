@@ -1,6 +1,6 @@
-# 🚀 Deploy Pet Social — Web (Vercel) → PWA instalável no celular
+# 🚀 Deploy Maestro Pet — Web (Vercel) → PWA instalável no celular
 
-Guia direto pra colocar o site no ar e ter o **banner "Instalar Pet Social"** aparecendo
+Guia direto pra colocar o site no ar e ter o **banner "Instalar Maestro Pet"** aparecendo
 no celular dos usuários — sem app store, sem EAS, sem burocracia.
 
 ---
@@ -124,7 +124,7 @@ supabase secrets set VAPID_SUBJECT=mailto:pedrocobron@gmail.com
 
 ### Android (Chrome ou Edge)
 1. Abra `https://petsocial-xxx.vercel.app` no celular
-2. **Banner laranja aparece no topo**: "Instale o Pet Social"
+2. **Banner laranja aparece no topo**: "Instale o Maestro Pet"
 3. Toque **Instalar** → confirma no popup do sistema → app vai pra home screen
 4. Abre como app nativo, fullscreen, sem barra do browser
 

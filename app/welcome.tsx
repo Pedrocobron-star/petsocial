@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedPet } from '@/components/animated-pet';
@@ -10,6 +10,7 @@ import { PawPrintsBg } from '@/components/paw-prints-bg';
 import { WordSwap } from '@/components/word-swap';
 import { track } from '@/lib/analytics';
 import { FONTS } from '@/lib/fonts';
+import { MOZART } from '@/lib/mozart';
 import { useTranslation } from '@/lib/i18n';
 import { storePendingRef } from '@/lib/referral';
 import { useSession } from '@/providers/session-provider';
@@ -87,7 +88,12 @@ function NavBar() {
       className="flex-row items-center justify-between border-b border-orange-100 px-6 py-3"
     >
       <View className="flex-row items-center gap-2">
-        <Text style={{ fontSize: 24 }}>🐾</Text>
+        <Image
+          source={{ uri: MOZART.rosto }}
+          style={{ width: 34, height: 34 }}
+          resizeMode="contain"
+          accessibilityLabel="Mozart, o mascote do Maestro Pet"
+        />
         <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: '#1A1410' }}>
           Maestro Pet
         </Text>
@@ -242,8 +248,8 @@ function Hero() {
             }}
           >
             Saúde, jogos, notícias, carteirinha, lugares, rolês — cada coisa é um{' '}
-            <Text style={{ fontFamily: FONTS.bodyBold, color: '#1A1410' }}>app</Text> dentro do Pet
-            Social. Deslize, toque e cuide de tudo num lugar só.
+            <Text style={{ fontFamily: FONTS.bodyBold, color: '#1A1410' }}>app</Text> dentro do
+            Maestro Pet. Deslize, toque e cuide de tudo num lugar só.
           </Text>
 
           <View
@@ -926,7 +932,12 @@ function Footer() {
       <View style={{ marginHorizontal: 'auto', width: '100%', maxWidth: 1152, gap: 18 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={{ fontSize: 20 }}>🐾</Text>
+            <Image
+              source={{ uri: MOZART.rosto }}
+              style={{ width: 28, height: 28 }}
+              resizeMode="contain"
+              accessibilityLabel=""
+            />
             <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#fff' }}>Maestro Pet</Text>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginLeft: 'auto' }}>

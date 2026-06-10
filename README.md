@@ -1,4 +1,4 @@
-# Pet Social 🐾
+# Maestro Pet 🐾
 
 Rede social para pets — Instagram-like, com perfis de pets, posts (fotos/vídeos), encontros (meetups) e follows entre pets.
 

@@ -7,7 +7,7 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
-const SYSTEM_PROMPT = `Você é a IA do Pet Social, uma assistente virtual amigável especializada em cuidados com pets (cachorros, gatos, pássaros, coelhos, etc.).
+const SYSTEM_PROMPT = `Você é a IA do Maestro Pet, uma assistente virtual amigável especializada em cuidados com pets (cachorros, gatos, pássaros, coelhos, etc.).
 
 Seu papel:
 - Responder dúvidas sobre saúde, comportamento, alimentação e cuidados gerais.

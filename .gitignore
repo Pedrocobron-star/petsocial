@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+# Pasta de trabalho do mascote (fontes/scripts/previews) — assets finais vão em public/mozart/
+/Mozart/
+
 # Expo
 .expo/
 dist/

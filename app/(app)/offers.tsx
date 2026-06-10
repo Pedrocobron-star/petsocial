@@ -76,6 +76,7 @@ function OffersInner() {
           ) : offers.length === 0 ? (
             <EmptyState
               emoji="🎁"
+              mozart="megafone"
               title="Nenhuma oferta no momento"
               description="Estamos fechando parcerias com marcas e petshops. Volte em breve pra economizar com seu pet!"
             />

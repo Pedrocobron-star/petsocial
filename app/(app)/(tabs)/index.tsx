@@ -186,6 +186,7 @@ export default function FeedScreen() {
           ListEmptyComponent={
             <EmptyState
               emoji="🦴"
+              mozart="oi"
               title="Sem posts ainda"
               description="Posta a primeira foto ou siga outros pets pra ver o feed encher."
               action={

@@ -79,6 +79,7 @@ function AdoptionFeedInner() {
           ) : listings.length === 0 ? (
             <EmptyState
               emoji="🐾"
+              mozart="coracao"
               title="Nenhum pet por aqui ainda"
               description="Seja o primeiro a anunciar um pet pra adoção, ou volte em breve. Cada divulgação ajuda a achar um lar."
               action={

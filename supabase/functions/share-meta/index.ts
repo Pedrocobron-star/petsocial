@@ -128,10 +128,10 @@ async function fetchPetMeta(petId: string): Promise<PageMeta | null> {
   const breedLine = data.breed ? `${speciesLabel} ${data.breed}` : speciesLabel;
   const description = data.bio
     ? truncate(data.bio, 160)
-    : `${data.name} (${breedLine}) tem carteirinha digital, histórico de saúde e perfil no Pet Social. Crie a do seu pet grátis.`;
+    : `${data.name} (${breedLine}) tem carteirinha digital, histórico de saúde e perfil no Maestro Pet. Crie a do seu pet grátis.`;
 
   return {
-    title: `${data.name} (${breedLine}) · Pet Social`,
+    title: `${data.name} (${breedLine}) · Maestro Pet`,
     description,
     image: data.avatar_url ?? DEFAULT_IMAGE,
     ogType: 'profile',
@@ -167,10 +167,10 @@ async function fetchPostMeta(postId: string): Promise<PageMeta | null> {
   const firstMedia = (data as { media: { url: string }[] }).media?.[0]?.url;
   const description = data.caption
     ? truncate(data.caption, 160)
-    : `Post de ${pet.name} no Pet Social`;
+    : `Post de ${pet.name} no Maestro Pet`;
 
   return {
-    title: `${pet.name} no Pet Social`,
+    title: `${pet.name} no Maestro Pet`,
     description,
     image: firstMedia ?? pet.avatar_url ?? DEFAULT_IMAGE,
     ogType: 'article',
@@ -199,7 +199,7 @@ async function fetchIdCardMeta(token: string): Promise<PageMeta | null> {
   const description = `Carteirinha digital de ${data.name} (${breedLine}). Toque pra contato em caso de emergência.`;
 
   return {
-    title: `Carteirinha de ${data.name} · Pet Social`,
+    title: `Carteirinha de ${data.name} · Maestro Pet`,
     description,
     image: data.avatar_url ?? DEFAULT_IMAGE,
     ogType: 'profile',
@@ -243,7 +243,7 @@ function buildHtml(meta: PageMeta, canonicalUrl: string, spaPath: string, isBot:
   <meta property="og:description" content="${escape(meta.description)}" />
   <meta property="og:image" content="${escape(meta.image)}" />
   <meta property="og:url" content="${escape(canonicalUrl)}" />
-  <meta property="og:site_name" content="Pet Social" />
+  <meta property="og:site_name" content="Maestro Pet" />
   <meta property="og:locale" content="pt_BR" />
 
   <!-- Twitter Card -->
@@ -267,7 +267,7 @@ function buildHtml(meta: PageMeta, canonicalUrl: string, spaPath: string, isBot:
   <div class="container">
     <div class="pulse">🐾</div>
     <p class="text">
-      Abrindo Pet Social...
+      Abrindo Maestro Pet...
       <br />
       <noscript>JavaScript desativado? <a href="${escape(spaPath)}">Continuar</a></noscript>
     </p>
@@ -281,10 +281,10 @@ function notFoundHtml(reason: string): string {
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Não encontrado · Pet Social</title>
+  <title>Não encontrado · Maestro Pet</title>
   <meta name="theme-color" content="${BRAND_ORANGE}" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta property="og:title" content="Não encontrado · Pet Social" />
+  <meta property="og:title" content="Não encontrado · Maestro Pet" />
   <meta property="og:description" content="Esse conteúdo não está mais disponível." />
   <meta property="og:image" content="${DEFAULT_IMAGE}" />
   <style>
@@ -301,7 +301,7 @@ function notFoundHtml(reason: string): string {
     <div class="icon">🐾</div>
     <h1>Conteúdo não encontrado</h1>
     <p>${escape(reason)}. Talvez tenha sido removido pelo tutor.</p>
-    <a href="${APP_URL}">Ir pra Pet Social</a>
+    <a href="${APP_URL}">Ir pra Maestro Pet</a>
   </div>
 </body>
 </html>`;

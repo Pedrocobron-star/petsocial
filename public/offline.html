@@ -27,15 +27,16 @@
       gap: 20px;
     }
     .icon {
-      width: 96px;
-      height: 96px;
-      background: #F97316;
-      border-radius: 28px;
+      width: 148px;
+      height: 148px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 48px;
-      box-shadow: 0 10px 40px rgba(249, 115, 22, 0.25);
+    }
+    .icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
     h1 {
       font-size: 26px;
@@ -71,7 +72,7 @@
 </head>
 <body>
   <div class="container">
-    <div class="icon">🐾</div>
+    <div class="icon"><img src="/mozart/dormindo.png" alt="Mozart dormindo" /></div>
     <h1>Sem conexão agora</h1>
     <p>
       Não conseguimos carregar o Maestro Pet — parece que você está offline ou nossa rede está
