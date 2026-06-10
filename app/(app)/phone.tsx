@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Image } from 'expo-image';
-import { Redirect, Stack, useFocusEffect, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,7 +24,6 @@ import { PetAvatar } from '@/components/pet-avatar';
 import { FONTS } from '@/lib/fonts';
 import { setThemeColorMeta } from '@/lib/theme-color';
 import { haptic } from '@/lib/haptics';
-import { wasOnboardingSkipped } from '@/lib/onboarding-state';
 import { computeHealthScore } from '@/lib/health-score';
 import {
   fetchHealthSummary,
@@ -501,11 +500,35 @@ export default function PetPhoneScreen() {
       </View>
     );
   }
-  // Sem pet: manda pro onboarding — a menos que o usuário já tenha "Pulado"
-  // nesta sessão (aí vai pro feed, evitando o loop celular↔onboarding).
+  // Sem pet: CTA inline. IMPORTANTE: NÃO redireciona pro feed — isso corrompia
+  // o histórico (ao voltar pro springboard ele pulava pro feed, e o "voltar" de
+  // qualquer app caía no feed em vez da tela inicial). Aqui o springboard sempre
+  // se mantém como a base do "voltar".
   if (pets.length === 0)
     return (
-      <Redirect href={(wasOnboardingSkipped() ? '/(app)/(tabs)' : '/(app)/onboarding') as never} />
+      <View style={{ flex: 1, backgroundColor: wp.to }}>
+        <Wallpaper wp={wp} width={width} height={height} photoUri={null} idSuffix="empty" />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, gap: 14 }}>
+          <Text style={{ fontSize: 56 }}>🐾</Text>
+          <Text style={[{ fontFamily: FONTS.bodyBold, fontSize: 21, color: '#fff', textAlign: 'center' }, LABEL_SHADOW]}>
+            Cadastre seu primeiro pet
+          </Text>
+          <Text
+            style={[
+              { fontFamily: FONTS.body, fontSize: 14, color: 'rgba(255,255,255,0.92)', textAlign: 'center', lineHeight: 20 },
+              LABEL_SHADOW,
+            ]}
+          >
+            É rapidinho e libera todos os apps do Maestro Pet.
+          </Text>
+          <Pressable
+            onPress={() => router.push('/(app)/onboarding' as never)}
+            style={{ backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 26, paddingVertical: 13, marginTop: 8 }}
+          >
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: wp.to }}>Adicionar meu pet</Text>
+          </Pressable>
+        </View>
+      </View>
     );
   if (!activePet) return null;
 
