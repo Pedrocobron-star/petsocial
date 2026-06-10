@@ -9,16 +9,16 @@ import {
 
 export default function AboutPage() {
   return (
-    <LegalPage title="Sobre o Pet Social">
+    <LegalPage title="Sobre o Maestro Pet">
       <View className="mb-8 items-center">
         <Text className="text-6xl">🐾</Text>
-        <Text className="mt-3 text-3xl font-bold text-neutral-900">Pet Social</Text>
+        <Text className="mt-3 text-3xl font-bold text-neutral-900">Maestro Pet</Text>
         <Text className="mt-1 text-base text-neutral-500">A rede dos bichinhos</Text>
       </View>
 
       <LegalSection title="Nossa missão">
         <LegalParagraph>
-          O Pet Social existe pra dar voz aos pets. Cada bichinho tem personalidade, jeitinho próprio
+          O Maestro Pet existe pra dar voz aos pets. Cada bichinho tem personalidade, jeitinho próprio
           e merece um espaço onde a foto dele não compete com o almoço de ninguém. Aqui é só pet,
           pet com pet.
         </LegalParagraph>

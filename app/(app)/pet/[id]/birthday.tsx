@@ -80,7 +80,7 @@ export default function BirthdayScreen() {
           : `🐾 ${pet.name}, ${ageNow ?? 'um pet incrível'}`;
       await Share.share({
         title: `${pet.name}`,
-        message: `${headline}\n\nVeja a história desse pet no Pet Social:\n${petUrl(pet.id)}`,
+        message: `${headline}\n\nVeja a história desse pet no Maestro Pet:\n${petUrl(pet.id)}`,
       });
     } catch (e) {
       Alert.alert('Erro', e instanceof Error ? e.message : 'Tente de novo');

@@ -100,7 +100,7 @@ export function PetIdStoryCard({ pet, tutorProfile, qrUrl, width = 360 }: Props)
             marginTop: 2,
           }}
         >
-          Pet Social
+          Maestro Pet
         </Text>
         <Text
           style={{

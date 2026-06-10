@@ -1,5 +1,5 @@
 /**
- * Pet Social i18n — provider, hook e API de tradução.
+ * Maestro Pet i18n — provider, hook e API de tradução.
  *
  * Por que custom (sem react-i18next): app é médio, queremos zero overhead de
  * runtime e tipos fortes vindo direto dos arquivos .ts. Quando crescer (>500

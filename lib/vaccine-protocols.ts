@@ -2,7 +2,7 @@
  * Calendário vacinal sugerido — referência brasileira (CRMV / Anvisa / Vacinet).
  *
  * IMPORTANTE: estas sugestões são REFERÊNCIA, não prescrição médica.
- * O Pet Social NUNCA substitui veterinário. O protocolo final depende
+ * O Maestro Pet NUNCA substitui veterinário. O protocolo final depende
  * de avaliação clínica, região, lifestyle do pet e disponibilidade de vacinas.
  *
  * Fontes consultadas:

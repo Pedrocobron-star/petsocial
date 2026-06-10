@@ -226,7 +226,7 @@ function PostCardComponent({
 
   const onShareTap = async () => {
     await sharePost({
-      title: `${post.pet.name} no Pet Social`,
+      title: `${post.pet.name} no Maestro Pet`,
       message: post.caption ? `${post.pet.name}: ${post.caption}` : `Veja o post de ${post.pet.name}`,
       url: postUrl(post.id),
     });

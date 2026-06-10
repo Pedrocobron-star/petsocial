@@ -60,7 +60,7 @@ export function FeedHeader({ unreadMessages, unreadNotifications }: Props) {
             letterSpacing: -0.5,
           }}
         >
-          Pet Social
+          Maestro Pet
         </Text>
       </Pressable>
 

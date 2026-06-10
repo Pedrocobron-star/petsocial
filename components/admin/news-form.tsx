@@ -29,7 +29,7 @@ const STORES: { value: AffiliateStore; label: string }[] = [
   { value: 'outro', label: 'Outro' },
 ];
 
-const DEFAULT_AUTHOR = 'Redação Pet Social';
+const DEFAULT_AUTHOR = 'Redação Maestro Pet';
 
 /**
  * Formulário compartilhado de matéria do Portal de Notícias (criar OU editar).

@@ -274,7 +274,7 @@ function WebPushToggle({ userId }: { userId?: string }) {
           🌐 Push não disponível aqui
         </Text>
         <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#78350F', lineHeight: 17 }}>
-          Seu navegador não suporta notificações push (ou está em aba privada). Instale o Pet Social
+          Seu navegador não suporta notificações push (ou está em aba privada). Instale o Maestro Pet
           como app (banner &quot;Instalar&quot;) pra ativar.
         </Text>
       </View>
@@ -368,7 +368,7 @@ function PermissionBanner({
         </Text>
         <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#78350F', lineHeight: 17 }}>
           No navegador, os alertas aparecem dentro do app (em LEMBRETES no health hub). Pra receber
-          notificações push no celular, baixe o Pet Social no app store.
+          notificações push no celular, baixe o Maestro Pet no app store.
         </Text>
       </View>
     );

@@ -10,7 +10,7 @@ import { FONTS } from '@/lib/fonts';
 import { Ionicons } from '@expo/vector-icons';
 
 /**
- * Logo "🐾 Pet Social" clicável usado como headerLeft em todas as telas.
+ * Logo "🐾 Maestro Pet" clicável usado como headerLeft em todas as telas.
  * Substitui o back button padrão por uma logo home que SEMPRE leva pra
  * `/(app)/(tabs)`, funcionando mesmo quando o histórico de navegação está
  * vazio (caso de quem entrou direto pela URL no web).
@@ -34,7 +34,7 @@ export function HeaderHomeLogo() {
     >
       <Text style={{ fontSize: 18 }}>🐾</Text>
       <Text style={{ fontFamily: FONTS.display, fontSize: 16, color: '#1A1410' }}>
-        Pet Social
+        Maestro Pet
       </Text>
     </Pressable>
   );

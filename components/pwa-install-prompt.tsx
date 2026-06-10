@@ -117,7 +117,7 @@ export function PwaInstallPrompt() {
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#1A1410' }}>
-          Instalar Pet Social
+          Instalar Maestro Pet
         </Text>
         <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373', marginTop: 2 }}>
           {deferredPrompt

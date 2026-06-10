@@ -57,7 +57,7 @@ export function OnboardingTour() {
   const steps: Step[] = [
     {
       emoji: '🐾',
-      title: 'Bem-vindo ao Pet Social!',
+      title: 'Bem-vindo ao Maestro Pet!',
       description:
         'A rede social pros pets — mas com saúde de verdade. Vou te mostrar o essencial em 4 passos rápidos.',
     },

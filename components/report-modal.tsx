@@ -45,7 +45,7 @@ export function ReportModal({ visible, onClose, targetKind, targetId }: Props) {
         notes: notes.trim() || undefined,
       }),
     onSuccess: () => {
-      toast.success('Denúncia enviada', 'Obrigado por ajudar a manter o Pet Social seguro 🐾');
+      toast.success('Denúncia enviada', 'Obrigado por ajudar a manter o Maestro Pet seguro 🐾');
       setReason(null);
       setNotes('');
       onClose();

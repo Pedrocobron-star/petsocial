@@ -330,7 +330,7 @@ function Disclaimer() {
       <Text style={{ fontSize: 18 }}>⚠️</Text>
       <View style={{ flex: 1 }}>
         <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#92400E' }}>
-          Pet Social não substitui veterinário
+          Maestro Pet não substitui veterinário
         </Text>
         <Text
           style={{

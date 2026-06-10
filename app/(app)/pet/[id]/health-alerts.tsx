@@ -334,7 +334,7 @@ function DisclaimerFooter() {
           lineHeight: 16,
         }}
       >
-        Alertas baseados nos registros que você fez no app. Pet Social não substitui veterinário.
+        Alertas baseados nos registros que você fez no app. Maestro Pet não substitui veterinário.
         Em casos sérios, procure atendimento profissional imediatamente.
       </Text>
     </View>

@@ -64,7 +64,7 @@ export default function QuizScreen() {
       try {
         await Share.share({
           title: `${pet.name} é ${info.title}!`,
-          message: `${info.emoji} ${pet.name} é um pet ${info.title}!\n"${info.description}"\n\nDescubra a personalidade do seu pet no Pet Social:\n${petUrl(pet.id)}`,
+          message: `${info.emoji} ${pet.name} é um pet ${info.title}!\n"${info.description}"\n\nDescubra a personalidade do seu pet no Maestro Pet:\n${petUrl(pet.id)}`,
         });
       } catch (e) {
         toast.error('Não foi possível compartilhar', e instanceof Error ? e.message : '');

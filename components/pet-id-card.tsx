@@ -114,7 +114,7 @@ export function PetIdCard({ pet, tutorProfile, qrUrl, width = 340 }: Props) {
                   textTransform: 'uppercase',
                 }}
               >
-                Pet Social
+                Maestro Pet
               </Text>
               <Text
                 style={{

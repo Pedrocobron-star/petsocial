@@ -62,7 +62,7 @@ export default function PublicPetIdScreen() {
     if (!phone) return;
     track('pet_id_public_contact', { method: 'whatsapp' });
     const cleaned = phone.replace(/[^\d+]/g, '');
-    const text = encodeURIComponent(`Oi! Achei o ${petName} 🐾 Vi sua carteirinha digital do Pet Social.`);
+    const text = encodeURIComponent(`Oi! Achei o ${petName} 🐾 Vi sua carteirinha digital do Maestro Pet.`);
     Linking.openURL(`https://wa.me/${cleaned}?text=${text}`).catch(() => {});
   };
 
@@ -126,7 +126,7 @@ export default function PublicPetIdScreen() {
             style={{ marginTop: 8, paddingVertical: 10, paddingHorizontal: 18 }}
           >
             <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.brand }}>
-              Ir pra Pet Social
+              Ir pra Maestro Pet
             </Text>
           </Pressable>
         </View>
@@ -139,7 +139,7 @@ export default function PublicPetIdScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
       <MetaTags
-        title={`Carteirinha de ${pet.name} · Pet Social`}
+        title={`Carteirinha de ${pet.name} · Maestro Pet`}
         description={`Carteirinha digital de ${pet.name} (${pet.breed ?? pet.species}). Toque pra contato em caso de emergência.`}
         image={pet.avatar_url}
         type="profile"
@@ -365,7 +365,7 @@ export default function PublicPetIdScreen() {
                   lineHeight: 16,
                 }}
               >
-                Os dados aqui foram registrados pelo tutor de {pet.name}. Pet Social não substitui um veterinário — em emergências médicas, procure ajuda profissional.
+                Os dados aqui foram registrados pelo tutor de {pet.name}. Maestro Pet não substitui um veterinário — em emergências médicas, procure ajuda profissional.
               </Text>
             </View>
           </View>

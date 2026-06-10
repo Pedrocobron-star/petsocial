@@ -237,7 +237,7 @@ function AchievementsInner() {
                 key={a.def.id}
                 state={a}
                 onShare={async () => {
-                  const text = `🏆 Acabei de desbloquear "${a.def.title}" no Pet Social!\n${a.def.description}`;
+                  const text = `🏆 Acabei de desbloquear "${a.def.title}" no Maestro Pet!\n${a.def.description}`;
                   if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.share) {
                     try {
                       await navigator.share({ title: a.def.title, text });

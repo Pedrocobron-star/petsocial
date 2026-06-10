@@ -211,7 +211,7 @@ export function HealthSummaryPosterSvg({
           Gerado em {format(new Date(), "d 'de' MMM 'de' yyyy", { locale: ptBR })}
         </SvgText>
         <SvgText x={W / 2} y="1075" fontSize="14" fill="#A3A3A3" textAnchor="middle">
-          Pet Social · Resumo de saúde do pet
+          Maestro Pet · Resumo de saúde do pet
         </SvgText>
       </Svg>
     </View>

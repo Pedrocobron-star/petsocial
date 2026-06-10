@@ -38,7 +38,7 @@ export function InviteFriendsCard() {
     if (!link) return;
     track('referral_share_clicked');
     const result = await sharePost({
-      title: 'Vem pro Pet Social 🐾',
+      title: 'Vem pro Maestro Pet 🐾',
       message:
         'Te dou 7 dias de Pet Pro grátis! Crie sua conta pelo meu convite e cadastre seu pet:',
       url: link,

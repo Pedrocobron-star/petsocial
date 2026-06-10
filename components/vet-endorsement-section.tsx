@@ -60,7 +60,7 @@ export function VetEndorsementSection({ petId, petName }: Props) {
     onSuccess: async (token) => {
       await qc.invalidateQueries({ queryKey: ['pet-endorsements', petId] });
       const url = endorseUrl(token);
-      const msg = `🐾 Olá! Pode confirmar a carteirinha de saúde do(a) ${petName} no Pet Social? É rápido, sem cadastro:\n\n${url}`;
+      const msg = `🐾 Olá! Pode confirmar a carteirinha de saúde do(a) ${petName} no Maestro Pet? É rápido, sem cadastro:\n\n${url}`;
       const ok = await shareToWhatsApp(msg);
       if (!ok) {
         await sharePost({
@@ -76,7 +76,7 @@ export function VetEndorsementSection({ petId, petName }: Props) {
   const resendPending = async () => {
     if (!pending) return;
     const url = endorseUrl(pending.token);
-    const msg = `🐾 Olá! Pode confirmar a carteirinha de saúde do(a) ${petName} no Pet Social? É rápido, sem cadastro:\n\n${url}`;
+    const msg = `🐾 Olá! Pode confirmar a carteirinha de saúde do(a) ${petName} no Maestro Pet? É rápido, sem cadastro:\n\n${url}`;
     const ok = await shareToWhatsApp(msg);
     if (!ok) await sharePost({ title: `Endosso · ${petName}`, message: msg, url });
   };

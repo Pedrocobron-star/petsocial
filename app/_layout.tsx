@@ -59,7 +59,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* Sobrescreve global o respeito ao "Reduce Motion" do sistema.
-          As animações do Pet Social são suaves e fundamentais pra UX —
+          As animações do Maestro Pet são suaves e fundamentais pra UX —
           em vez de cada componente declarar ReduceMotion.Never, configuramos
           uma vez aqui. Usuários com sensibilidade extrema podem desativar
           via setting nosso próprio no futuro. */}

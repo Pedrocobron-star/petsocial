@@ -690,7 +690,7 @@ export interface PetDietLog {
 /**
  * Sintoma registrado pelo tutor pra mostrar pro veterinário.
  *
- * IMPORTANTE: o Pet Social NUNCA dá diagnóstico ou recomendação médica.
+ * IMPORTANTE: o Maestro Pet NUNCA dá diagnóstico ou recomendação médica.
  * pet_symptoms são REGISTROS — o veterinário decide o que significam.
  * Severidade é a percepção do tutor, não classificação clínica.
  */

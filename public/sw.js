@@ -1,5 +1,5 @@
 /**
- * Pet Social — Service Worker
+ * Maestro Pet — Service Worker
  *
  * Estratégia:
  *  - Cache-first pra assets estáticos (fontes, ícones, JS/CSS bundle)
@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION ao mudar assets — força refresh do cache.
  */
 
-const CACHE_VERSION = 'pet-social-v70';
+const CACHE_VERSION = 'pet-social-v71';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -101,9 +101,9 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: 'Pet Social', body: event.data ? event.data.text() : '' };
+    data = { title: 'Maestro Pet', body: event.data ? event.data.text() : '' };
   }
-  const title = data.title || 'Pet Social 🐾';
+  const title = data.title || 'Maestro Pet 🐾';
   const options = {
     body: data.body || '',
     icon: data.icon || '/icon-192.png',

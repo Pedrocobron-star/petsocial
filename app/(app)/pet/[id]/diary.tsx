@@ -85,7 +85,7 @@ export default function PetDiaryScreen() {
       id: `auto-welcome-${id}`,
       date: toISODate(petQuery.data.created_at),
       emoji: '🐾',
-      title: 'Entrou no Pet Social',
+      title: 'Entrou no Maestro Pet',
       description: `${petQuery.data.name} criou conta na rede`,
       source: 'auto',
       color: '#F97316',

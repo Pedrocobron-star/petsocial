@@ -31,9 +31,9 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="msapplication-TileColor" content="#F97316" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Pet Social" />
+        <meta name="apple-mobile-web-app-title" content="Maestro Pet" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="application-name" content="Pet Social" />
+        <meta name="application-name" content="Maestro Pet" />
 
         {/* Pre-connect pra perf (Supabase + Google Fonts) */}
         <link rel="preconnect" href="https://aefrcwysifgniogumxwk.supabase.co" />
@@ -49,16 +49,16 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* Default OG tags (override em cada rota via MetaTags) */}
         <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Pet Social" />
+        <meta property="og:site_name" content="Maestro Pet" />
         <meta property="og:locale" content="pt_BR" />
-        <meta property="og:title" content="Pet Social — Saúde do pet + comunidade · App grátis" />
+        <meta property="og:title" content="Maestro Pet — Saúde do pet + comunidade · App grátis" />
         <meta
           property="og:description"
           content="Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu pet."
         />
         <meta property="og:image" content="/assets/assets/images/icon-512.png" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Pet Social — Saúde do pet + comunidade · App grátis" />
+        <meta name="twitter:title" content="Maestro Pet — Saúde do pet + comunidade · App grátis" />
         <meta
           name="twitter:description"
           content="Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu pet."

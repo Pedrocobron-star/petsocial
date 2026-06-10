@@ -205,7 +205,7 @@ export default function PostDetailScreen() {
 
   const onShare = async () => {
     const result = await sharePost({
-      title: `${post.pet.name} no Pet Social`,
+      title: `${post.pet.name} no Maestro Pet`,
       message: post.caption ? `${post.pet.name}: ${post.caption}` : `Veja o post de ${post.pet.name}`,
       url: postUrl(id),
     });
@@ -270,11 +270,11 @@ export default function PostDetailScreen() {
     >
       {post ? (
         <MetaTags
-          title={`${post.pet.name} no Pet Social`}
+          title={`${post.pet.name} no Maestro Pet`}
           description={
             post.caption
               ? post.caption.slice(0, 160)
-              : `Post de ${post.pet.name} no Pet Social`
+              : `Post de ${post.pet.name} no Maestro Pet`
           }
           image={post.media[0]?.url ?? post.pet.avatar_url}
           type="article"

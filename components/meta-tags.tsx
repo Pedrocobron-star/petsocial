@@ -8,7 +8,7 @@ import { setMetaTags, type MetaTagsInput } from '@/lib/meta-tags';
  *
  * Uso:
  *   <MetaTags
- *     title="Bidu — Pet Social"
+ *     title="Bidu — Maestro Pet"
  *     description="Conheça o Bidu, vira-lata adorável de São Paulo"
  *     image={pet.avatar_url}
  *     type="profile"

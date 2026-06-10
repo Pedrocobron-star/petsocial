@@ -238,7 +238,7 @@ function OfferCard({ offer }: { offer: Offer }) {
         ) : null}
 
         <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim, textAlign: 'center' }}>
-          Oferta do parceiro {offer.brand} · Pet Social não se responsabiliza pela compra
+          Oferta do parceiro {offer.brand} · Maestro Pet não se responsabiliza pela compra
         </Text>
       </View>
     </View>

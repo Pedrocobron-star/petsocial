@@ -7,7 +7,7 @@ import { FONTS } from '@/lib/fonts';
 import { track } from '@/lib/analytics';
 
 /**
- * Banner sticky no topo que oferece instalar o Pet Social como PWA.
+ * Banner sticky no topo que oferece instalar o Maestro Pet como PWA.
  *
  * Mostra em QUALQUER celular (web), a não ser que:
  *  - já esteja instalado (standalone), ou
@@ -190,7 +190,7 @@ export function MobileAppBanner() {
               lineHeight: 17,
             }}
           >
-            Instale o Pet Social
+            Instale o Maestro Pet
           </Text>
           <Text
             style={{
@@ -207,7 +207,7 @@ export function MobileAppBanner() {
         </View>
         <Pressable
           onPress={handleInstall}
-          accessibilityLabel="Instalar Pet Social na tela inicial"
+          accessibilityLabel="Instalar Maestro Pet na tela inicial"
           style={{
             backgroundColor: '#FFFFFF',
             paddingHorizontal: 14,

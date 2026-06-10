@@ -88,7 +88,7 @@ export function AffiliateProducts({
         }}
       >
         <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: theme.textDim, lineHeight: 17 }}>
-          Os links acima são afiliados — o Pet Social pode receber uma comissão, sem custo extra pra você.
+          Os links acima são afiliados — o Maestro Pet pode receber uma comissão, sem custo extra pra você.
         </Text>
       </View>
     </View>

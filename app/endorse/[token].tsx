@@ -85,7 +85,7 @@ export default function PublicEndorseScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFBF5' }}>
       <Stack.Screen options={{ headerShown: false }} />
       <MetaTags
-        title="Endosso veterinário · Pet Social"
+        title="Endosso veterinário · Maestro Pet"
         description="Confirme e endosse a carteirinha de saúde deste pet."
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
@@ -94,7 +94,7 @@ export default function PublicEndorseScreen() {
           <View style={{ alignItems: 'center', paddingTop: 28, paddingBottom: 12, gap: 4 }}>
             <Text style={{ fontSize: 32 }}>🐾</Text>
             <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: '#1A1410' }}>
-              Pet Social
+              Maestro Pet
             </Text>
             <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#16A34A', letterSpacing: 0.8 }}>
               ENDOSSO VETERINÁRIO

@@ -31,7 +31,7 @@ export default function TimeCapsuleScreen() {
     try {
       await Share.share({
         title: `${pet.name} em retrospectiva`,
-        message: `📼 ${stats.daysActive} dias com ${pet.name}!\n📸 ${stats.postsCount} posts\n❤️ ${stats.likesReceived} curtidas\n\nVeja o ano completo no Pet Social:\n${petUrl(pet.id)}`,
+        message: `📼 ${stats.daysActive} dias com ${pet.name}!\n📸 ${stats.postsCount} posts\n❤️ ${stats.likesReceived} curtidas\n\nVeja o ano completo no Maestro Pet:\n${petUrl(pet.id)}`,
       });
     } catch (e) {
       Alert.alert('Erro', e instanceof Error ? e.message : '');

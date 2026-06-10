@@ -59,7 +59,7 @@ export default function AdoptionDetailScreen() {
     }
     const digits = listing.contact_phone.replace(/\D/g, '');
     const withCountry = digits.startsWith('55') ? digits : `55${digits}`;
-    const text = `Olá! Vi o anúncio do ${listing.pet_name} pra adoção no Pet Social e tenho interesse 🐾`;
+    const text = `Olá! Vi o anúncio do ${listing.pet_name} pra adoção no Maestro Pet e tenho interesse 🐾`;
     const url = `https://wa.me/${withCountry}?text=${encodeURIComponent(text)}`;
     try {
       await Linking.openURL(url);
@@ -76,7 +76,7 @@ export default function AdoptionDetailScreen() {
         : 'https://petsocial.app';
     await sharePost({
       title: `${listing.pet_name} pra adoção`,
-      message: `🏠 ${listing.pet_name} está pra adoção no Pet Social! ${listing.city ? `📍 ${listing.city}` : ''}`,
+      message: `🏠 ${listing.pet_name} está pra adoção no Maestro Pet! ${listing.city ? `📍 ${listing.city}` : ''}`,
       url: `${base}/adoption/${listing.id}`,
     });
   };

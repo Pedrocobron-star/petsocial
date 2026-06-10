@@ -3,7 +3,7 @@ import { type AppThemeKey } from '@/lib/app-themes';
 /**
  * IDENTIDADE VISUAL FORTE POR ÁREA — além do accent.
  *
- * Cada "app" do Pet Social ganha um HERO próprio: gradiente, padrão de motivos
+ * Cada "app" do Maestro Pet ganha um HERO próprio: gradiente, padrão de motivos
  * repetidos (textura), e uma SILHUETA de borda inferior diferente (onda,
  * festão, zigue-zague, fita, ticket...). Assim cada seção tem "cara única" de
  * verdade — não só uma cor trocada — mantendo o mesmo design system embaixo.

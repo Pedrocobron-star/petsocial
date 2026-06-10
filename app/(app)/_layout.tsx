@@ -42,7 +42,7 @@ export default function AppLayout() {
             headerBackTitle: '',
             contentStyle: { backgroundColor: '#FFFBF5' },
             // headerLeft custom: combina back button (volta uma tela)
-            // + logo "🐾 Pet Social" (volta pra home).
+            // + logo "🐾 Maestro Pet" (volta pra home).
             // Funciona mesmo se histórico vazio (caso de entrar direto pela URL no web).
             headerLeft: () => <HeaderBackAndHome />,
             headerBackVisible: false, // desabilita o back automático pra evitar duplicação

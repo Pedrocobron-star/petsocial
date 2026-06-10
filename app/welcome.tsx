@@ -89,7 +89,7 @@ function NavBar() {
       <View className="flex-row items-center gap-2">
         <Text style={{ fontSize: 24 }}>🐾</Text>
         <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: '#1A1410' }}>
-          Pet Social
+          Maestro Pet
         </Text>
       </View>
       <View className="flex-row items-center gap-2">
@@ -339,7 +339,7 @@ function AppsShowcase() {
     { emoji: '🩺', name: 'Saúde', desc: 'Vacinas, sintomas e o Score de Saúde do seu pet.', bg: '#CCFBF1', fg: '#0F766E' },
     { emoji: '🪪', name: 'Carteirinha', desc: 'ID digital com QR pra quem encontrar seu pet te achar.', bg: '#CFFAFE', fg: '#0E7490' },
     { emoji: '🎮', name: 'Jogos', desc: 'Joguinhos, desafio diário, streak e ranking de tutores.', bg: '#EDE9FE', fg: '#6D28D9' },
-    { emoji: '📰', name: 'Notícias', desc: 'Jornal do mundo pet, assinado pela Redação Pet Social.', bg: '#FCE7F3', fg: '#BE185D' },
+    { emoji: '📰', name: 'Notícias', desc: 'Jornal do mundo pet, assinado pela Redação Maestro Pet.', bg: '#FCE7F3', fg: '#BE185D' },
     { emoji: '📍', name: 'Lugares', desc: 'Parques, vets e cafés pet-friendly perto de você.', bg: '#DBEAFE', fg: '#1D4ED8' },
     { emoji: '🎉', name: 'Rolês', desc: 'Encontros de pets pra socializar na sua região.', bg: '#F3E8FF', fg: '#7E22CE' },
     { emoji: '🏆', name: 'Conquistas', desc: 'Medalhas por cuidar bem e manter tudo em dia.', bg: '#FEF3C7', fg: '#B45309' },
@@ -769,7 +769,7 @@ function PrivacyPromise() {
 function Faq() {
   const items: { q: string; a: string }[] = [
     {
-      q: 'O Pet Social substitui o veterinário?',
+      q: 'O Maestro Pet substitui o veterinário?',
       a: 'Não. É uma ferramenta de organização — calendário de vacinas, registro de sintomas, histórico pra mostrar ao vet. Diagnóstico e tratamento sempre com profissional. Nunca damos orientação clínica que pode colocar seu pet em risco.',
     },
     {
@@ -927,7 +927,7 @@ function Footer() {
         <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Text style={{ fontSize: 20 }}>🐾</Text>
-            <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#fff' }}>Pet Social</Text>
+            <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#fff' }}>Maestro Pet</Text>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginLeft: 'auto' }}>
             <Link href="/legal/about" style={{ fontFamily: FONTS.bodyMedium, fontSize: 13, color: '#A3A3A3' }}>
@@ -956,7 +956,7 @@ function Footer() {
           }}
         >
           <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>
-            © {new Date().getFullYear()} Pet Social — Feito com 💛 pra quem ama bichinhos
+            © {new Date().getFullYear()} Maestro Pet — Feito com 💛 pra quem ama bichinhos
           </Text>
           <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>
             contato@petsocial.app

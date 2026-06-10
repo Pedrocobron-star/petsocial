@@ -2,7 +2,7 @@ import { type AccentSet } from '@/lib/theme';
 
 // ============================================================================
 // IDENTIDADE POR ÁREA ("sub-marca dentro do sistema")
-// Cada "app" do Pet Social herda 100% do design system (tipografia, espaçamento,
+// Cada "app" do Maestro Pet herda 100% do design system (tipografia, espaçamento,
 // primitivos, navegação) e muda APENAS o accent + motif. Isso dá "cara própria"
 // sem quebrar a unidade. Regra: o accent pinta no máx ~10% da tela (CTA, header,
 // ícone ativo) — fundo/cards/texto continuam neutros.

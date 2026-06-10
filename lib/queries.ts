@@ -2721,7 +2721,7 @@ export async function sendAiMessage(
     console.warn('[sendAiMessage] Edge function não deployada, usando fallback:', err);
     // Fallback local — resposta canned (dev mode)
     const petName = pet?.name ?? 'seu pet';
-    const fallback = `Oi! Sou a assistente de saúde do Pet Social 🐾\n\nNão consegui acessar a IA agora (a função no servidor ainda não foi deployada). Em produção eu analiso a pergunta sobre ${petName} e respondo com base em conhecimento veterinário.\n\nPara situações urgentes, sempre procure um veterinário próximo!`;
+    const fallback = `Oi! Sou a assistente de saúde do Maestro Pet 🐾\n\nNão consegui acessar a IA agora (a função no servidor ainda não foi deployada). Em produção eu analiso a pergunta sobre ${petName} e respondo com base em conhecimento veterinário.\n\nPara situações urgentes, sempre procure um veterinário próximo!`;
     const { data: aMsg, error: e3 } = await supabase
       .from('ai_messages')
       .insert({ conversation_id: conversationId, role: 'assistant', content: fallback })

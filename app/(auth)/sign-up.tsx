@@ -181,7 +181,7 @@ export default function SignUpScreen() {
               >
                 Política de Privacidade
               </Text>
-              {'. '}Concedo licença ao Pet Social pra usar fotos, vídeos e dados do meu pet
+              {'. '}Concedo licença ao Maestro Pet pra usar fotos, vídeos e dados do meu pet
               dentro do app (seção 3 dos Termos).
             </Text>
           </Pressable>

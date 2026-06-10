@@ -189,7 +189,7 @@ function toRow(input: NewsArticleInput) {
     dek: input.dek,
     cover_url: input.cover_url,
     body: input.body,
-    author_name: input.author_name?.trim() || 'Redação Pet Social',
+    author_name: input.author_name?.trim() || 'Redação Maestro Pet',
     status: input.status,
     is_featured: input.is_featured,
     affiliate_products: input.affiliate_products,

@@ -11,7 +11,7 @@
  */
 
 const DEFAULTS = {
-  title: 'Pet Social — Saúde do pet + comunidade · App grátis',
+  title: 'Maestro Pet — Saúde do pet + comunidade · App grátis',
   description:
     'Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu cachorro, gato, coelho e mais.',
   image: '/assets/assets/images/icon-512.png',
@@ -71,7 +71,7 @@ export function setMetaTags(input: MetaTagsInput): void {
 /** Reseta tudo pros defaults — usar em telas genéricas (feed, tabs). */
 export function resetMetaTags(siteSuffix?: string): void {
   setMetaTags({
-    title: siteSuffix ? `${siteSuffix} · Pet Social` : DEFAULTS.title,
+    title: siteSuffix ? `${siteSuffix} · Maestro Pet` : DEFAULTS.title,
     description: DEFAULTS.description,
     image: DEFAULTS.image,
     type: 'website',

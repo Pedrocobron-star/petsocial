@@ -123,7 +123,7 @@ export default function AdminScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <Stack.Screen options={{ title: 'Admin · Pet Social' }} />
+      <Stack.Screen options={{ title: 'Admin · Maestro Pet' }} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 60 }}>
         {/* Header */}
         <View
@@ -153,7 +153,7 @@ export default function AdminScreen() {
               ADMIN PANEL
             </Text>
             <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#FFFFFF', marginTop: 2 }}>
-              Pet Social Overview
+              Maestro Pet Overview
             </Text>
             {engagement ? (
               <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#A3A3A3', marginTop: 2 }}>

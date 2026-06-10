@@ -73,7 +73,7 @@ export const enUS: TranslationKeys = {
       button: 'Create account now',
     },
     footer: {
-      copyright: 'Pet Social © 2026 · Made with 💛 in Brazil',
+      copyright: 'Maestro Pet © 2026 · Made with 💛 in Brazil',
     },
   },
   auth: {

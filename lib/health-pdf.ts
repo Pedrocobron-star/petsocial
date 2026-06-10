@@ -194,7 +194,7 @@ export function buildHealthRecordHtml(data: RecordData): string {
       ${pet.avatar_url ? `<img src="${esc(pet.avatar_url)}" alt="${esc(pet.name)}" />` : `<div class="ph">${speciesEmoji(pet.species)}</div>`}
     </div>
     <div class="id">
-      <div class="brandline">Pet Social · Prontuário de saúde</div>
+      <div class="brandline">Maestro Pet · Prontuário de saúde</div>
       <div class="petname">${esc(pet.name)}</div>
       <div class="meta">${esc(speciesLabel(pet.species))}${pet.breed ? ` · ${esc(pet.breed)}` : ''}${ageText ? ` · ${esc(ageText)}` : ''}</div>
     </div>
@@ -221,7 +221,7 @@ export function buildHealthRecordHtml(data: RecordData): string {
   ${section('📎 Exames & laudos', ['Tipo', 'Título', 'Data'], docsRows, 'Nenhum documento anexado')}
 
   <footer>
-    <b>Documento gerado pelo Pet Social em ${today}.</b><br>
+    <b>Documento gerado pelo Maestro Pet em ${today}.</b><br>
     Este prontuário organiza o histórico informado pelo tutor e <b>não substitui a avaliação veterinária presencial</b> nem constitui orientação clínica. Aponte a câmera no QR pra abrir a carteirinha verificável do pet.
   </footer>
 </body>

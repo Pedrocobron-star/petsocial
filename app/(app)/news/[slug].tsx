@@ -79,7 +79,7 @@ export default function NewsArticleScreen() {
   useEffect(() => {
     if (!article) return;
     setMetaTags({
-      title: `${article.title} · Pet Social`,
+      title: `${article.title} · Maestro Pet`,
       description: article.dek ?? undefined,
       image: article.cover_url ?? undefined,
     });

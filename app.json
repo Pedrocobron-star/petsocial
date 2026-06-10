@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Pet Social",
+    "name": "Maestro Pet",
     "slug": "petsocial",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -24,8 +24,8 @@
     "web": {
       "output": "single",
       "favicon": "./assets/images/favicon.png",
-      "name": "Pet Social — Saúde do pet + comunidade",
-      "shortName": "Pet Social",
+      "name": "Maestro Pet — Saúde do pet + comunidade",
+      "shortName": "Maestro Pet",
       "description": "Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu cachorro, gato, coelho e mais.",
       "lang": "pt-BR",
       "themeColor": "#F97316",

@@ -167,8 +167,8 @@ export default function PetProfileScreen() {
   const onShare = async () => {
     if (!pet) return;
     const result = await sharePost({
-      title: `${pet.name} no Pet Social`,
-      message: pet.bio ? `${pet.name}: ${pet.bio}` : `Conheça ${pet.name} no Pet Social`,
+      title: `${pet.name} no Maestro Pet`,
+      message: pet.bio ? `${pet.name}: ${pet.bio}` : `Conheça ${pet.name} no Maestro Pet`,
       url: petUrl(pet.id),
     });
     if (result === 'copied') Alert.alert('Link copiado', 'Pode colar onde quiser.');
@@ -317,11 +317,11 @@ export default function PetProfileScreen() {
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       {pet ? (
         <MetaTags
-          title={`${pet.name} (${pet.breed ?? pet.species}) · Pet Social`}
+          title={`${pet.name} (${pet.breed ?? pet.species}) · Maestro Pet`}
           description={
             pet.bio
               ? pet.bio.slice(0, 160)
-              : `${pet.name} tem carteirinha digital, histórico de saúde e perfil no Pet Social.`
+              : `${pet.name} tem carteirinha digital, histórico de saúde e perfil no Maestro Pet.`
           }
           image={pet.avatar_url}
           type="profile"

@@ -151,7 +151,7 @@ export function buildIcs(event: IcsEventInput): string {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Pet Social//Meetup//PT-BR',
+    'PRODID:-//Maestro Pet//Meetup//PT-BR',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',

@@ -18,7 +18,7 @@
  * ============================================================================
  * DECISÃO DE PRODUTO — Sponsored aparece pra TODOS os usuários (Free + Pro).
  * ============================================================================
- * Patrocinadores são a principal fonte de receita do Pet Social (mais que
+ * Patrocinadores são a principal fonte de receita do Maestro Pet (mais que
  * Pet Pro, que sozinho não cobre custos de infra). Por isso Pro NÃO remove
  * anúncios — só remove os outros limites (posts/dia, pets, marca d'água, AI
  * rate limit, histórico de Score de Saúde). Anúncios continuam exibidos pra todos.

@@ -101,7 +101,7 @@ export async function sendTestPush(userId: string): Promise<{ ok: boolean; error
     const { error } = await supabase.functions.invoke('send-web-push', {
       body: {
         user_id: userId,
-        title: 'Pet Social 🐾',
+        title: 'Maestro Pet 🐾',
         body: 'Push funcionando! É assim que os lembretes vão chegar.',
         url: '/reminders',
         tag: 'test',

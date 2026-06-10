@@ -11,7 +11,7 @@ export default function TermsPage() {
   return (
     <LegalPage title="Termos de Uso">
       <LegalParagraph>
-        Última atualização: 23 de maio de 2026. Ao usar o Pet Social, você concorda com estes
+        Última atualização: 23 de maio de 2026. Ao usar o Maestro Pet, você concorda com estes
         termos. Lê com calma — é curto.
       </LegalParagraph>
 
@@ -26,7 +26,7 @@ export default function TermsPage() {
       <LegalSection title="2. Conteúdo que você posta">
         <LegalListItem>
           <strong>Você mantém a propriedade</strong> de todo conteúdo que posta (fotos, vídeos,
-          textos, registros de saúde). O Pet Social NÃO toma posse do seu material.
+          textos, registros de saúde). O Maestro Pet NÃO toma posse do seu material.
         </LegalListItem>
         <LegalListItem>
           Você é responsável por garantir que tem direito de publicar — incluindo imagem de outros
@@ -42,9 +42,9 @@ export default function TermsPage() {
         </LegalListItem>
       </LegalSection>
 
-      <LegalSection title="3. Licença que você concede pro Pet Social">
+      <LegalSection title="3. Licença que você concede pro Maestro Pet">
         <LegalParagraph>
-          Ao postar conteúdo no Pet Social, você nos concede uma licença{' '}
+          Ao postar conteúdo no Maestro Pet, você nos concede uma licença{' '}
           <strong>limitada, mundial, não-exclusiva, isenta de royalties</strong> pra:
         </LegalParagraph>
         <LegalListItem>
@@ -98,7 +98,7 @@ export default function TermsPage() {
 
       <LegalSection title="5. Saúde e cuidados — o que somos e NÃO somos">
         <LegalListItem>
-          <strong>O Pet Social NÃO é veterinário</strong>. Sintomas, severidades, calendários
+          <strong>O Maestro Pet NÃO é veterinário</strong>. Sintomas, severidades, calendários
           sugeridos e respostas do assistente IA são <strong>referência informativa</strong>, nunca
           diagnóstico nem prescrição.
         </LegalListItem>
@@ -178,7 +178,7 @@ export default function TermsPage() {
 
       <LegalSection title="10. Limitação de responsabilidade">
         <LegalParagraph>
-          O Pet Social é fornecido &ldquo;como é&rdquo;. Fazemos nosso melhor pra manter o serviço
+          O Maestro Pet é fornecido &ldquo;como é&rdquo;. Fazemos nosso melhor pra manter o serviço
           no ar, mas não garantimos disponibilidade 100%. Não somos responsáveis por:
         </LegalParagraph>
         <LegalListItem>

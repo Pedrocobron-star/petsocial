@@ -235,7 +235,7 @@ export default function NewAdoptionScreen() {
         >
           <Text style={{ fontSize: 16 }}>💛</Text>
           <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 11, color: '#991B1B', lineHeight: 16 }}>
-            Adoção é responsável. Combine uma visita, oriente sobre castração e vacinas. O Pet Social só conecta — a entrega é com você.
+            Adoção é responsável. Combine uma visita, oriente sobre castração e vacinas. O Maestro Pet só conecta — a entrega é com você.
           </Text>
         </View>
 

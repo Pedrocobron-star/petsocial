@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { PremiumBadge } from '@/components/premium-badge';
+import { MOZART } from '@/lib/mozart';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { track } from '@/lib/analytics';
@@ -141,8 +142,13 @@ export default function ProScreen() {
             }}
           />
 
+          <Image
+            source={{ uri: MOZART.maestro }}
+            style={{ width: 132, height: 132 }}
+            resizeMode="contain"
+            accessibilityLabel="Mozart maestro"
+          />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={{ fontSize: 38 }}>🐾</Text>
             <Text
               style={{
                 fontFamily: FONTS.display,

@@ -76,11 +76,11 @@ export function buildVaccinationHtml(pet: Pet, vaccines: Vaccination[], isPro = 
   </style>
 </head>
 <body>
-  ${!isPro ? '<div class="watermark">PET SOCIAL</div>' : ''}
+  ${!isPro ? '<div class="watermark">MAESTRO PET</div>' : ''}
   <div class="header">
     <div class="logo">🐾</div>
     <div>
-      <div class="brand">Pet Social${isPro ? ' Pro ⭐' : ''}</div>
+      <div class="brand">Maestro Pet${isPro ? ' Pro ⭐' : ''}</div>
       <div class="subtitle">Carteira de Vacinação Digital</div>
     </div>
   </div>
@@ -117,8 +117,8 @@ export function buildVaccinationHtml(pet: Pet, vaccines: Vaccination[], isPro = 
   <div class="footer">
     ${
       isPro
-        ? `Documento gerado pelo Pet Social Pro em ${today} &bull; pet.social`
-        : `Documento gerado pelo Pet Social em ${today} &bull; pet.social &bull; <strong>Upgrade pra Pet Pro pra remover a marca d'água</strong>`
+        ? `Documento gerado pelo Maestro Pet Pro em ${today} &bull; pet.social`
+        : `Documento gerado pelo Maestro Pet em ${today} &bull; pet.social &bull; <strong>Upgrade pra Pet Pro pra remover a marca d'água</strong>`
     }
   </div>
 </body>

@@ -194,7 +194,7 @@ export function LostPosterSvg({ report, size = 400, style }: Props) {
           fill="#A3A3A3"
           textAnchor="middle"
         >
-          Pet Social · ajude a espalhar
+          Maestro Pet · ajude a espalhar
         </SvgText>
       </Svg>
     </View>

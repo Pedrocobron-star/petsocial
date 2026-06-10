@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link, Stack, useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedPet } from '@/components/animated-pet';
 import { FONTS } from '@/lib/fonts';
+import { MOZART } from '@/lib/mozart';
 
 /**
  * 404 customizado — substitui o "Unmatched Route" padrão do Expo Router.
@@ -25,13 +25,13 @@ export default function NotFoundScreen() {
           gap: 16,
         }}
       >
-        {/* Pet confuso */}
-        <View style={{ alignItems: 'center', marginBottom: 8 }}>
-          <View style={{ flexDirection: 'row', gap: 4, marginBottom: 8 }}>
-            <AnimatedPet kind="dog" size={48} delay={0} />
-            <Text style={{ fontSize: 36, marginTop: 8 }}>❓</Text>
-          </View>
-        </View>
+        {/* Mozart curioso */}
+        <Image
+          source={{ uri: MOZART.curioso }}
+          style={{ width: 160, height: 160, marginBottom: 4 }}
+          resizeMode="contain"
+          accessibilityLabel="Mozart curioso"
+        />
 
         <Text
           style={{
@@ -97,7 +97,7 @@ export default function NotFoundScreen() {
             >
               <Text style={{ fontSize: 16 }}>🐾</Text>
               <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#fff' }}>
-                Pet Social
+                Maestro Pet
               </Text>
             </Pressable>
           </Link>

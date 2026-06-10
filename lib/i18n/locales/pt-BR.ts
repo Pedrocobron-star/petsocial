@@ -78,7 +78,7 @@ export const ptBR = {
       button: 'Criar conta agora',
     },
     footer: {
-      copyright: 'Pet Social © 2026 · Feito com 💛 no Brasil',
+      copyright: 'Maestro Pet © 2026 · Feito com 💛 no Brasil',
     },
   },
   auth: {

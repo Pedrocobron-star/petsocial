@@ -189,11 +189,11 @@ export function buildSymptomsHtml(
   </style>
 </head>
 <body>
-  ${!isPro ? '<div class="watermark">PET SOCIAL</div>' : ''}
+  ${!isPro ? '<div class="watermark">MAESTRO PET</div>' : ''}
   <div class="header">
     <div class="logo">🐾</div>
     <div>
-      <div class="brand">Pet Social${isPro ? ' Pro ⭐' : ''}</div>
+      <div class="brand">Maestro Pet${isPro ? ' Pro ⭐' : ''}</div>
       <div class="subtitle">Diário de Sintomas — para apresentação veterinária</div>
     </div>
   </div>
@@ -258,8 +258,8 @@ export function buildSymptomsHtml(
   <div class="footer">
     ${
       isPro
-        ? `Gerado pelo Pet Social Pro em ${today} &bull; pet.social`
-        : `Gerado pelo Pet Social em ${today} &bull; pet.social &bull; <strong>Upgrade pra Pet Pro pra remover a marca d'água</strong>`
+        ? `Gerado pelo Maestro Pet Pro em ${today} &bull; pet.social`
+        : `Gerado pelo Maestro Pet em ${today} &bull; pet.social &bull; <strong>Upgrade pra Pet Pro pra remover a marca d'água</strong>`
     }
   </div>
 </body>

@@ -21,7 +21,7 @@ import { fetchActiveSponsoredPosts } from '@/lib/sponsored';
 import { useTheme } from '@/providers/theme-provider';
 
 /**
- * PORTAL HOME — "Redação Pet Social".
+ * PORTAL HOME — "Redação Maestro Pet".
  * Masthead + matéria de destaque + slot publicitário + pílulas de categoria +
  * lista de últimas. Tudo theme-aware e pt-BR.
  */
@@ -85,7 +85,7 @@ export default function NewsPortalScreen() {
                 textAlign: 'center',
               }}
             >
-              Redação Pet Social
+              Redação Maestro Pet
             </Text>
             <Text
               style={{

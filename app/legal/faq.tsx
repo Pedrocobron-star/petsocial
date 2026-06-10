@@ -6,7 +6,7 @@ import { LegalPage } from '@/components/legal-page';
 
 const FAQS = [
   {
-    q: 'O Pet Social é grátis mesmo?',
+    q: 'O Maestro Pet é grátis mesmo?',
     a: 'Sim. Você pode cadastrar quantos pets quiser, postar, seguir e marcar encontros sem pagar nada. No futuro pode rolar funcionalidade premium, mas o que existe hoje continua grátis.',
   },
   {
@@ -38,7 +38,7 @@ const FAQS = [
     a: 'Por enquanto não tem botão de reportar no app — manda email pra contato@petsocial.app com o link do post. A gente avalia em até 48h.',
   },
   {
-    q: 'O Pet Social tem versão mobile na App Store ou Play Store?',
+    q: 'O Maestro Pet tem versão mobile na App Store ou Play Store?',
     a: 'Ainda não. A versão atual roda no navegador do celular (PWA, dá pra instalar como app). Versões nativas pras lojas estão no roadmap.',
   },
   {

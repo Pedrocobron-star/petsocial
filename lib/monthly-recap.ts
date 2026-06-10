@@ -135,9 +135,9 @@ export function recapVibe(recap: MonthlyRecap, petName: string): string {
 export function recapShareText(recap: MonthlyRecap, petName: string): string {
   const lines = recap.stats.map((s) => `${s.emoji} ${s.count} ${s.label.toLowerCase()}`);
   return [
-    `📅 ${recap.monthShort} do ${petName} no Pet Social`,
+    `📅 ${recap.monthShort} do ${petName} no Maestro Pet`,
     ...lines,
     '',
-    'Cuido da saúde do meu pet no Pet Social 🐾',
+    'Cuido da saúde do meu pet no Maestro Pet 🐾',
   ].join('\n');
 }

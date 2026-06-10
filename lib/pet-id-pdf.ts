@@ -240,7 +240,7 @@ export function buildPetIdHtml(pet: Pet, tutor: Profile | null, qrUrl?: string |
       <div class="brand">
         <span class="logo">🐾</span>
         <div>
-          <div class="title">Pet Social</div>
+          <div class="title">Maestro Pet</div>
           <div class="subtitle">CARTEIRINHA DIGITAL DO PET</div>
         </div>
       </div>
@@ -454,7 +454,7 @@ export function buildPetIdStoryHtml(pet: Pet, tutor: Profile | null, qrUrl?: str
     <div class="header">
       <div class="stripes"><div></div><div></div><div></div></div>
       <div class="paw-em">🐾</div>
-      <h1>Pet Social</h1>
+      <h1>Maestro Pet</h1>
       <div class="sub">CARTEIRINHA DIGITAL OFICIAL</div>
     </div>
 

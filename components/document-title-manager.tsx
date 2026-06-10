@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 
 import { resetMetaTags } from '@/lib/meta-tags';
 
-const SITE_NAME = 'Pet Social';
+const SITE_NAME = 'Maestro Pet';
 
 // Mapeamento de rota → título amigável. Rotas com [param] usam matching por prefixo.
 const ROUTE_TITLES: { match: RegExp | string; title: string }[] = [
