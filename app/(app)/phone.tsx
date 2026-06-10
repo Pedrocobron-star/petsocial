@@ -452,7 +452,7 @@ export default function PetPhoneScreen() {
 
   const badges: Record<string, number> = {
     Chat: unreadMsg,
-    Atividade: unreadNotif,
+    Notificações: unreadNotif,
     Saúde: healthAlerts,
   };
 
@@ -470,20 +470,17 @@ export default function PetPhoneScreen() {
           : null;
   const widgetLine = notice ?? format(now, "EEEE, d 'de' MMMM", { locale: ptBR });
 
-  const dockApps: PhoneApp[] = useMemo(
+  // Smartphone do pet: TODOS os apps na grade (sem dock). "Descobrir" e "Postar"
+  // são funções DA rede social (ficam como abas dentro do app "Feed"), por isso
+  // não aparecem como apps soltos aqui.
+  const isAdmin = session?.user.email === 'pedrocobron@gmail.com';
+
+  const gridApps: PhoneApp[] = useMemo(
     () => [
       { label: 'Feed', emoji: '🐾', bg: '#FB923C', href: '/(app)/(tabs)' },
       { label: 'Saúde', emoji: '🩺', bg: '#34D399', href: `/(app)/pet/${pid}/health` },
       { label: 'Chat', emoji: '💬', bg: '#4ADE80', href: '/(app)/messages' },
       { label: 'Perfil', emoji: '🐶', bg: '#60A5FA', href: `/(app)/pet/${pid}` },
-    ],
-    [pid],
-  );
-
-  const gridApps: PhoneApp[] = useMemo(
-    () => [
-      { label: 'Descobrir', emoji: '🔍', bg: '#38BDF8', href: '/(app)/(tabs)/explore' },
-      { label: 'Postar', emoji: '📸', bg: '#F472B6', href: '/(app)/(tabs)/create' },
       { label: 'Rolês', emoji: '🎉', bg: '#A78BFA', href: '/(app)/(tabs)/meetups' },
       { label: 'Carteirinha', emoji: '🪪', bg: '#22D3EE', href: `/(app)/pet/${pid}/id-card` },
       { label: 'Galeria', emoji: '🖼️', bg: '#FBBF24', href: `/(app)/pet/${pid}/gallery` },
@@ -495,9 +492,11 @@ export default function PetPhoneScreen() {
       { label: 'Notícias', emoji: '📰', bg: '#EC4899', href: '/(app)/news' },
       { label: 'Notificações', emoji: '🔔', bg: '#F87171', href: '/(app)/notifications' },
       { label: 'Achados', emoji: '🦴', bg: '#FCD34D', href: '/(app)/lost-found' },
+      { label: 'Ajustes', emoji: '⚙️', bg: '#94A3B8', href: '/(app)/account' },
       { label: 'Pet Pro', emoji: '⭐', bg: '#FBBF24', href: '/(app)/pro' },
+      ...(isAdmin ? [{ label: 'Admin', emoji: '🛠️', bg: '#1F2937', href: '/(app)/admin' }] : []),
     ],
-    [pid],
+    [pid, isAdmin],
   );
 
   if (loading) {
@@ -648,27 +647,6 @@ export default function PetPhoneScreen() {
             <Text style={[{ fontFamily: FONTS.bodyMedium, fontSize: 13, color: '#fff' }, LABEL_SHADOW]}>Buscar</Text>
           </Pressable>
         </ScrollView>
-
-        {/* DOCK */}
-        <View style={{ paddingHorizontal: 12, paddingBottom: 16, paddingTop: 4 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-around',
-              alignItems: 'center',
-              backgroundColor: 'rgba(255,255,255,0.20)',
-              borderColor: 'rgba(255,255,255,0.25)',
-              borderWidth: 1,
-              borderRadius: 34,
-              paddingVertical: 12,
-              paddingHorizontal: 6,
-            }}
-          >
-            {dockApps.map((app) => (
-              <AppIcon key={app.label} app={app} iconSize={iconSize} badge={badges[app.label]} hideLabel onActivate={handleActivate} />
-            ))}
-          </View>
-        </View>
       </View>
 
       {/* Botão papel de parede */}

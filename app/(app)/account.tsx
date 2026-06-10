@@ -312,6 +312,44 @@ export default function AccountScreen() {
             </Link>
           ) : null}
 
+          <Link href={'/(app)/edit-profile' as never} asChild>
+            <Pressable
+              style={{
+                backgroundColor: theme.surface,
+                borderRadius: 12,
+                padding: 14,
+                marginTop: 8,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                borderWidth: 1,
+                borderColor: theme.borderLight,
+              }}
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: '#DBEAFE',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="person-outline" size={18} color="#1D4ED8" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }}>
+                  Editar meu perfil
+                </Text>
+                <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim, marginTop: 2 }}>
+                  Nome, foto e bio do tutor
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={theme.textDim} />
+            </Pressable>
+          </Link>
+
           <Link href={'/(app)/language' as never} asChild>
             <Pressable
               style={{
