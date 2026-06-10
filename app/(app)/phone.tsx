@@ -489,7 +489,12 @@ export default function PetPhoneScreen() {
     [pid, isAdmin],
   );
 
-  if (loading) {
+  // Espera carregar. IMPORTANTE: também espera o `userId` existir — ao voltar
+  // pro springboard no PWA, a sessão pode re-inicializar e deixar o userId
+  // indefinido por um instante (query de pets some pra []), o que ANTES jogava
+  // o usuário no feed por engano no "voltar". Com o guard, fica no spinner até
+  // a sessão/pets estabilizarem.
+  if (loading || !userId) {
     return (
       <View style={{ flex: 1, backgroundColor: wp.to, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color="#fff" />
