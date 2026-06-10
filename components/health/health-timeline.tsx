@@ -1,10 +1,16 @@
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 
+import { PaywallCard } from '@/components/paywall-card';
 import { FONTS } from '@/lib/fonts';
 import type { HealthEventKind, HealthTimelineEvent } from '@/lib/queries';
+import { useIsPro } from '@/providers/subscription-provider';
 import { useTheme } from '@/providers/theme-provider';
+
+/** Quantos meses de histórico clínico o usuário free enxerga. O resto é Pet Pro. */
+const FREE_TIMELINE_MONTHS = 3;
 
 interface Props {
   events: HealthTimelineEvent[];
@@ -32,9 +38,21 @@ const KIND_META: Record<
  */
 export function HealthTimeline({ events, limit = 8 }: Props) {
   const { theme } = useTheme();
-  const visible = events.slice(0, limit);
+  const isPro = useIsPro();
 
-  if (visible.length === 0) {
+  // Free: histórico clínico só dos últimos 3 meses. O que é mais antigo fica
+  // bloqueado e vira gancho pro Pet Pro (mesma lógica do Score de saúde).
+  const cutoffISO = useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - FREE_TIMELINE_MONTHS);
+    return d.toISOString();
+  }, []);
+  const freeEvents = isPro ? events : events.filter((e) => e.date >= cutoffISO);
+  const lockedCount = events.length - freeEvents.length;
+  const visible = freeEvents.slice(0, limit);
+
+  // Nenhum evento registrado de fato.
+  if (events.length === 0) {
     return (
       <View
         style={{
@@ -152,7 +170,22 @@ export function HealthTimeline({ events, limit = 8 }: Props) {
           </View>
         );
       })}
-      {events.length > limit ? (
+      {/* Free com TUDO fora da janela de 3 meses: nada visível, só o gancho. */}
+      {visible.length === 0 ? (
+        <Text
+          style={{
+            fontFamily: FONTS.body,
+            fontSize: 12,
+            color: theme.textDim,
+            textAlign: 'center',
+            paddingVertical: 4,
+          }}
+        >
+          Seu histórico dos últimos 3 meses aparece aqui.
+        </Text>
+      ) : null}
+
+      {freeEvents.length > limit ? (
         <Text
           style={{
             fontFamily: FONTS.body,
@@ -163,8 +196,20 @@ export function HealthTimeline({ events, limit = 8 }: Props) {
             marginLeft: 40,
           }}
         >
-          + {events.length - limit} eventos anteriores
+          + {freeEvents.length - limit} eventos recentes
         </Text>
+      ) : null}
+
+      {/* Histórico clínico antigo (fora dos 3 meses) é exclusivo do Pet Pro. */}
+      {lockedCount > 0 ? (
+        <PaywallCard
+          intent="health-timeline"
+          emoji="🩺"
+          title="Histórico clínico completo no Pet Pro"
+          description={`${lockedCount} ${lockedCount === 1 ? 'registro mais antigo está' : 'registros mais antigos estão'} guardados no Cofre da Saúde. No free você vê os últimos 3 meses; no Pet Pro, a vida toda do seu pet — vacinas, exames, peso e consultas que nunca somem.`}
+          compact
+          style={{ marginTop: 12 }}
+        />
       ) : null}
     </View>
   );

@@ -15,25 +15,27 @@ import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
 // 3 hero benefits exibidos com peso visual maior, antes da lista completa.
+// Âncora da assinatura = "Cofre da Saúde": histórico clínico que nunca some.
 const HERO_BENEFITS = [
-  { emoji: '🐾', title: 'Pets ilimitados', desc: 'Toda a família num lugar só' },
-  { emoji: '📤', title: 'Carteirinha sem marca d\'água', desc: 'PDF profissional pro vet' },
-  { emoji: '📈', title: 'Histórico de saúde', desc: 'Evolução completa, sem limite de meses' },
+  { emoji: '🩺', title: 'Histórico clínico completo', desc: 'Vacinas, exames e peso — sem limite de tempo' },
+  { emoji: '📄', title: 'Prontuário pro vet', desc: 'PDF completo num clique, sem marca d\'água' },
+  { emoji: '📈', title: 'Evolução da saúde', desc: 'Acompanhe o Score mês a mês, o ano todo' },
 ] as const;
 
 const PRO_FEATURES = [
-  { emoji: '🏅', title: 'Badge dourada', desc: 'Destaque seu perfil com a estrela de Pet Pro' },
-  { emoji: '📸', title: 'Posts ilimitados', desc: 'Compartilhe a fofura sem limites diários' },
-  { emoji: '🎨', title: 'Avatar customizável', desc: 'Cores, acessórios e cenários únicos pro seu pet' },
-  { emoji: '📈', title: 'Analytics avançado', desc: 'Veja crescimento e engagement do perfil' },
-  { emoji: '💾', title: 'Backup ilimitado', desc: 'Fotos em alta qualidade pra sempre' },
-  { emoji: '🏆', title: 'Boost no Wall of Fame', desc: 'Mais chances entre os pets top' },
+  { emoji: '🩺', title: 'Histórico clínico sem limite', desc: 'Veja vacinas, consultas, sintomas e peso de qualquer época. No free, só os últimos 3 meses.' },
+  { emoji: '📄', title: 'Prontuário-mestre em PDF', desc: 'Exporte tudo do seu pet pro vet num clique, sem marca d\'água.' },
+  { emoji: '🪪', title: 'Carteirinha premium', desc: 'Carteirinha de identidade do pet sem marca d\'água, pronta pra imprimir.' },
+  { emoji: '📈', title: 'Evolução da saúde o ano todo', desc: 'Score de saúde de todos os meses, não só os últimos 3.' },
+  { emoji: '🐾', title: 'Pets ilimitados', desc: 'Toda a família num lugar só (no free são 3).' },
+  { emoji: '🎨', title: 'Avatar customizável', desc: 'Cores, acessórios e cenários únicos pro seu pet.' },
+  { emoji: '🏅', title: 'Selo dourado Pet Pro', desc: 'Sua estrela de Pet Pro em destaque no perfil e no feed.' },
 ];
 
 const FREE_FEATURES = [
   '3 pets',
-  '1 post por dia',
-  'Diário com 30 dias de histórico',
+  '10 posts por dia',
+  'Histórico de saúde dos últimos 3 meses',
   'Carteirinha com marca d\'água',
   'Anúncios discretos',
 ];
@@ -161,8 +163,8 @@ export default function ProScreen() {
               lineHeight: 20,
             }}
           >
-            O Pet Social do jeito que ele deveria ser. Sem limites, posts ilimitados,
-            com tudo que tutores apaixonados merecem.
+            A saúde do seu pet organizada e protegida: histórico clínico que nunca
+            some, prontuário pro vet num clique e a evolução acompanhada o ano todo.
           </Text>
           {isPro ? (
             <View
