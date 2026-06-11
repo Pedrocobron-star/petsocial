@@ -4,8 +4,13 @@ import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { TutorLevelBar } from '@/components/tutor-level-bar';
+import {
+  fetchMyMonthlyMissionRank,
+  fetchTodayMission,
+  qkMyMonthlyMission,
+  qkTodayMission,
+} from '@/lib/daily-missions';
 import { FONTS } from '@/lib/fonts';
-import { fetchTodayMission, qkTodayMission } from '@/lib/daily-missions';
 import { useTheme } from '@/providers/theme-provider';
 
 /**
@@ -21,6 +26,11 @@ export function DailyMissionCard() {
     queryKey: qkTodayMission,
     queryFn: fetchTodayMission,
     staleTime: 5 * 60_000,
+  });
+  const rankQuery = useQuery({
+    queryKey: qkMyMonthlyMission,
+    queryFn: fetchMyMonthlyMissionRank,
+    staleTime: 60_000,
   });
 
   const m = query.data;
@@ -146,6 +156,31 @@ export function DailyMissionCard() {
 
         {/* Nível de Tutor — é PRA CÁ que os pontos da missão vão (eles sobem seu nível). */}
         <TutorLevelBar points={m.total_points} />
+
+        {/* Atalho pro ranking MENSAL — o 1º do mês ganha 1 mês de Pro. */}
+        <Pressable
+          onPress={() => router.push('/(app)/mission-ranking' as never)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            backgroundColor: '#1A1410',
+            borderRadius: 12,
+            paddingVertical: 9,
+            paddingHorizontal: 11,
+          }}
+        >
+          <Text style={{ fontSize: 16 }}>🏆</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#FBBF24' }}>
+              Ranking do mês
+            </Text>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 10.5, color: '#E5E5E5', marginTop: 1 }}>
+              {rankQuery.data ? `Você está em ${rankQuery.data.rank}º · ` : ''}o 1º ganha 1 mês de Pet Pro
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color="#F59E0B" />
+        </Pressable>
       </View>
     </View>
   );

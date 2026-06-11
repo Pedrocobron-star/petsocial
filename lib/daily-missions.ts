@@ -80,3 +80,39 @@ export async function upsertMission(input: DailyMissionInput): Promise<void> {
 
 export const qkTodayMission = ['daily-mission', 'today'] as const;
 export const qkAllMissions = ['admin', 'daily-missions'] as const;
+
+// -------- Ranking MENSAL da Missão do Dia (o 1º do mês ganha 1 mês de Pro) --------
+
+export interface MissionLeaderboardEntry {
+  user_id: string;
+  display_name: string;
+  tutor_avatar: string | null;
+  points: number;
+  completions: number;
+  rank_position: number;
+}
+
+export interface MyMonthlyRank {
+  rank: number;
+  points: number;
+  total_tutors: number;
+}
+
+export const qkMissionLeaderboard = ['mission', 'monthly-leaderboard'] as const;
+export const qkMyMonthlyMission = ['mission', 'my-monthly'] as const;
+
+/** Top tutores do mês corrente (pontos da Missão do Dia). */
+export async function fetchMissionMonthlyLeaderboard(
+  limit = 50,
+): Promise<MissionLeaderboardEntry[]> {
+  const { data, error } = await supabase.rpc('mission_monthly_leaderboard', { p_limit: limit });
+  if (error) throw error;
+  return (data as MissionLeaderboardEntry[] | null) ?? [];
+}
+
+/** Minha posição no ranking do mês (null se ainda não pontuei no mês). */
+export async function fetchMyMonthlyMissionRank(): Promise<MyMonthlyRank | null> {
+  const { data, error } = await supabase.rpc('mission_my_monthly');
+  if (error) throw error;
+  return (data as MyMonthlyRank[] | null)?.[0] ?? null;
+}

@@ -106,6 +106,7 @@ export default function AppLayout() {
         />
         <Stack.Screen name="lost-found/[id]" options={{ headerShown: true }} />
         <Stack.Screen name="achievements" options={{ headerShown: true, title: 'Conquistas' }} />
+        <Stack.Screen name="mission-ranking" options={{ headerShown: true, title: 'Ranking do mês' }} />
         <Stack.Screen name="wall-of-fame" options={{ headerShown: true }} />
         <Stack.Screen name="messages" options={{ headerShown: true, title: 'Mensagens' }} />
         <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />
