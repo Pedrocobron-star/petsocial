@@ -2,8 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, isSameDay, isToday, isYesterday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Image } from 'expo-image';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -22,6 +21,7 @@ import { FONTS } from '@/lib/fonts';
 import {
   fetchConversationOtherUser,
   fetchMessages,
+  fetchUserFirstPet,
   markConversationRead,
   qk,
   sendMessage,
@@ -37,6 +37,7 @@ export default function ChatScreen() {
   const { theme } = useTheme();
   const toast = useToast();
   const qc = useQueryClient();
+  const router = useRouter();
   const listRef = useRef<FlatList<Message>>(null);
   const [draft, setDraft] = useState('');
 
@@ -46,6 +47,14 @@ export default function ChatScreen() {
     queryKey: ['conversation-other', id, userId],
     queryFn: () => fetchConversationOtherUser(id!, userId!),
     enabled: !!id && !!userId,
+  });
+
+  // Pet do outro tutor — pra abrir o perfil dele ao tocar no avatar/nome.
+  const otherUserId = otherUserQuery.data?.id;
+  const otherPetQuery = useQuery({
+    queryKey: ['conversation-other-pet', otherUserId],
+    queryFn: () => fetchUserFirstPet(otherUserId!),
+    enabled: !!otherUserId,
   });
 
   const messagesQuery = useQuery({
@@ -104,6 +113,11 @@ export default function ChatScreen() {
 
   const messages = messagesQuery.data ?? [];
   const other = otherUserQuery.data;
+  const otherPet = otherPetQuery.data;
+
+  const openOtherPet = () => {
+    if (otherPet) router.push({ pathname: '/pet/[id]', params: { id: otherPet.id } });
+  };
 
   // Enriquece a lista com day headers e flags showTime/showGap pra renderizar
   // bubbles corretamente. Memoizado pra não recomputar a cada keystroke.
@@ -151,9 +165,15 @@ export default function ChatScreen() {
           headerShown: true,
           title: '',
           headerTitle: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            // Tocar no avatar/nome abre o perfil do pet do outro tutor.
+            <Pressable
+              onPress={openOtherPet}
+              disabled={!otherPet}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
+              hitSlop={8}
+            >
               <UserInitialAvatar
-                avatarUrl={other?.avatar_url}
+                avatarUrl={otherPet?.avatar_url ?? other?.avatar_url}
                 displayName={other?.display_name}
                 userId={other?.id}
                 size={32}
@@ -161,7 +181,7 @@ export default function ChatScreen() {
               <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: theme.text }}>
                 {other?.display_name ?? 'Conversa'}
               </Text>
-            </View>
+            </Pressable>
           ),
         }}
       />

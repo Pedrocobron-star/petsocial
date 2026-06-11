@@ -2,10 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { differenceInDays, differenceInHours, format, formatDistanceToNow, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, Alert, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, {
   Easing,
   ReduceMotion,
@@ -16,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { LostReportShareButton } from '@/components/lost-found/lost-report-share-button';
+import { MediaCarousel } from '@/components/media-carousel';
 import { PetAvatar } from '@/components/pet-avatar';
 import { Button } from '@/components/ui/button';
 import { speciesEmoji, speciesLabel } from '@/lib/constants';
@@ -26,8 +26,11 @@ import {
   qk,
   resolveLostReport,
 } from '@/lib/queries';
+import type { PostMedia } from '@/lib/types';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
+
+const { width: SCREEN_W } = Dimensions.get('window');
 
 export default function LostReportDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -104,8 +107,38 @@ export default function LostReportDetailScreen() {
   }
 
   const isOwner = session?.user.id === r.reporter_user_id;
-  // photo_url do reporte tem prioridade (foto recente); senão usa avatar do pet vinculado.
-  const reportPhoto = r.photo_url;
+  // Mídias do reporte: fotos primeiro (image_urls, com fallback pro photo_url antigo),
+  // depois o vídeo no fim. Avatar/emoji só entram quando não há NENHUMA mídia.
+  const photoUrls =
+    r.image_urls && r.image_urls.length > 0
+      ? r.image_urls
+      : r.photo_url
+        ? [r.photo_url]
+        : [];
+  const carouselMedia: PostMedia[] = [
+    ...photoUrls.map((url, i) => ({
+      id: `img-${i}`,
+      post_id: r.id,
+      url,
+      media_type: 'image' as const,
+      position: i,
+      created_at: r.created_at,
+    })),
+    ...(r.video_url
+      ? [
+          {
+            id: 'video',
+            post_id: r.id,
+            url: r.video_url,
+            media_type: 'video' as const,
+            position: photoUrls.length,
+            created_at: r.created_at,
+          },
+        ]
+      : []),
+  ];
+  const hasMedia = carouselMedia.length > 0;
+  const carouselWidth = Math.min(SCREEN_W, 560);
   const linkedPet = r.pet;
   const displayName = r.pet?.name ?? r.pet_name ?? 'Sem nome';
   const displaySpecies = r.pet?.species ?? r.species;
@@ -172,9 +205,9 @@ export default function LostReportDetailScreen() {
             : undefined,
         }}
       />
-      <View className="bg-white">
-        {reportPhoto ? (
-          <Image source={{ uri: reportPhoto }} style={{ width: '100%', aspectRatio: 4 / 3 }} contentFit="cover" />
+      <View className="bg-white" style={{ alignItems: 'center' }}>
+        {hasMedia ? (
+          <MediaCarousel media={carouselMedia} width={carouselWidth} />
         ) : linkedPet ? (
           <View
             style={{

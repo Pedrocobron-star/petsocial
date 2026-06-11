@@ -18,6 +18,7 @@ import { FONTS } from '@/lib/fonts';
 import { formatCount, formatRelativeShort } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { MAX_FEED_WIDTH } from '@/lib/layout';
+import { isMozartPet } from '@/lib/mozart';
 import {
   addComment,
   deletePost,
@@ -45,6 +46,7 @@ import { ImageViewer } from './image-viewer';
 import { MediaCarousel } from './media-carousel';
 import { PetAvatar } from './pet-avatar';
 import { PostActionsSheet } from './post-actions-sheet';
+import { OfficialBadge } from './official-badge';
 import { PremiumBadge } from './premium-badge';
 import { ReportModal } from './report-modal';
 import { RichText } from './rich-text';
@@ -286,7 +288,13 @@ function PostCardComponent({
                 >
                   {post.pet.name}
                 </Text>
-                {post.owner_is_pro ? <PremiumBadge size={12} /> : null}
+                {/* Mozart (anfitrião oficial) ganha o selo verificado dourado;
+                    demais tutores Pro mantêm o PremiumBadge. */}
+                {isMozartPet(post.pet.id) ? (
+                  <OfficialBadge size={14} />
+                ) : post.owner_is_pro ? (
+                  <PremiumBadge size={12} />
+                ) : null}
               </View>
               <Text
                 numberOfLines={1}

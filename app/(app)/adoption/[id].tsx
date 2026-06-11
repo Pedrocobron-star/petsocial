@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -13,6 +12,7 @@ import {
   View,
 } from 'react-native';
 
+import { MediaCarousel } from '@/components/media-carousel';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
 import {
@@ -24,6 +24,7 @@ import {
 } from '@/lib/adoption';
 import { FONTS } from '@/lib/fonts';
 import { sharePost } from '@/lib/share';
+import type { PostMedia } from '@/lib/types';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -134,6 +135,29 @@ export default function AdoptionDetailScreen() {
 
   const chips = listingChips(listing);
   const imgW = Math.min(SCREEN_W, 560);
+  // Monta as mídias do carrossel: fotos primeiro, vídeo (se houver) no fim.
+  const carouselMedia: PostMedia[] = [
+    ...listing.image_urls.map((url, i) => ({
+      id: `img-${i}`,
+      post_id: listing.id,
+      url,
+      media_type: 'image' as const,
+      position: i,
+      created_at: listing.created_at,
+    })),
+    ...(listing.video_url
+      ? [
+          {
+            id: 'video',
+            post_id: listing.id,
+            url: listing.video_url,
+            media_type: 'video' as const,
+            position: listing.image_urls.length,
+            created_at: listing.created_at,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -149,13 +173,11 @@ export default function AdoptionDetailScreen() {
         }}
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
-        {/* Fotos */}
-        {listing.image_urls.length > 0 ? (
-          <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
-            {listing.image_urls.map((u, i) => (
-              <Image key={i} source={{ uri: u }} style={{ width: imgW, height: 300 }} contentFit="cover" />
-            ))}
-          </ScrollView>
+        {/* Fotos + vídeo */}
+        {carouselMedia.length > 0 ? (
+          <View style={{ alignItems: 'center' }}>
+            <MediaCarousel media={carouselMedia} width={imgW} />
+          </View>
         ) : (
           <View style={{ width: '100%', height: 220, backgroundColor: theme.borderLight, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ fontSize: 72 }}>{SPECIES_META[listing.species].emoji}</Text>

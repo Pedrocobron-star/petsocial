@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -16,10 +17,19 @@ import { FONTS } from '@/lib/fonts';
 import { getCurrentPosition, type Coords } from '@/lib/geo';
 import { createLostReport } from '@/lib/queries';
 import { guessExtension, uploadToBucket } from '@/lib/storage';
-import type { LostReportKind, Species } from '@/lib/types';
+import type { LostReportKind, MediaType, Species } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
+
+// Mesmos limites do create.tsx — até 10 mídias, vídeos de até 60s e 100 MB.
+const MAX_MEDIA = 10;
+const MAX_VIDEO_MB = 100;
+
+interface PickedMedia {
+  uri: string;
+  type: MediaType;
+}
 
 export default function NewLostReportScreen() {
   const { theme } = useTheme();
@@ -55,14 +65,23 @@ export default function NewLostReportScreen() {
   const [lastSeenAt, setLastSeenAt] = useState<Date | null>(new Date());
   const [description, setDescription] = useState('');
   const [contact, setContact] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [uploading, setUploading] = useState(false);
+  const [media, setMedia] = useState<PickedMedia[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Hook tem que ser chamado SEMPRE — não pode vir depois de early return
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!userId) throw new Error('Não autenticado');
+      // Sobe todas as mídias pro bucket público `posts`, preservando a ordem.
+      const uploaded = await Promise.all(
+        media.map(async (m) => {
+          const ext = guessExtension(m.uri, m.type === 'video' ? 'mp4' : 'jpg');
+          const url = await uploadToBucket('posts', userId, m.uri, ext);
+          return { url, type: m.type };
+        }),
+      );
+      const imageUrls = uploaded.filter((u) => u.type === 'image').map((u) => u.url);
+      const videoUrl = uploaded.find((u) => u.type === 'video')?.url ?? null;
       const id = await createLostReport({
         pet_id: linkedPetId,
         reporter_user_id: userId,
@@ -75,7 +94,10 @@ export default function NewLostReportScreen() {
         last_seen_at: lastSeenAt ? lastSeenAt.toISOString() : null,
         description: description.trim() || null,
         contact_info: contact.trim(),
-        photo_url: photoUrl || null,
+        // photo_url = primeira foto pra manter compat com cards/listagens antigos.
+        photo_url: imageUrls[0] ?? null,
+        image_urls: imageUrls,
+        video_url: videoUrl,
         latitude: coords?.lat ?? null,
         longitude: coords?.lng ?? null,
       });
@@ -88,32 +110,72 @@ export default function NewLostReportScreen() {
     onError: (e) => Alert.alert('Erro', e instanceof Error ? e.message : 'Tente novamente.'),
   });
 
-  const pickPhoto = async () => {
+  const hasVideo = media.some((m) => m.type === 'video');
+
+  const pickMedia = async () => {
     if (!userId) return;
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       Alert.alert('Permissão necessária', 'Libere o acesso à galeria.');
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.85,
-    });
-    if (result.canceled || !result.assets[0]) return;
-    setUploading(true);
-    try {
-      const asset = result.assets[0];
-      const ext = guessExtension(asset.uri, 'jpg');
-      const url = await uploadToBucket('avatars', userId, asset.uri, ext);
-      setPhotoUrl(url);
-    } catch (e) {
-      Alert.alert('Erro no upload', e instanceof Error ? e.message : 'Tente outra foto.');
-    } finally {
-      setUploading(false);
+    const remaining = MAX_MEDIA - media.length;
+    if (remaining <= 0) {
+      Alert.alert('Limite atingido', `Máximo de ${MAX_MEDIA} mídias.`);
+      return;
     }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images', 'videos'],
+      quality: 0.85,
+      videoMaxDuration: 60,
+      videoExportPreset: ImagePicker.VideoExportPreset.H264_1920x1080,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
+    });
+    if (result.canceled) return;
+    const picked: PickedMedia[] = [];
+    let tooBig = 0;
+    let extraVideo = 0;
+    let videoTaken = hasVideo;
+    for (const a of result.assets) {
+      if (media.length + picked.length >= MAX_MEDIA) break;
+      const type: MediaType = a.type === 'video' ? 'video' : 'image';
+      if (type === 'video') {
+        // Só 1 vídeo no total — ignora os extras.
+        if (videoTaken) {
+          extraVideo++;
+          continue;
+        }
+        let bytes = a.fileSize ?? 0;
+        if (!bytes) {
+          try {
+            bytes = (await fetch(a.uri).then((r) => r.blob())).size;
+          } catch {
+            bytes = 0;
+          }
+        }
+        if (bytes && bytes > MAX_VIDEO_MB * 1024 * 1024) {
+          tooBig++;
+          continue;
+        }
+        videoTaken = true;
+      }
+      picked.push({ uri: a.uri, type });
+    }
+    if (tooBig > 0) {
+      Alert.alert(
+        'Vídeo muito pesado',
+        `Limite de ${MAX_VIDEO_MB} MB por vídeo. Use um clipe mais curto ou em menor resolução (evite 4K).`,
+      );
+    }
+    if (extraVideo > 0) {
+      Alert.alert('Só 1 vídeo', 'Você pode adicionar apenas um vídeo por reporte.');
+    }
+    if (picked.length === 0) return;
+    setMedia((cur) => [...cur, ...picked].slice(0, MAX_MEDIA));
   };
+
+  const removeAt = (i: number) => setMedia((cur) => cur.filter((_, idx) => idx !== i));
 
   // Early return DEPOIS dos hooks pra cumprir rules-of-hooks
   if (!userId) return null;
@@ -253,33 +315,92 @@ export default function NewLostReportScreen() {
                 marginBottom: 6,
               }}
             >
-              Foto (recomendado)
+              Fotos e vídeo (recomendado) · {media.length}/{MAX_MEDIA}
             </Text>
-            <Pressable
-              onPress={pickPhoto}
-              style={{
-                height: 120,
-                borderRadius: 14,
-                borderWidth: 2,
-                borderColor: theme.border,
-                borderStyle: 'dashed',
-                backgroundColor: theme.surface,
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}
-            >
-              {photoUrl ? (
-                <Image source={{ uri: photoUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-              ) : (
-                <>
-                  <Ionicons name="camera" size={28} color={theme.textDim} />
-                  <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: theme.textDim, marginTop: 4 }}>
-                    {uploading ? 'Enviando...' : 'Toque pra adicionar foto'}
-                  </Text>
-                </>
-              )}
-            </Pressable>
+            {media.length === 0 ? (
+              <Pressable
+                onPress={pickMedia}
+                style={{
+                  height: 120,
+                  borderRadius: 14,
+                  borderWidth: 2,
+                  borderColor: theme.border,
+                  borderStyle: 'dashed',
+                  backgroundColor: theme.surface,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                }}
+              >
+                <Ionicons name="camera" size={28} color={theme.textDim} />
+                <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: theme.textDim, marginTop: 4 }}>
+                  Toque pra adicionar fotos ou vídeo
+                </Text>
+                <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim, marginTop: 2 }}>
+                  Até {MAX_MEDIA} mídias · 1 vídeo de até 60s
+                </Text>
+              </Pressable>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+                {media.map((m, i) => (
+                  <View key={`${m.uri}-${i}`} style={{ position: 'relative' }}>
+                    <View
+                      style={{
+                        width: 96,
+                        height: 96,
+                        borderRadius: 12,
+                        overflow: 'hidden',
+                        backgroundColor: theme.borderLight,
+                      }}
+                    >
+                      {m.type === 'image' ? (
+                        <Image source={{ uri: m.uri }} style={{ width: 96, height: 96 }} contentFit="cover" />
+                      ) : (
+                        <ReportVideoThumb uri={m.uri} />
+                      )}
+                    </View>
+                    <Pressable
+                      onPress={() => removeAt(i)}
+                      hitSlop={8}
+                      accessibilityLabel="Remover mídia"
+                      style={{
+                        position: 'absolute',
+                        top: -6,
+                        right: -6,
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        backgroundColor: '#1A1410',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Ionicons name="close" size={14} color="#fff" />
+                    </Pressable>
+                  </View>
+                ))}
+                {media.length < MAX_MEDIA ? (
+                  <Pressable
+                    onPress={pickMedia}
+                    style={{
+                      width: 96,
+                      height: 96,
+                      borderRadius: 12,
+                      borderWidth: 2,
+                      borderColor: theme.border,
+                      borderStyle: 'dashed',
+                      backgroundColor: theme.surface,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 2,
+                    }}
+                  >
+                    <Ionicons name="add" size={26} color={theme.textDim} />
+                    <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim }}>Mais</Text>
+                  </Pressable>
+                ) : null}
+              </ScrollView>
+            )}
           </View>
 
           <Input
@@ -390,5 +511,47 @@ export default function NewLostReportScreen() {
         </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+// Thumbnail de vídeo na grade de seleção (mudo, com selo de play).
+function ReportVideoThumb({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.muted = true;
+  });
+  return (
+    <View style={{ width: 96, height: 96 }}>
+      <VideoView
+        player={player}
+        style={{ width: 96, height: 96 }}
+        contentFit="cover"
+        nativeControls={false}
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <View
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name="play" size={15} color="#fff" />
+        </View>
+      </View>
+    </View>
   );
 }

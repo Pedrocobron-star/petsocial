@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Redirect, Stack, useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
@@ -22,7 +23,9 @@ import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
-const MAX_PHOTOS = 5;
+// Até 10 fotos + 1 vídeo (mesmos limites do create.tsx).
+const MAX_PHOTOS = 10;
+const MAX_VIDEO_MB = 100;
 
 export default function NewAdoptionScreen() {
   const { theme } = useTheme();
@@ -33,7 +36,9 @@ export default function NewAdoptionScreen() {
   const userId = session?.user.id;
 
   const [images, setImages] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [name, setName] = useState('');
   const [species, setSpecies] = useState<AdoptionSpecies>('dog');
   const [breed, setBreed] = useState('');
@@ -58,17 +63,64 @@ export default function NewAdoptionScreen() {
       toast.info('Limite de fotos', `Máximo ${MAX_PHOTOS} fotos.`);
       return;
     }
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
-    if (res.canceled || !res.assets?.[0]) return;
+    const remaining = MAX_PHOTOS - images.length;
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
+    });
+    if (res.canceled || res.assets.length === 0) return;
     setUploading(true);
     try {
-      const asset = res.assets[0];
-      const url = await uploadToBucket('posts', userId, asset.uri, guessExtension(asset.uri));
-      setImages((prev) => [...prev, url]);
+      const slice = res.assets.slice(0, remaining);
+      const urls = await Promise.all(
+        slice.map((asset) => uploadToBucket('posts', userId, asset.uri, guessExtension(asset.uri))),
+      );
+      setImages((prev) => [...prev, ...urls].slice(0, MAX_PHOTOS));
     } catch (e) {
       toast.error('Erro ao subir foto', e instanceof Error ? e.message : '');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const pickVideo = async () => {
+    if (videoUrl) {
+      toast.info('Só 1 vídeo', 'Você pode adicionar apenas um vídeo por anúncio.');
+      return;
+    }
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['videos'],
+      videoMaxDuration: 60,
+      videoExportPreset: ImagePicker.VideoExportPreset.H264_1920x1080,
+    });
+    if (res.canceled || !res.assets?.[0]) return;
+    const asset = res.assets[0];
+    // Rejeita vídeo pesado (mesmo teto do create.tsx).
+    let bytes = asset.fileSize ?? 0;
+    if (!bytes) {
+      try {
+        bytes = (await fetch(asset.uri).then((r) => r.blob())).size;
+      } catch {
+        bytes = 0;
+      }
+    }
+    if (bytes && bytes > MAX_VIDEO_MB * 1024 * 1024) {
+      toast.info(
+        'Vídeo muito pesado',
+        `Limite de ${MAX_VIDEO_MB} MB. Use um clipe mais curto ou em menor resolução (evite 4K).`,
+      );
+      return;
+    }
+    setUploadingVideo(true);
+    try {
+      const url = await uploadToBucket('posts', userId, asset.uri, guessExtension(asset.uri, 'mp4'));
+      setVideoUrl(url);
+    } catch (e) {
+      toast.error('Erro ao subir vídeo', e instanceof Error ? e.message : '');
+    } finally {
+      setUploadingVideo(false);
     }
   };
 
@@ -103,6 +155,7 @@ export default function NewAdoptionScreen() {
         contact_name: contactName.trim() || null,
         contact_phone: contactPhone.trim() || null,
         image_urls: images,
+        video_url: videoUrl,
       });
       await qc.invalidateQueries({ queryKey: ['adoption-listings'] });
       toast.success('Anúncio publicado! 🏠', 'Obrigado por ajudar a achar um lar.');
@@ -118,8 +171,8 @@ export default function NewAdoptionScreen() {
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <Stack.Screen options={{ title: 'Anunciar pra adoção', headerShown: true }} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 120 }} keyboardShouldPersistTaps="handled">
-        {/* Fotos */}
-        <Section title="Fotos" />
+        {/* Fotos e vídeo */}
+        <Section title={`Fotos e vídeo · ${images.length}/${MAX_PHOTOS}`} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {images.map((u, i) => (
             <View key={i} style={{ position: 'relative' }}>
@@ -142,6 +195,30 @@ export default function NewAdoptionScreen() {
               </Pressable>
             </View>
           ))}
+          {/* Vídeo (1 só) */}
+          {videoUrl ? (
+            <View style={{ position: 'relative' }}>
+              <View style={{ width: 84, height: 84, borderRadius: 12, overflow: 'hidden', backgroundColor: '#000' }}>
+                <AdoptionVideoThumb uri={videoUrl} />
+              </View>
+              <Pressable
+                onPress={() => setVideoUrl(null)}
+                style={{
+                  position: 'absolute',
+                  top: -6,
+                  right: -6,
+                  backgroundColor: '#1A1410',
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="close" size={14} color="#fff" />
+              </Pressable>
+            </View>
+          ) : null}
           {images.length < MAX_PHOTOS ? (
             <Pressable
               onPress={pickImage}
@@ -162,6 +239,29 @@ export default function NewAdoptionScreen() {
               <Ionicons name={uploading ? 'cloud-upload' : 'camera'} size={22} color={theme.textDim} />
               <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim }}>
                 {uploading ? '...' : 'Foto'}
+              </Text>
+            </Pressable>
+          ) : null}
+          {!videoUrl ? (
+            <Pressable
+              onPress={pickVideo}
+              disabled={uploadingVideo}
+              style={{
+                width: 84,
+                height: 84,
+                borderRadius: 12,
+                borderWidth: 1.5,
+                borderColor: theme.border,
+                borderStyle: 'dashed',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2,
+                opacity: uploadingVideo ? 0.5 : 1,
+              }}
+            >
+              <Ionicons name={uploadingVideo ? 'cloud-upload' : 'videocam'} size={22} color={theme.textDim} />
+              <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim }}>
+                {uploadingVideo ? '...' : 'Vídeo'}
               </Text>
             </Pressable>
           ) : null}
@@ -246,6 +346,43 @@ export default function NewAdoptionScreen() {
 }
 
 // ----------------------------------------------------------------------------
+
+// Thumbnail do vídeo selecionado (mudo, com selo de play).
+function AdoptionVideoThumb({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.muted = true;
+  });
+  return (
+    <View style={{ width: 84, height: 84 }}>
+      <VideoView player={player} style={{ width: 84, height: 84 }} contentFit="cover" nativeControls={false} />
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <View
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: 13,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name="play" size={14} color="#fff" />
+        </View>
+      </View>
+    </View>
+  );
+}
 
 function Section({ title }: { title: string }) {
   const { theme } = useTheme();

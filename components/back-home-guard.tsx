@@ -24,7 +24,6 @@ const FEED_PATH = '/';
 const FEED_FAMILY: RegExp[] = [
   /^\/explore$/,
   /^\/create$/,
-  /^\/meetups$/,
   /^\/profile$/,
   /^\/post\//,
   /^\/tag\//,

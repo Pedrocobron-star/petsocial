@@ -187,6 +187,8 @@ export interface LostReport {
   description: string | null;
   contact_info: string;
   photo_url: string | null;
+  image_urls?: string[] | null;
+  video_url?: string | null;
   created_at: string;
   updated_at: string;
 }

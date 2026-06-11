@@ -35,6 +35,7 @@ export interface AdoptionListing {
   contact_name: string | null;
   contact_phone: string | null;
   image_urls: string[];
+  video_url?: string | null;
   priority: number;
   /** Sinalizado pela heuristica anti-spam do servidor (link, venda, etc). */
   needs_review: boolean;
@@ -135,6 +136,7 @@ export interface AdoptionInput {
   contact_name?: string | null;
   contact_phone?: string | null;
   image_urls?: string[];
+  video_url?: string | null;
   status?: AdoptionStatus;
 }
 
@@ -161,6 +163,7 @@ export async function createAdoptionListing(
       contact_name: input.contact_name ?? null,
       contact_phone: input.contact_phone ?? null,
       image_urls: input.image_urls ?? [],
+      video_url: input.video_url ?? null,
       status: input.status ?? 'available',
     })
     .select('*')
@@ -180,18 +183,21 @@ export async function setAdoptionStatus(id: string, status: AdoptionStatus): Pro
 }
 
 export async function deleteAdoptionListing(id: string): Promise<void> {
-  // Pega as URLs das fotos antes de apagar a linha (pra limpar o storage depois).
+  // Pega as URLs das mídias antes de apagar a linha (pra limpar o storage depois).
   const { data: row } = await supabase
     .from('adoption_listings')
-    .select('image_urls')
+    .select('image_urls, video_url')
     .eq('id', id)
     .maybeSingle();
 
   const { error } = await supabase.from('adoption_listings').delete().eq('id', id);
   if (error) throw error;
 
-  // Best-effort: remove as fotos órfãs do bucket público `posts`.
-  const urls = (row?.image_urls ?? []) as string[];
+  // Best-effort: remove as mídias órfãs do bucket público `posts`.
+  const urls = [
+    ...((row?.image_urls ?? []) as string[]),
+    ...((row?.video_url ? [row.video_url] : []) as string[]),
+  ];
   await Promise.all(urls.map((u) => deleteFromBucket('posts', u)));
 }
 

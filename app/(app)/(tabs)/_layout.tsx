@@ -72,15 +72,10 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="meetups"
-        options={{
-          title: t('tabs.meetups'),
-          tabBarIcon: ({ color, size, focused }) => (
-            <AnimatedTabIcon name="calendar" focused={focused} color={color} size={size} />
-          ),
-        }}
-      />
+      {/* Rolês (Encontros) virou app independente no springboard — fora da barra
+          do feed. `href: null` esconde da tab bar mas mantém a rota acessível
+          (o app do springboard navega pra /(app)/(tabs)/meetups normalmente). */}
+      <Tabs.Screen name="meetups" options={{ href: null }} />
       <Tabs.Screen
         name="profile"
         options={{

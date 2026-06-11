@@ -1732,6 +1732,18 @@ export async function fetchConversationOtherUser(conversationId: string, myUserI
   return (profile as Profile | null) ?? null;
 }
 
+/** Primeiro pet de um tutor — pra abrir o perfil do pet a partir do chat. */
+export async function fetchUserFirstPet(userId: string): Promise<Pet | null> {
+  const { data } = await supabase
+    .from('pets')
+    .select('*')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return (data as Pet | null) ?? null;
+}
+
 export async function sendMessage(conversationId: string, senderId: string, content: string): Promise<Message> {
   const trimmed = content.trim();
   if (!trimmed) throw new Error('mensagem vazia');
