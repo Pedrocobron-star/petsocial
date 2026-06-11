@@ -676,6 +676,16 @@ export interface PlaceWithStats extends Place {
   review_count: number;
 }
 
+export interface PlacePhoto {
+  id: string;
+  place_id: string;
+  user_id: string;
+  url: string;
+  storage_path: string;
+  caption: string | null;
+  created_at: string;
+}
+
 export interface PlaceReview {
   id: string;
   place_id: string;

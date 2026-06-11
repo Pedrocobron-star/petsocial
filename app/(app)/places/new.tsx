@@ -6,6 +6,7 @@ import { Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-na
 
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
+import { buildPlaceQuery, geocodeAddress } from '@/lib/geocode';
 import { createPlace } from '@/lib/queries';
 import type { PlaceKind } from '@/lib/types';
 import { AppThemeProvider } from '@/providers/app-theme-provider';
@@ -75,8 +76,18 @@ function NewPlaceInner() {
   };
 
   const createMut = useMutation({
-    mutationFn: () =>
-      createPlace({
+    mutationFn: async () => {
+      let lat = coords?.lat;
+      let lng = coords?.lng;
+      // Fallback: sem coords marcadas? tenta geocodar o endereço (best-effort, 1 req).
+      if (lat == null && address.trim()) {
+        const g = await geocodeAddress(buildPlaceQuery(address, city, state));
+        if (g) {
+          lat = g.lat;
+          lng = g.lng;
+        }
+      }
+      return createPlace({
         added_by_user_id: session!.user.id,
         name: name.trim(),
         kind,
@@ -87,9 +98,10 @@ function NewPlaceInner() {
         website: website.trim() || undefined,
         hours: hours.trim() || undefined,
         description: description.trim() || undefined,
-        latitude: coords?.lat,
-        longitude: coords?.lng,
-      }),
+        latitude: lat,
+        longitude: lng,
+      });
+    },
     onSuccess: (place) => {
       toast.success('Lugar adicionado!');
       router.replace({ pathname: '/places/[id]' as never, params: { id: place.id } as never });

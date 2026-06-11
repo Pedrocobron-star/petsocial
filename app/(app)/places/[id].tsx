@@ -2,28 +2,36 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { copyToClipboard } from '@/lib/clipboard';
 import { FONTS } from '@/lib/fonts';
 import { placeKindMeta } from '@/lib/places-meta';
 import {
+  addPlacePhoto,
+  deletePlacePhoto,
   deletePlaceReview,
   fetchPlace,
+  fetchPlacePhotos,
   fetchPlaceReviews,
   fetchSavedPlaceIds,
   qk,
   toggleSavePlace,
   upsertPlaceReview,
 } from '@/lib/queries';
-import type { PlaceReviewWithProfile } from '@/lib/types';
+import { deleteFromBucket, guessExtension, uploadToBucket } from '@/lib/storage';
+import type { PlacePhoto, PlaceReviewWithProfile } from '@/lib/types';
 import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
+
+const ADMIN_EMAIL = 'pedrocobron@gmail.com';
+const MAX_PLACE_PHOTOS = 12;
 
 export default function PlaceDetailScreen() {
   return (
@@ -269,6 +277,9 @@ function PlaceDetailInner() {
           </View>
         </View>
 
+        {/* Galeria de fotos da comunidade */}
+        <PlacePhotosSection placeId={id} accentColor={meta.color} />
+
         <View style={{ padding: 16, gap: 14 }}>
           {place.description ? (
             <Text style={{ fontFamily: FONTS.body, fontSize: 14, color: theme.text, lineHeight: 21 }}>
@@ -456,6 +467,205 @@ function PlaceDetailInner() {
           )}
         </View>
       </ScrollView>
+    </View>
+  );
+}
+
+/** Extrai o caminho "<userId>/<arquivo>" do URL público do bucket 'posts'. */
+function storagePathFromUrl(publicUrl: string): string {
+  const marker = '/object/public/posts/';
+  const idx = publicUrl.indexOf(marker);
+  return idx >= 0 ? publicUrl.substring(idx + marker.length) : '';
+}
+
+function PlacePhotosSection({ placeId, accentColor }: { placeId: string; accentColor: string }) {
+  const { theme } = useTheme();
+  const { session } = useSession();
+  const qc = useQueryClient();
+  const toast = useToast();
+  const userId = session?.user.id;
+  const isAdmin = session?.user.email === ADMIN_EMAIL;
+
+  const photosQuery = useQuery({
+    queryKey: qk.placePhotos(placeId),
+    queryFn: () => fetchPlacePhotos(placeId),
+    enabled: !!placeId,
+  });
+  const photos = photosQuery.data ?? [];
+
+  const [uploading, setUploading] = useState(false);
+  const [viewer, setViewer] = useState<PlacePhoto | null>(null);
+
+  const addMut = useMutation({
+    mutationFn: async (input: { url: string; storage_path: string }) =>
+      addPlacePhoto({
+        place_id: placeId,
+        user_id: userId!,
+        url: input.url,
+        storage_path: input.storage_path,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.placePhotos(placeId) });
+      toast.success('Foto adicionada 📸', 'Valeu por ajudar a comunidade!');
+    },
+    onError: () => toast.error('Não consegui salvar a foto'),
+  });
+
+  const delMut = useMutation({
+    mutationFn: async (photo: PlacePhoto) => {
+      await deletePlacePhoto(photo.id);
+      await deleteFromBucket('posts', photo.url);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.placePhotos(placeId) });
+      setViewer(null);
+      toast.success('Foto removida');
+    },
+    onError: () => toast.error('Não consegui remover'),
+  });
+
+  const pickPhoto = async () => {
+    if (!userId) {
+      toast.error('Faça login pra adicionar foto');
+      return;
+    }
+    if (photos.length >= MAX_PLACE_PHOTOS) {
+      toast.info(`Máximo ${MAX_PLACE_PHOTOS} fotos por lugar`);
+      return;
+    }
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      toast.error('Permissão negada', 'Libere o acesso à galeria pra anexar foto');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    setUploading(true);
+    try {
+      const asset = result.assets[0];
+      const ext = guessExtension(asset.uri, 'jpg');
+      const url = await uploadToBucket('posts', userId, asset.uri, ext);
+      const storage_path = storagePathFromUrl(url);
+      addMut.mutate({ url, storage_path });
+    } catch (e) {
+      toast.error('Erro no upload', e instanceof Error ? e.message : '');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const canDelete = (photo: PlacePhoto) => isAdmin || photo.user_id === userId;
+
+  return (
+    <View style={{ paddingTop: 14, gap: 8 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 16,
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: FONTS.bodyBold,
+            fontSize: 12,
+            letterSpacing: 1.2,
+            textTransform: 'uppercase',
+            color: accentColor,
+          }}
+        >
+          Fotos {photos.length > 0 ? `(${photos.length})` : ''}
+        </Text>
+        <Pressable
+          onPress={pickPhoto}
+          disabled={uploading || addMut.isPending}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, opacity: uploading ? 0.6 : 1 }}
+          hitSlop={8}
+        >
+          {uploading || addMut.isPending ? (
+            <ActivityIndicator size="small" color={accentColor} />
+          ) : (
+            <Ionicons name="camera" size={16} color={accentColor} />
+          )}
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: accentColor }}>
+            Adicionar foto
+          </Text>
+        </Pressable>
+      </View>
+
+      {photos.length === 0 ? (
+        <Text
+          style={{
+            fontFamily: FONTS.body,
+            fontSize: 13,
+            color: theme.textDim,
+            paddingHorizontal: 16,
+            paddingVertical: 6,
+          }}
+        >
+          Sem fotos ainda. Seja o primeiro a mostrar como é esse lugar 📸
+        </Text>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
+        >
+          {photos.map((p) => (
+            <Pressable key={p.id} onPress={() => setViewer(p)}>
+              <Image
+                source={{ uri: p.url }}
+                style={{ width: 150, height: 150, borderRadius: 14, backgroundColor: theme.borderLight }}
+                resizeMode="cover"
+              />
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Lightbox */}
+      <Modal visible={!!viewer} transparent animationType="fade" onRequestClose={() => setViewer(null)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center' }}>
+          <Pressable
+            onPress={() => setViewer(null)}
+            style={{ position: 'absolute', top: 50, right: 20, zIndex: 2, padding: 8 }}
+            hitSlop={12}
+          >
+            <Ionicons name="close" size={30} color="#FFFFFF" />
+          </Pressable>
+          {viewer ? (
+            <Image source={{ uri: viewer.url }} style={{ width: '100%', height: '70%' }} resizeMode="contain" />
+          ) : null}
+          {viewer && canDelete(viewer) ? (
+            <Pressable
+              onPress={() => delMut.mutate(viewer)}
+              disabled={delMut.isPending}
+              style={{
+                position: 'absolute',
+                bottom: 50,
+                alignSelf: 'center',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingVertical: 10,
+                paddingHorizontal: 18,
+                borderRadius: 999,
+                backgroundColor: 'rgba(220,38,38,0.9)',
+              }}
+            >
+              <Ionicons name="trash" size={16} color="#FFFFFF" />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FFFFFF' }}>
+                {delMut.isPending ? 'Removendo...' : 'Remover foto'}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </Modal>
     </View>
   );
 }

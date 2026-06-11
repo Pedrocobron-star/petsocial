@@ -23,6 +23,7 @@ import type {
   Place,
   PlaceKind,
   PlaceReview,
+  PlacePhoto,
   PlaceReviewWithProfile,
   PlaceWithStats,
   PostMedia,
@@ -109,6 +110,7 @@ export const qk = {
   places: (filter: string) => ['places', filter] as const,
   place: (id: string) => ['place', id] as const,
   placeReviews: (placeId: string) => ['place-reviews', placeId] as const,
+  placePhotos: (placeId: string) => ['place-photos', placeId] as const,
   subscription: (userId: string) => ['subscription', userId] as const,
   subscriptionEvents: (userId: string) => ['subscription-events', userId] as const,
   memorialMessages: (petId: string) => ['memorial-messages', petId] as const,
@@ -2494,6 +2496,35 @@ export async function deletePlaceReview(placeId: string, userId: string): Promis
     .delete()
     .eq('place_id', placeId)
     .eq('user_id', userId);
+  if (error) throw error;
+}
+
+// -------- Place photos (galeria da comunidade) --------
+
+export async function fetchPlacePhotos(placeId: string): Promise<PlacePhoto[]> {
+  const { data, error } = await supabase
+    .from('place_photos')
+    .select('*')
+    .eq('place_id', placeId)
+    .order('created_at', { ascending: false })
+    .limit(30);
+  if (error) throw error;
+  return (data ?? []) as PlacePhoto[];
+}
+
+export async function addPlacePhoto(input: {
+  place_id: string;
+  user_id: string;
+  url: string;
+  storage_path: string;
+  caption?: string;
+}): Promise<void> {
+  const { error } = await supabase.from('place_photos').insert(input);
+  if (error) throw error;
+}
+
+export async function deletePlacePhoto(id: string): Promise<void> {
+  const { error } = await supabase.from('place_photos').delete().eq('id', id);
   if (error) throw error;
 }
 

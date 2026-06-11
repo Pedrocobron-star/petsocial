@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/empty-state';
 import { PlacesMap } from '@/components/places-map';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
+import { formatDistance, getCurrentPosition, haversineKm, type Coords } from '@/lib/geo';
 import { PLACE_KIND_META, placeKindMeta } from '@/lib/places-meta';
 import { fetchPlaces, qk } from '@/lib/queries';
 import type { PlaceKind, PlaceSpecies, PlaceWithStats } from '@/lib/types';
@@ -64,6 +65,23 @@ function PlacesInner() {
   const [sort, setSort] = useState<SortKey>('top');
   const [species, setSpecies] = useState<PlaceSpecies>('all');
   const [view, setView] = useState<'list' | 'map'>('list');
+  const [myLoc, setMyLoc] = useState<Coords | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [nearMeTried, setNearMeTried] = useState(false);
+
+  // Toggle "perto de mim": pega localização e ordena por distância (sobrepõe o sort).
+  const toggleNearMe = async () => {
+    if (myLoc) {
+      setMyLoc(null);
+      setNearMeTried(false);
+      return;
+    }
+    setLocating(true);
+    const c = await getCurrentPosition();
+    setLocating(false);
+    setNearMeTried(true);
+    setMyLoc(c);
+  };
 
   // Se o query param mudar via deep link, sincroniza
   useEffect(() => {
@@ -81,7 +99,19 @@ function PlacesInner() {
 
   const places = useMemo(() => {
     const all = query.data ?? [];
-    const sorted = [...all].sort((a, b) => {
+    // Anexa distância quando temos a localização do usuário e o lugar tem coords.
+    const withDist = all.map((p) => ({
+      ...p,
+      distanceKm:
+        myLoc && p.latitude != null && p.longitude != null
+          ? haversineKm(myLoc.lat, myLoc.lng, p.latitude, p.longitude)
+          : undefined,
+    }));
+    const sorted = [...withDist].sort((a, b) => {
+      // "Perto de mim" sobrepõe os outros sorts: lugares sem coords vão pro fim.
+      if (myLoc) {
+        return (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity);
+      }
       if (sort === 'top') {
         // Top rated: prioriza review_count >= 1 e maior rating, desempata por contagem
         if (a.review_count === 0 && b.review_count > 0) return 1;
@@ -101,7 +131,7 @@ function PlacesInner() {
       const sp = p.species ?? 'all';
       return sp === 'all' || sp === species;
     });
-  }, [query.data, sort, species]);
+  }, [query.data, sort, species, myLoc]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -153,18 +183,24 @@ function PlacesInner() {
           ) : null}
         </View>
 
-        {/* Toggle Lista / Mapa */}
+        {/* Toggle Lista / Mapa + Perto de mim */}
         <View
           style={{
             flexDirection: 'row',
-            gap: 4,
-            backgroundColor: theme.borderLight,
-            borderRadius: 999,
-            padding: 3,
+            alignItems: 'center',
+            justifyContent: 'space-between',
             marginTop: 10,
-            alignSelf: 'flex-start',
           }}
         >
+          <View
+            style={{
+              flexDirection: 'row',
+              gap: 4,
+              backgroundColor: theme.borderLight,
+              borderRadius: 999,
+              padding: 3,
+            }}
+          >
           {(['list', 'map'] as const).map((v) => {
             const active = view === v;
             return (
@@ -198,7 +234,50 @@ function PlacesInner() {
               </Pressable>
             );
           })}
+          </View>
+
+          {/* Perto de mim — ordena por distância (web/PWA) */}
+          <Pressable
+            onPress={toggleNearMe}
+            disabled={locating}
+            accessibilityRole="button"
+            accessibilityLabel="Ordenar por lugares perto de mim"
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 999,
+              borderWidth: 1.5,
+              borderColor: myLoc ? theme.accent.color : theme.border,
+              backgroundColor: myLoc ? theme.accent.surface : 'transparent',
+              opacity: locating ? 0.6 : 1,
+            }}
+          >
+            <Ionicons
+              name={myLoc ? 'navigate' : 'navigate-outline'}
+              size={14}
+              color={myLoc ? theme.accent.color : theme.textDim}
+            />
+            <Text
+              style={{
+                fontFamily: FONTS.bodyBold,
+                fontSize: 12,
+                color: myLoc ? theme.accent.dark : theme.textDim,
+              }}
+            >
+              {locating ? 'Localizando…' : myLoc ? 'Perto de mim ✓' : 'Perto de mim'}
+            </Text>
+          </Pressable>
         </View>
+
+        {/* Aviso quando a localização não veio (negada / indisponível) */}
+        {!locating && myLoc === null && nearMeTried ? (
+          <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: theme.textDim, marginTop: 6 }}>
+            Não consegui pegar sua localização. Libere o acesso no navegador e tente de novo.
+          </Text>
+        ) : null}
 
         <ScrollView
           horizontal
@@ -279,7 +358,12 @@ function PlacesInner() {
               return (
                 <Pressable
                   key={s.value}
-                  onPress={() => setSort(s.value)}
+                  onPress={() => {
+                    // Sort manual desliga "perto de mim" (que sobrepõe a ordenação).
+                    setMyLoc(null);
+                    setNearMeTried(false);
+                    setSort(s.value);
+                  }}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -287,9 +371,9 @@ function PlacesInner() {
                     paddingHorizontal: 10,
                     paddingVertical: 5,
                     borderRadius: 8,
-                    backgroundColor: active ? theme.accent.surface : 'transparent',
+                    backgroundColor: active && !myLoc ? theme.accent.surface : 'transparent',
                     borderWidth: 1,
-                    borderColor: active ? theme.accent.color : theme.borderLight,
+                    borderColor: active && !myLoc ? theme.accent.color : theme.borderLight,
                   }}
                 >
                   <Text style={{ fontSize: 11 }}>{s.emoji}</Text>
@@ -325,7 +409,7 @@ function PlacesInner() {
       <FlatList
         data={places}
         keyExtractor={(p) => p.id}
-        renderItem={({ item }) => <PlaceCard place={item} />}
+        renderItem={({ item }) => <PlaceCard place={item} distanceKm={item.distanceKm} />}
         contentContainerStyle={{ padding: 12, gap: 10, flexGrow: 1 }}
         ListHeaderComponent={
           <View style={{ marginHorizontal: -12, marginTop: -12, marginBottom: 12 }}>
@@ -356,7 +440,7 @@ function PlacesInner() {
   );
 }
 
-function PlaceCard({ place }: { place: PlaceWithStats }) {
+function PlaceCard({ place, distanceKm }: { place: PlaceWithStats; distanceKm?: number }) {
   const { theme } = useTheme();
   const meta = placeKindMeta(place.kind);
 
@@ -451,7 +535,7 @@ function PlaceCard({ place }: { place: PlaceWithStats }) {
         </View>
 
         {/* Endereço + cidade */}
-        <View style={{ paddingHorizontal: 14, paddingVertical: 12 }}>
+        <View style={{ paddingHorizontal: 14, paddingVertical: 12, gap: 6 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
             <Ionicons name="location-outline" size={14} color={theme.textDim} style={{ marginTop: 2 }} />
             <Text
@@ -468,6 +552,25 @@ function PlaceCard({ place }: { place: PlaceWithStats }) {
               {place.city ? <Text style={{ color: theme.textDim }}> · {place.city}</Text> : null}
             </Text>
           </View>
+          {distanceKm != null ? (
+            <View
+              style={{
+                alignSelf: 'flex-start',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 999,
+                backgroundColor: meta.bg,
+              }}
+            >
+              <Ionicons name="navigate" size={11} color={meta.color} />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: meta.text }}>
+                a {formatDistance(distanceKm)} de você
+              </Text>
+            </View>
+          ) : null}
         </View>
       </Pressable>
     </Link>
