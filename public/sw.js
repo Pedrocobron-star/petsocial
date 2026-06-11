@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION ao mudar assets — força refresh do cache.
  */
 
-const CACHE_VERSION = 'pet-social-v109';
+const CACHE_VERSION = 'pet-social-v110';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

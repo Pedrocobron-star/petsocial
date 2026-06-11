@@ -233,7 +233,15 @@ function MozartPostModal({ target, onClose }: { target: MozartPost | 'new' | nul
       } else {
         await createMozartPost({ caption: clean, media_url: mediaUrl, status, scheduled_at });
       }
-      if (mode === 'now') await runMozartPublishNow().catch(() => {});
+      if (mode === 'now') {
+        try {
+          await runMozartPublishNow();
+        } catch {
+          // O post JÁ foi gravado como scheduled+agora; só a publicação imediata
+          // falhou. Não engole: avisa que sai no próximo ciclo do dispatch.
+          throw new Error('Post salvo, mas a publicação imediata falhou — ele sai no próximo ciclo (até 5 min).');
+        }
+      }
     },
     onSuccess: () => {
       toast.success(

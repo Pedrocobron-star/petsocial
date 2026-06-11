@@ -155,9 +155,9 @@ export default function AdminScreen() {
             <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#FFFFFF', marginTop: 2 }}>
               Maestro Pet Overview
             </Text>
-            {engagement ? (
+            {safeClock(engagement?.generated_at) ? (
               <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#A3A3A3', marginTop: 2 }}>
-                Atualizado {format(parseISO(engagement.generated_at), 'HH:mm:ss', { locale: ptBR })}
+                Atualizado {safeClock(engagement?.generated_at)}
               </Text>
             ) : null}
           </View>
@@ -341,7 +341,7 @@ export default function AdminScreen() {
               />
               <StatCard
                 label="Horas totais"
-                value={`${Math.round(engagement.total_time_seconds_7d / 3600)}h`}
+                value={`${Math.round((engagement.total_time_seconds_7d || 0) / 3600)}h`}
                 accent="#92400E"
                 bg="#FEF3C7"
               />
@@ -415,7 +415,7 @@ export default function AdminScreen() {
               <StatCard
                 label="Conv. %"
                 value={
-                  stats.subscriptions.free > 0
+                  stats.subscriptions.free + stats.subscriptions.active_pro > 0
                     ? `${((stats.subscriptions.active_pro / (stats.subscriptions.free + stats.subscriptions.active_pro)) * 100).toFixed(1)}%`
                     : '—'
                 }
@@ -732,6 +732,18 @@ function formatNumber(n: number): string {
   if (n < 1000) return String(n);
   if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}k`;
   return `${(n / 1_000_000).toFixed(1)}M`;
+}
+
+// Formata HH:mm:ss de um ISO; retorna '' se a data for nula/inválida (sem crashar).
+function safeClock(iso: string | null | undefined): string {
+  if (!iso) return '';
+  try {
+    const d = parseISO(iso);
+    if (isNaN(d.getTime())) return '';
+    return format(d, 'HH:mm:ss', { locale: ptBR });
+  } catch {
+    return '';
+  }
 }
 
 function formatDuration(seconds: number): string {

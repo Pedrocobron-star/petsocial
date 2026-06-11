@@ -111,8 +111,20 @@ export default function AdminUserDetailScreen() {
   });
 
   const onGrant = (days: number | null, label: string) => {
-    setPendingPreset(label);
-    grantMutation.mutate({ days, label });
+    const desc =
+      days === null
+        ? 'Vai conceder Pet Pro PERMANENTE (sem expiração). Tem certeza?'
+        : `Vai conceder Pet Pro por ${label}.`;
+    Alert.alert('Conceder Pet Pro?', desc, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Conceder',
+        onPress: () => {
+          setPendingPreset(label);
+          grantMutation.mutate({ days, label });
+        },
+      },
+    ]);
   };
 
   const onRevoke = () => {

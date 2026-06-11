@@ -77,7 +77,13 @@ export default function AdminNotificationsScreen() {
         scheduled_at: scheduledAt,
       });
       if (mode === 'now') {
-        await adminRunDispatchNow().catch(() => {});
+        try {
+          await adminRunDispatchNow();
+        } catch {
+          // A notificação JÁ foi criada; só o envio imediato falhou. Não engole:
+          // avisa que ela ainda sai no próximo ciclo do cron de dispatch (5 min).
+          throw new Error('Notificação criada, mas o envio imediato falhou — ela sai no próximo ciclo (até 5 min).');
+        }
       }
     },
     onSuccess: () => {

@@ -65,6 +65,10 @@ export function OfferForm({
       toast.error('Link obrigatório', 'Pra onde o usuário vai ao clicar');
       return;
     }
+    if (!/^https?:\/\//i.test(ctaUrl.trim())) {
+      toast.error('Link inválido', 'Comece com http:// ou https:// (ex: https://loja.com)');
+      return;
+    }
     if (validUntil.trim() && !parseBrDate(validUntil)) {
       toast.error('Data inválida', 'Use dd/mm/aaaa ou deixe em branco');
       return;

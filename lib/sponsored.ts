@@ -34,6 +34,7 @@
  *  - upgrade-modal.tsx ajustada pra remover qualquer promessa de "sem ads"
  */
 
+import { logAdminAction } from './admin-audit';
 import { supabase } from './supabase';
 
 // ============================================================================
@@ -236,6 +237,9 @@ export async function adminUpdateSponsoredPost(
 export async function adminDeleteSponsoredPost(id: string): Promise<void> {
   const { error } = await supabase.from('sponsored_posts').delete().eq('id', id);
   if (error) throw error;
+  // Hard-delete de recurso de RECEITA: registra na trilha de auditoria como
+  // offer/news/adoption ja fazem (best-effort, nao bloqueia o delete).
+  void logAdminAction('delete', 'sponsored_post', id);
 }
 
 export async function adminFetchSponsoredPost(id: string): Promise<SponsoredPost | null> {
