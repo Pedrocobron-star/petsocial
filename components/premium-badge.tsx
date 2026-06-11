@@ -58,11 +58,9 @@ export function PremiumBadge({ size = 14, style }: Props) {
           height: size,
           alignItems: 'center',
           justifyContent: 'center',
-          shadowColor: '#B45309',
-          shadowOpacity: 0.45,
-          shadowRadius: size / 3.2,
-          shadowOffset: { width: 0, height: size / 14 },
         },
+        // Sem shadow*: no RN Web a sombra vira box-shadow RETANGULAR e desenha
+        // um "quadrado" feio ao redor do selo. O gradiente do SVG já dá relevo.
         style,
       ]}
     >

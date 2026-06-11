@@ -26,6 +26,7 @@ import {
   fetchPet,
   fetchPetStats,
   fetchPostsByPet,
+  fetchUserIsPro,
   fetchVaccinations,
   getOrCreateDM,
   isUserBlocked,
@@ -84,6 +85,12 @@ export default function PetProfileScreen() {
     queryKey: qk.parasiteSummary(id),
     queryFn: () => fetchParasiteSummary(id),
     enabled: !!id && isOwn,
+  });
+  // Dono é Pet Pro? → selo dourado no perfil (pra quem vê saber que é assinante).
+  const ownerIsProQuery = useQuery({
+    queryKey: ['user-is-pro', pet?.owner_id],
+    queryFn: () => fetchUserIsPro(pet!.owner_id),
+    enabled: !!pet?.owner_id,
   });
   const followingQuery = useQuery({
     queryKey: ['following', activePet?.id, id],
@@ -205,6 +212,7 @@ export default function PetProfileScreen() {
           pet={pet}
           stats={stats}
           isOwn={isOwn}
+          ownerIsPro={!!ownerIsProQuery.data}
           isFollowing={!!followingQuery.data}
           onFollow={() => followMutation.mutate()}
           onMessage={() => {
@@ -318,6 +326,7 @@ export default function PetProfileScreen() {
     pet,
     stats,
     isOwn,
+    ownerIsProQuery.data,
     followingQuery.data,
     followMutation,
     openDmMutation,

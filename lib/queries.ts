@@ -1732,6 +1732,16 @@ export async function fetchConversationOtherUser(conversationId: string, myUserI
   return (profile as Profile | null) ?? null;
 }
 
+/** O tutor (dono) é Pet Pro? Usado pro selo dourado no perfil do pet. */
+export async function fetchUserIsPro(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('is_pro')
+    .eq('id', userId)
+    .maybeSingle();
+  return !!(data as { is_pro?: boolean } | null)?.is_pro;
+}
+
 /** Primeiro pet de um tutor — pra abrir o perfil do pet a partir do chat. */
 export async function fetchUserFirstPet(userId: string): Promise<Pet | null> {
   const { data } = await supabase

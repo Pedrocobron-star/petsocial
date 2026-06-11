@@ -293,7 +293,7 @@ function PostCardComponent({
                 {isMozartPet(post.pet.id) ? (
                   <OfficialBadge size={14} />
                 ) : post.owner_is_pro ? (
-                  <PremiumBadge size={12} />
+                  <PremiumBadge size={14} />
                 ) : null}
               </View>
               <Text

@@ -23,27 +23,11 @@ interface Props {
  * Layout com cores tonais. Tudo com PressScale pra feedback tátil.
  */
 export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }: Props) {
-  const vaccinesCount = vaccinations.length;
+  // Vacinas atrasadas — alimenta o selo de "pendente" do card Saúde.
   const overdue = vaccinations.filter((v) => {
     if (!v.next_dose_at) return false;
     return new Date(v.next_dose_at) < new Date();
   }).length;
-
-  // Antiparasitários — sub text contextual baseado em status
-  const parasiteSub = (() => {
-    if (!parasiteSummary || parasiteSummary.total === 0) return 'Vermífugo · Pulga · etc';
-    if (parasiteSummary.overdue > 0) {
-      return `${parasiteSummary.overdue} atrasado${parasiteSummary.overdue > 1 ? 's' : ''}`;
-    }
-    if (parasiteSummary.next_due && parasiteSummary.next_due.days_until <= 7) {
-      const d = parasiteSummary.next_due.days_until;
-      return d === 0 ? 'Vence hoje!' : `Em ${d}d`;
-    }
-    if (parasiteSummary.next_due) {
-      return `${parasiteSummary.next_due.product_name}`;
-    }
-    return `${parasiteSummary.total} ${parasiteSummary.total === 1 ? 'registro' : 'registros'}`;
-  })();
 
   const parasiteAlert =
     !!parasiteSummary && (parasiteSummary.overdue > 0 || parasiteSummary.due_soon > 0);
@@ -184,7 +168,7 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={{ fontFamily: FONTS.display, fontSize: 17, color: '#fff' }}>
-                      Hub de Saúde
+                      Saúde
                     </Text>
                     {overdue > 0 || parasiteAlert ? (
                       <View
@@ -217,153 +201,10 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
             </Link>
           ) : null}
 
-          {/* Antiparasitários — card destacado pro dono (linha individual) */}
-          {isOwn ? (
-            <Link
-              href={{
-                pathname: '/pet/[id]/parasites' as never,
-                params: { id: petId } as never,
-              }}
-              asChild
-            >
-              <PressScale
-                style={{
-                  backgroundColor: parasiteAlert ? '#FEE2E2' : '#ECFDF5',
-                  borderRadius: 18,
-                  padding: 14,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 12,
-                  borderWidth: 1,
-                  borderColor: parasiteAlert ? '#FCA5A5' : '#86EFAC',
-                }}
-              >
-                <View
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 12,
-                    backgroundColor: parasiteAlert ? '#FCA5A5' : '#86EFAC',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ fontSize: 22 }}>{parasiteAlert ? '⚠️' : '💊'}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontFamily: FONTS.display,
-                      fontSize: 16,
-                      color: parasiteAlert ? '#991B1B' : '#166534',
-                    }}
-                  >
-                    Vermífugo & Antipulgas
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: FONTS.body,
-                      fontSize: 12,
-                      color: parasiteAlert ? '#991B1B' : '#166534',
-                      opacity: 0.85,
-                      marginTop: 1,
-                    }}
-                  >
-                    {parasiteSub}
-                  </Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={parasiteAlert ? '#991B1B' : '#166534'}
-                />
-              </PressScale>
-            </Link>
-          ) : null}
-
-          {/* Agenda completa (só dono) */}
-          {isOwn ? (
-            <Link
-              href={{
-                pathname: '/pet/[id]/agenda' as never,
-                params: { id: petId } as never,
-              }}
-              asChild
-            >
-              <PressScale
-                style={{
-                  backgroundColor: '#EEF2FF',
-                  borderRadius: 18,
-                  padding: 14,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 12,
-                  borderWidth: 1,
-                  borderColor: '#C7D2FE',
-                }}
-              >
-                <View
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 12,
-                    backgroundColor: '#C7D2FE',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ fontSize: 22 }}>📅</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontFamily: FONTS.display,
-                      fontSize: 16,
-                      color: '#3730A3',
-                    }}
-                  >
-                    Agenda do pet
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: FONTS.body,
-                      fontSize: 12,
-                      color: '#3730A3',
-                      opacity: 0.85,
-                      marginTop: 1,
-                    }}
-                  >
-                    Banho · Escolinha · Vet · Passeio
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#3730A3" />
-              </PressScale>
-            </Link>
-          ) : null}
-
-          {/* Grid de cards públicos */}
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <QuickCard
-              href={`/pet/${petId}/vaccinations`}
-              emoji="💉"
-              label="Vacinas"
-              sub={
-                vaccinesCount === 0
-                  ? 'Sem registros'
-                  : `${vaccinesCount} ${vaccinesCount === 1 ? 'dose' : 'doses'}`
-              }
-              tint="#FFEDD5"
-              tintText="#9A3412"
-            />
-            <QuickCard
-              href={`/pet/${petId}/diary`}
-              emoji="📔"
-              label="Diário"
-              sub="Linha do tempo"
-              tint="#F3E8FF"
-              tintText="#7C3AED"
-            />
-          </View>
+          {/* Vacinas, vermífugo, agenda e diário NÃO ficam mais aqui: cada um
+              é um app separado na tela inicial (springboard). O card "Saúde"
+              acima já abre o hub que contém todos eles. Evita entrada duplicada
+              pra mesma página (pedido do Pedro). */}
 
           {isOwn ? (
             <>

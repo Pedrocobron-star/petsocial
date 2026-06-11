@@ -15,6 +15,7 @@ import { useTheme } from '@/providers/theme-provider';
 
 import { ImageViewer } from './image-viewer';
 import { PetAvatar } from './pet-avatar';
+import { PremiumBadge } from './premium-badge';
 import { Button } from './ui/button';
 import { CenteredColumn } from './ui/centered-column';
 import { NumberCounter } from './ui/number-counter';
@@ -24,6 +25,8 @@ interface Props {
   pet: Pet;
   stats: { posts_count: number; followers_count: number; following_count: number };
   isOwn: boolean;
+  /** Dono é Pet Pro? → selo dourado ao lado do nome. */
+  ownerIsPro?: boolean;
   isFollowing: boolean;
   onFollow: () => void;
   onMessage: () => void;
@@ -44,6 +47,7 @@ export function PetProfileHero({
   pet,
   stats,
   isOwn,
+  ownerIsPro,
   isFollowing,
   onFollow,
   onMessage,
@@ -191,16 +195,20 @@ export function PetProfileHero({
           </View>
         ) : (
           <View style={{ alignItems: 'center', marginTop: 12, gap: 6 }}>
-            <Text
-              style={{
-                fontFamily: FONTS.display,
-                fontSize: 30,
-                color: theme.text,
-                letterSpacing: -0.5,
-              }}
-            >
-              {pet.name}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+              <Text
+                style={{
+                  fontFamily: FONTS.display,
+                  fontSize: 30,
+                  color: theme.text,
+                  letterSpacing: -0.5,
+                }}
+              >
+                {pet.name}
+              </Text>
+              {/* Selo dourado de Pet Pro — quem vê sabe que o tutor é assinante. */}
+              {ownerIsPro ? <PremiumBadge size={20} /> : null}
+            </View>
             <View
               style={{
                 flexDirection: 'row',
