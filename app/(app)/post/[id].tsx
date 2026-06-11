@@ -20,10 +20,12 @@ import {
 
 import { MediaCarousel } from '@/components/media-carousel';
 import { MetaTags } from '@/components/meta-tags';
+import { OfficialBadge } from '@/components/official-badge';
 import { PetAvatar } from '@/components/pet-avatar';
 import { Button } from '@/components/ui/button';
 import { TextArea } from '@/components/ui/text-area';
 import { FONTS } from '@/lib/fonts';
+import { isMozartPet } from '@/lib/mozart';
 import {
   addComment,
   deleteComment,
@@ -308,9 +310,12 @@ export default function PostDetailScreen() {
         <View className="flex-row items-center gap-3 px-4 py-3">
           <PetAvatar pet={post.pet} size={36} />
           <View>
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#1A1410' }}>
-              {post.pet.name}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#1A1410' }}>
+                {post.pet.name}
+              </Text>
+              {isMozartPet(post.pet.id) ? <OfficialBadge size={14} /> : null}
+            </View>
             <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}
               {post.updated_at &&
