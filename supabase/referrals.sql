@@ -132,31 +132,13 @@ $$;
 revoke all on function public._referral_grant_pro(uuid, int) from public;
 
 -- ---- recompensa no 1o pet do indicado -------------------------------------
-create or replace function public.referral_reward_on_first_pet()
-returns trigger language plpgsql security definer set search_path = public as $$
-declare
-  v_owner uuid := new.owner_id;
-  v_referrer uuid;
-  v_granted boolean;
-  v_pet_count int;
-begin
-  -- AFTER insert: a contagem ja inclui esta linha; 1 = primeiro pet
-  select count(*) into v_pet_count from public.pets where owner_id = v_owner;
-  if v_pet_count <> 1 then return new; end if;
-
-  select referred_by, referral_reward_granted
-    into v_referrer, v_granted
-    from public.profiles where id = v_owner;
-
-  if v_referrer is null or v_granted then return new; end if;
-
-  perform public._referral_grant_pro(v_owner, 7);
-  perform public._referral_grant_pro(v_referrer, 7);
-
-  update public.profiles set referral_reward_granted = true where id = v_owner;
-  return new;
-end;
-$$;
+-- ⚠️ DEFINICAO CANONICA movida para supabase/referral-antifraud.sql (2026-06-11).
+-- Aquela versao apenas MARCA a indicacao como pendente (referral_pending_since);
+-- a concessao de Pro acontece no cron process_referral_rewards (carencia >=3d +
+-- teto rolante 10/30d + prova de atividade). NAO redefinir a funcao aqui —
+-- reaplicar este arquivo reverteria o anti-fraude (voltaria a conceder Pro na
+-- hora, sem teto). O trigger pets_referral_reward (abaixo) continua aqui e
+-- aponta pra funcao canonica; aplique referral-antifraud.sql por cima depois.
 
 drop trigger if exists pets_referral_reward on public.pets;
 create trigger pets_referral_reward

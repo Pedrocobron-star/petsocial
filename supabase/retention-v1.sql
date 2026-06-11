@@ -53,28 +53,12 @@ $$;
 revoke all on function public.submit_app_rating(int, text, text) from public;
 grant execute on function public.submit_app_rating(int, text, text) to authenticated;
 
--- Admin: listar avaliações + resumo
-create or replace function public.admin_list_app_ratings(p_limit int default 200)
-returns table (
-  id uuid, rating int, comment text, trigger_reason text, created_at timestamptz,
-  user_email text, user_name text
-)
-language plpgsql security definer set search_path = public as $$
-begin
-  if not public.is_admin() then raise exception 'forbidden' using errcode = '42501'; end if;
-  return query
-  select r.id, r.rating, r.comment, r.trigger_reason, r.created_at,
-         u.email::text, p.display_name
-  from public.app_ratings r
-  join auth.users u on u.id = r.user_id
-  left join public.profiles p on p.id = r.user_id
-  order by r.created_at desc
-  limit p_limit;
-end;
-$$;
-revoke all on function public.admin_list_app_ratings(int) from public;
-grant execute on function public.admin_list_app_ratings(int) to authenticated;
+-- admin_list_app_ratings: DEFINICAO CANONICA movida para supabase/mozart-dm.sql
+-- (versao com user_id, exigida pelo /admin/ratings pra responder como Mozart).
+-- NAO redefinir aqui — reaplicar este arquivo reverteria o user_id e quebraria
+-- a DM do Mozart. Ver supabase/mozart-dm.sql.
 
+-- Admin: resumo das avaliacoes
 create or replace function public.admin_app_ratings_summary()
 returns table (total bigint, avg_rating numeric, c1 bigint, c2 bigint, c3 bigint, c4 bigint, c5 bigint)
 language plpgsql security definer set search_path = public as $$
@@ -309,13 +293,11 @@ $$;
 -- 5. CRON — despacha notificações agendadas + publica matérias agendadas (5 min)
 -- ----------------------------------------------------------------------------
 
-create or replace function public.run_dispatch()
-returns void language plpgsql security definer set search_path = public as $$
-begin
-  perform public.news_publish_scheduled();
-  perform public.dispatch_scheduled_notifications();
-end;
-$$;
+-- run_dispatch(): DEFINICAO CANONICA em supabase/mozart-feed.sql (versao superset
+-- que tambem chama mozart_publish_due_posts() -> auto-post do Mozart). NAO
+-- redefinir aqui — reaplicar este arquivo reverteria run_dispatch e o Mozart
+-- pararia de publicar posts agendados. admin_run_dispatch_now() abaixo continua
+-- chamando a versao canonica por nome.
 
 -- Admin: dispara o dispatch na hora (pro "enviar agora" não esperar o cron)
 create or replace function public.admin_run_dispatch_now()

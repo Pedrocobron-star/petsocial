@@ -20,34 +20,9 @@ drop policy if exists "game_scores insert own" on public.game_scores;
 create policy "game_scores insert own" on public.game_scores
   for insert with check (auth.uid() = user_id);
 
--- Ranking público: melhor score por usuário, com nome do tutor + pet.
-create or replace function public.game_leaderboard(p_game text, p_limit int default 20)
-returns table (
-  user_id uuid,
-  display_name text,
-  pet_id uuid,
-  pet_name text,
-  pet_avatar text,
-  score int,
-  achieved_at timestamptz
-) language sql security definer set search_path = public as $$
-  with best as (
-    select distinct on (gs.user_id) gs.user_id, gs.pet_id, gs.score, gs.created_at
-    from public.game_scores gs
-    where gs.game = p_game
-    order by gs.user_id, gs.score desc, gs.created_at asc
-  )
-  select b.user_id,
-         coalesce(pr.display_name, 'Tutor') as display_name,
-         b.pet_id,
-         p.name as pet_name,
-         p.avatar_url as pet_avatar,
-         b.score,
-         b.created_at as achieved_at
-  from best b
-  left join public.profiles pr on pr.id = b.user_id
-  left join public.pets p on p.id = b.pet_id
-  order by b.score desc, b.created_at asc
-  limit p_limit;
-$$;
-grant execute on function public.game_leaderboard(text, int) to authenticated, anon;
+-- ⚠️ game_leaderboard: DEFINICAO CANONICA em supabase/games-difficulty.sql (v3,
+-- assinatura (text,int,text) com period + tutor_avatar + difficulty + ranking
+-- por score efetivo). NAO redefinir aqui — esta versao antiga (text,int) tem
+-- assinatura DIFERENTE, entao reaplicar cria uma SOBRECARGA que deixa a chamada
+-- do PostgREST ambigua e quebra o frontend (lib/games.ts le entry.difficulty).
+-- Este arquivo continua sendo a fonte da TABELA game_scores + indices + RLS acima.

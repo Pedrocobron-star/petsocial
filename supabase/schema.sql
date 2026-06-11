@@ -1168,6 +1168,9 @@ as $$
   );
 $$;
 
+-- Fonte UNICA desta funcao (free-tier-limits.sql aponta pra ca). Conta 'trialing'
+-- como Pro, igual sync_profile_is_pro (admin-grant-pro.sql).
+revoke all on function public.is_user_pro() from public;
 grant execute on function public.is_user_pro() to authenticated;
 
 -- updated_at automático

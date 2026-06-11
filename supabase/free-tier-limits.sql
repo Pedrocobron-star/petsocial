@@ -33,20 +33,13 @@ GRANT EXECUTE ON FUNCTION public.count_my_posts_today() TO authenticated;
 
 
 -- ----------------------------------------------------------------------------
--- is_user_pro: helper que retorna true se o user atual tem assinatura ativa
+-- ⚠️ is_user_pro: DEFINICAO CANONICA em schema.sql (linhas ~1158). NAO redefinir
+-- aqui. A versao que vivia neste arquivo so contava status='active' e EXCLUIA
+-- 'trialing' (bug: tutor em trial de Pro virava free e era barrado pela trigger
+-- de limite de post abaixo). A canonica conta status in ('active','trialing'),
+-- batendo com sync_profile_is_pro (admin-grant-pro.sql). Reaplicar esta versao
+-- reverteria a regra. Ver schema.sql.
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.is_user_pro()
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.subscriptions
-    WHERE user_id = auth.uid()
-      AND status = 'active'
-  );
-$$;
-
-REVOKE ALL ON FUNCTION public.is_user_pro() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_user_pro() TO authenticated;
 
 
 -- ----------------------------------------------------------------------------

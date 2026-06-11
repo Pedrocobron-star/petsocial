@@ -127,78 +127,14 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function public.tournament_podium(uuid) to authenticated, anon;
 
--- ---- LIFECYCLE (cron horario): finaliza + push -----------------------------
-create or replace function public.tournament_lifecycle()
-returns void language plpgsql security definer set search_path = public as $$
-declare
-  t record;
-  v_url text := 'https://aefrcwysifgniogumxwk.supabase.co/functions/v1/send-web-push';
-  v_headers jsonb := jsonb_build_object('Content-Type', 'application/json');
-  v_uids uuid[];
-begin
-  -- 1) finaliza torneios encerrados -> top 10 vira tournament_winners + push
-  for t in select * from public.tournaments where ends_at <= now() and finalized_at is null loop
-    insert into public.tournament_winners(tournament_id, user_id, rank, score)
-    select t.id, lb.user_id, row_number() over (order by lb.score desc), lb.score
-    from (
-      select gs.user_id,
-             max(gs.score * case coalesce(gs.difficulty, 2) when 1 then 1.0 when 3 then 2.0 else 1.5 end) as score
-      from public.game_scores gs
-      where gs.game = t.game
-        and gs.created_at >= t.starts_at and gs.created_at < t.ends_at
-        and coalesce(gs.difficulty, 2) >= t.min_difficulty
-      group by gs.user_id
-    ) lb
-    order by lb.score desc
-    limit 10
-    on conflict do nothing;
-
-    update public.tournaments set finalized_at = now() where id = t.id;
-
-    select array_agg(user_id) into v_uids from public.tournament_winners where tournament_id = t.id;
-    if v_uids is not null then
-      perform net.http_post(url := v_url, headers := v_headers, body := jsonb_build_object(
-        'user_ids', to_jsonb(v_uids),
-        'title', chr(127942) || ' Torneio encerrado!',
-        'body', 'Veja onde voce ficou no podio de ' || t.title || '.',
-        'url', '/games', 'tag', 'tournament-end'));
-    end if;
-  end loop;
-
-  -- 2) torneios que comecaram (ultimas 2h, nao avisados) -> push geral
-  for t in select * from public.tournaments
-           where starts_at <= now() and starts_at > now() - interval '2 hours' and start_notified_at is null loop
-    select array_agg(distinct user_id) into v_uids from public.push_subscriptions;
-    if v_uids is not null then
-      perform net.http_post(url := v_url, headers := v_headers, body := jsonb_build_object(
-        'user_ids', to_jsonb(v_uids),
-        'title', chr(127942) || ' Novo torneio no Cassino!',
-        'body', t.title || ' comecou. Jogue e dispute o podio!',
-        'url', '/games', 'tag', 'tournament-start'));
-    end if;
-    update public.tournaments set start_notified_at = now() where id = t.id;
-  end loop;
-
-  -- 3) acabando em ~1h -> push pros participantes
-  for t in select * from public.tournaments
-           where ends_at > now() and ends_at <= now() + interval '1 hour' and ending_notified_at is null loop
-    select array_agg(distinct gs.user_id) into v_uids
-    from public.game_scores gs
-    where gs.game = t.game
-      and gs.created_at >= t.starts_at and gs.created_at < t.ends_at
-      and coalesce(gs.difficulty, 2) >= t.min_difficulty
-      and exists (select 1 from public.push_subscriptions ps where ps.user_id = gs.user_id);
-    if v_uids is not null then
-      perform net.http_post(url := v_url, headers := v_headers, body := jsonb_build_object(
-        'user_ids', to_jsonb(v_uids),
-        'title', chr(9203) || ' Torneio acaba em 1h!',
-        'body', 'Ultima chance de subir no podio de ' || t.title || '.',
-        'url', '/games', 'tag', 'tournament-ending'));
-    end if;
-    update public.tournaments set ending_notified_at = now() where id = t.id;
-  end loop;
-end;
-$$;
+-- ---- LIFECYCLE (cron): finaliza + push --------------------------------------
+-- ⚠️ public.tournament_lifecycle() e definida de forma CANONICA em push-harden.sql
+-- (versao que injeta o header x-petsocial-secret exigido pela edge endurecida).
+-- NAO redefinir aqui: reaplicar este arquivo reverteria o segredo e quebraria o
+-- push de torneio (edge responde 401). Ver supabase/push-harden.sql.
+-- (O cron canonico hoje e petsocial-tournaments */15 — ver push-harden.sql.
+-- O schedule 'petsocial-tournament-lifecycle' abaixo e legado; mantido por
+-- compatibilidade mas a funcao que ele chama vem de push-harden.sql.)
 
 select cron.unschedule('petsocial-tournament-lifecycle')
 where exists (select 1 from cron.job where jobname = 'petsocial-tournament-lifecycle');
