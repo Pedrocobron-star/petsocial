@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
+import { TutorLevelBar } from '@/components/tutor-level-bar';
 import { FONTS } from '@/lib/fonts';
 import { fetchTodayMission, qkTodayMission } from '@/lib/daily-missions';
 import { useTheme } from '@/providers/theme-provider';
@@ -142,6 +143,9 @@ export function DailyMissionCard() {
             ) : null}
           </View>
         )}
+
+        {/* Nível de Tutor — é PRA CÁ que os pontos da missão vão (eles sobem seu nível). */}
+        <TutorLevelBar points={m.total_points} />
       </View>
     </View>
   );

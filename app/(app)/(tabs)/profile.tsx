@@ -11,9 +11,11 @@ import { ProfileQuickLinks } from '@/components/profile-quick-links';
 import { StreakBadge } from '@/components/streak-badge';
 import { MotionSwitcher } from '@/components/motion-switcher';
 import { ThemeSwitcher } from '@/components/theme-switcher';
+import { TutorLevelBar } from '@/components/tutor-level-bar';
 import { TutorProfileHero } from '@/components/tutor-profile-hero';
 import { Button } from '@/components/ui/button';
 import { CenteredColumn } from '@/components/ui/centered-column';
+import { fetchTodayMission, qkTodayMission } from '@/lib/daily-missions';
 import { FONTS } from '@/lib/fonts';
 import { fetchProfile, fetchUserPostDates, qk } from '@/lib/queries';
 import { calculateStreak } from '@/lib/streak';
@@ -40,6 +42,15 @@ export default function ProfileScreen() {
     queryFn: () => fetchUserPostDates(userId!),
     enabled: !!userId,
   });
+
+  // Nível de Tutor — pontos acumulados da Missão do Dia (mesmo cache do card do feed).
+  const missionQuery = useQuery({
+    queryKey: qkTodayMission,
+    queryFn: fetchTodayMission,
+    staleTime: 5 * 60_000,
+    enabled: !!userId,
+  });
+  const tutorPoints = missionQuery.data?.total_points;
 
   const streak = streakQuery.data
     ? calculateStreak(streakQuery.data)
@@ -76,6 +87,15 @@ export default function ProfileScreen() {
                 longest={streak.longest}
                 postedToday={streak.postedToday}
               />
+            </View>
+          </CenteredColumn>
+        ) : null}
+
+        {/* Nível de Tutor — onde os pontos da Missão do Dia se acumulam */}
+        {tutorPoints != null ? (
+          <CenteredColumn maxWidth={540}>
+            <View style={{ marginTop: 12 }}>
+              <TutorLevelBar points={tutorPoints} />
             </View>
           </CenteredColumn>
         ) : null}
