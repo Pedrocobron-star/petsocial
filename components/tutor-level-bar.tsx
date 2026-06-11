@@ -1,17 +1,20 @@
-import { Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, Text, View } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
 import { computeTutorLevel } from '@/lib/tutor-level';
 
 /**
- * Barra do Nível de Tutor — mostra que os pontos acumulados da Missão do Dia
- * sobem o seu nível (Filhote → Lenda Pet). Usada no card da missão (feed) e no
- * perfil do tutor.
+ * Barra do Nível de Tutor — mostra que os Pontos de Tutor (saúde + missão +
+ * social) sobem o seu nível (Filhote → Lenda Pet). Usada no card da missão
+ * (feed) e no perfil do tutor. `onPress` (opcional) abre o extrato de pontos.
  */
-export function TutorLevelBar({ points }: { points: number }) {
+export function TutorLevelBar({ points, onPress }: { points: number; onPress?: () => void }) {
   const lvl = computeTutorLevel(points);
+  const Container = onPress ? Pressable : View;
   return (
-    <View
+    <Container
+      onPress={onPress}
       style={{
         backgroundColor: '#FFFFFF',
         borderRadius: 12,
@@ -34,6 +37,7 @@ export function TutorLevelBar({ points }: { points: number }) {
         <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#C2410C' }}>
           {lvl.points} pts
         </Text>
+        {onPress ? <Ionicons name="chevron-forward" size={15} color="#C2410C" /> : null}
       </View>
       <View style={{ height: 7, borderRadius: 999, backgroundColor: '#FFEDD5', overflow: 'hidden' }}>
         <View
@@ -50,6 +54,6 @@ export function TutorLevelBar({ points }: { points: number }) {
           ? 'Nível máximo! você é uma Lenda Pet 👑'
           : `Faltam ${lvl.toNext} pts pra virar ${lvl.nextTitle}`}
       </Text>
-    </View>
+    </Container>
   );
 }

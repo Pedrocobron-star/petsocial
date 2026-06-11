@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -15,9 +15,9 @@ import { TutorLevelBar } from '@/components/tutor-level-bar';
 import { TutorProfileHero } from '@/components/tutor-profile-hero';
 import { Button } from '@/components/ui/button';
 import { CenteredColumn } from '@/components/ui/centered-column';
-import { fetchTodayMission, qkTodayMission } from '@/lib/daily-missions';
 import { FONTS } from '@/lib/fonts';
 import { fetchProfile, fetchUserPostDates, qk } from '@/lib/queries';
+import { fetchMyTutorPoints, qkMyTutorPoints } from '@/lib/tutor-points';
 import { calculateStreak } from '@/lib/streak';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
@@ -29,6 +29,7 @@ export default function ProfileScreen() {
   const { pets, activePet, setActivePet } = useActivePet();
   const { theme } = useTheme();
   const { isPro } = useSubscription();
+  const router = useRouter();
   const userId = session?.user.id;
 
   const profileQuery = useQuery({
@@ -43,14 +44,14 @@ export default function ProfileScreen() {
     enabled: !!userId,
   });
 
-  // Nível de Tutor — pontos acumulados da Missão do Dia (mesmo cache do card do feed).
-  const missionQuery = useQuery({
-    queryKey: qkTodayMission,
-    queryFn: fetchTodayMission,
-    staleTime: 5 * 60_000,
+  // Nível de Tutor — total de PT do ledger (saúde + missão + social).
+  const tutorPtsQuery = useQuery({
+    queryKey: qkMyTutorPoints,
+    queryFn: fetchMyTutorPoints,
+    staleTime: 60_000,
     enabled: !!userId,
   });
-  const tutorPoints = missionQuery.data?.total_points;
+  const tutorPoints = tutorPtsQuery.data;
 
   const streak = streakQuery.data
     ? calculateStreak(streakQuery.data)
@@ -91,11 +92,14 @@ export default function ProfileScreen() {
           </CenteredColumn>
         ) : null}
 
-        {/* Nível de Tutor — onde os pontos da Missão do Dia se acumulam */}
+        {/* Nível de Tutor — total de PT (toque pra ver de onde vêm) */}
         {tutorPoints != null ? (
           <CenteredColumn maxWidth={540}>
             <View style={{ marginTop: 12 }}>
-              <TutorLevelBar points={tutorPoints} />
+              <TutorLevelBar
+                points={tutorPoints}
+                onPress={() => router.push('/(app)/tutor-points' as never)}
+              />
             </View>
           </CenteredColumn>
         ) : null}

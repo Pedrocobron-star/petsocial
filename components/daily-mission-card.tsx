@@ -11,6 +11,7 @@ import {
   qkTodayMission,
 } from '@/lib/daily-missions';
 import { FONTS } from '@/lib/fonts';
+import { fetchMyTutorPoints, qkMyTutorPoints } from '@/lib/tutor-points';
 import { useTheme } from '@/providers/theme-provider';
 
 /**
@@ -30,6 +31,11 @@ export function DailyMissionCard() {
   const rankQuery = useQuery({
     queryKey: qkMyMonthlyMission,
     queryFn: fetchMyMonthlyMissionRank,
+    staleTime: 60_000,
+  });
+  const tutorPtsQuery = useQuery({
+    queryKey: qkMyTutorPoints,
+    queryFn: fetchMyTutorPoints,
     staleTime: 60_000,
   });
 
@@ -154,8 +160,11 @@ export function DailyMissionCard() {
           </View>
         )}
 
-        {/* Nível de Tutor — é PRA CÁ que os pontos da missão vão (eles sobem seu nível). */}
-        <TutorLevelBar points={m.total_points} />
+        {/* Nível de Tutor — soma de TODAS as fontes de PT (saúde + missão + social). */}
+        <TutorLevelBar
+          points={tutorPtsQuery.data ?? m.total_points}
+          onPress={() => router.push('/(app)/tutor-points' as never)}
+        />
 
         {/* Atalho pro ranking MENSAL — o 1º do mês ganha 1 mês de Pro. */}
         <Pressable

@@ -16,15 +16,18 @@ interface TutorTier {
   emoji: string;
 }
 
+// Limiares calibrados pra PT vindo de VÁRIAS fontes (saúde + missão + social),
+// com teto de 120 PT/dia. Um tutor ativo sobe alguns níveis por mês; Lenda Pet
+// (~9k) leva meses de cuidado consistente.
 const TUTOR_TIERS: TutorTier[] = [
   { min: 0, title: 'Filhote', emoji: '🐣' },
-  { min: 45, title: 'Curioso', emoji: '🐶' },
-  { min: 120, title: 'Companheiro', emoji: '🦴' },
-  { min: 250, title: 'Parceiro', emoji: '🐾' },
-  { min: 450, title: 'Melhor Amigo', emoji: '❤️' },
-  { min: 750, title: 'Tutor Dedicado', emoji: '🌟' },
-  { min: 1200, title: 'Tutor Master', emoji: '🏆' },
-  { min: 2000, title: 'Lenda Pet', emoji: '👑' },
+  { min: 150, title: 'Curioso', emoji: '🐶' },
+  { min: 500, title: 'Companheiro', emoji: '🦴' },
+  { min: 1200, title: 'Parceiro', emoji: '🐾' },
+  { min: 2500, title: 'Melhor Amigo', emoji: '❤️' },
+  { min: 4500, title: 'Tutor Dedicado', emoji: '🌟' },
+  { min: 6800, title: 'Tutor Master', emoji: '🏆' },
+  { min: 9000, title: 'Lenda Pet', emoji: '👑' },
 ];
 
 export interface TutorLevel {
