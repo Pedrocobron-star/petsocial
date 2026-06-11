@@ -234,6 +234,14 @@ export default function AdminScreen() {
             bg="#FCE7F3"
           />
           <NavCard
+            href="/(app)/admin/reports"
+            icon="flag"
+            label="Denúncias"
+            sub="Moderar conteúdo reportado"
+            color="#B91C1C"
+            bg="#FEE2E2"
+          />
+          <NavCard
             href="/(app)/admin/adoption"
             icon="heart"
             label="Adoção"

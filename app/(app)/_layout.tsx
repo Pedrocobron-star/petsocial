@@ -156,6 +156,7 @@ export default function AppLayout() {
           <Stack.Screen name="admin/places/new" options={{ headerShown: true, title: 'Novo lugar', presentation: 'modal' }} />
           <Stack.Screen name="admin/places/[id]" options={{ headerShown: true, title: 'Editar lugar' }} />
           <Stack.Screen name="admin/adoption" options={{ headerShown: true, title: 'Adoção · Moderação' }} />
+          <Stack.Screen name="admin/reports" options={{ headerShown: true, title: 'Denúncias · Moderação' }} />
           <Stack.Screen name="admin/notifications" options={{ headerShown: true, title: 'Notificações · Admin' }} />
           <Stack.Screen name="admin/ratings" options={{ headerShown: true, title: 'Avaliações' }} />
           <Stack.Screen name="admin/mozart" options={{ headerShown: true, title: 'Mozart · Admin' }} />
