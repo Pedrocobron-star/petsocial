@@ -24,8 +24,10 @@ create table if not exists public.mission_monthly_winners (
   month_start date primary key,                  -- 1º dia do mês premiado (BRT)
   user_id uuid references auth.users(id) on delete set null,  -- null = mês sem ninguém
   points int not null default 0,
+  note text,                                     -- auditoria: 'ok' / motivo de ficar sem campeão
   awarded_at timestamptz not null default now()
 );
+alter table public.mission_monthly_winners add column if not exists note text;
 alter table public.mission_monthly_winners enable row level security;
 drop policy if exists mmw_read on public.mission_monthly_winners;
 create policy mmw_read on public.mission_monthly_winners for select using (true);

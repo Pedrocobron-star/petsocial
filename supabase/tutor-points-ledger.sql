@@ -239,8 +239,14 @@ $$;
 grant execute on function public.mission_my_monthly() to authenticated;
 
 -- =============================================================================
--- Premiação mensal: campeão = maior PT PONDERADO do mês anterior (lê o ledger).
+-- Premiação mensal: campeão = maior PT PONDERADO do mês anterior (lê o ledger),
+-- COM GATE ANTI-SYBIL na elegibilidade (o prêmio vale 1 mês de Pro de verdade).
+-- Itera candidatos por PT desc e premia o 1o ELEGIVEL (nao o topo cego). NUNCA
+-- bloqueia nenhuma acao do app — so escolhe pra quem o premio vai.
 -- =============================================================================
+-- coluna de auditoria do resultado (porque um mes ficou sem campeao)
+alter table public.mission_monthly_winners add column if not exists note text;
+
 create or replace function public.award_mission_monthly_winner()
 returns void language plpgsql security definer set search_path = public as $$
 declare
@@ -251,23 +257,74 @@ declare
   v_points int;
   v_mozart uuid := 'd0c0ffee-0000-4000-8000-00000000cafe';
   v_conv uuid;
+  -- gate anti-Sybil (constantes tunaveis; ver [[security_referral_hole]])
+  c_min_account_age constant interval := interval '14 days';  -- conta nao recem-criada so pra ganhar
+  c_min_active_days constant int := 8;   -- PT em >= N dias DISTINTOS do mes (presenca distribuida)
+  c_min_engagers    constant int := 3;   -- >= K OUTROS users distintos curtiram/comentaram (Sybil de 1 conta nao forja)
+  r record;
+  v_checked int := 0;
+  v_active_days int;
+  v_engagers int;
 begin
   if exists (select 1 from public.mission_monthly_winners where month_start = v_month_start) then
     return;
   end if;
 
-  select tp.user_id, round(sum(tp.points * public._tp_weight(tp.source)))::int
-  into v_winner, v_points
-  from public.tutor_points tp
-  where tp.created_at >= v_m_start and tp.created_at < v_m_end
-  group by tp.user_id
-  having round(sum(tp.points * public._tp_weight(tp.source))) > 0
-  order by round(sum(tp.points * public._tp_weight(tp.source))) desc, count(*) desc, tp.user_id asc
-  limit 1;
+  -- Candidatos por PT ponderado desc; premia o 1o que passar nos 3 criterios.
+  for r in
+    select tp.user_id as uid, round(sum(tp.points * public._tp_weight(tp.source)))::int as pts
+    from public.tutor_points tp
+    where tp.created_at >= v_m_start and tp.created_at < v_m_end
+    group by tp.user_id
+    having round(sum(tp.points * public._tp_weight(tp.source))) > 0
+    order by round(sum(tp.points * public._tp_weight(tp.source))) desc, count(*) desc, tp.user_id asc
+    limit 50
+  loop
+    v_checked := v_checked + 1;
+
+    -- (1) idade minima da conta
+    if not exists (
+      select 1 from public.profiles pr
+      where pr.id = r.uid and pr.created_at <= now() - c_min_account_age
+    ) then continue; end if;
+
+    -- (2) atividade DISTRIBUIDA: PT em >= N dias distintos do mes (BRT)
+    select count(distinct (tp.created_at at time zone 'America/Sao_Paulo')::date)
+    into v_active_days
+    from public.tutor_points tp
+    where tp.user_id = r.uid and tp.created_at >= v_m_start and tp.created_at < v_m_end;
+    if v_active_days < c_min_active_days then continue; end if;
+
+    -- (3) engajamento de OUTROS users reais nos posts do candidato no mes
+    select count(distinct other_uid) into v_engagers from (
+      select p2.owner_id as other_uid
+      from public.likes l
+      join public.posts po on po.id = l.post_id
+      join public.pets pw on pw.id = po.pet_id and pw.owner_id = r.uid
+      join public.pets p2 on p2.id = l.pet_id
+      where l.created_at >= v_m_start and l.created_at < v_m_end and p2.owner_id <> r.uid
+      union
+      select p2.owner_id
+      from public.comments cm
+      join public.posts po on po.id = cm.post_id
+      join public.pets pw on pw.id = po.pet_id and pw.owner_id = r.uid
+      join public.pets p2 on p2.id = cm.pet_id
+      where cm.created_at >= v_m_start and cm.created_at < v_m_end and p2.owner_id <> r.uid
+    ) e;
+    if v_engagers < c_min_engagers then continue; end if;
+
+    -- passou nos 3: e o campeao
+    v_winner := r.uid;
+    v_points := r.pts;
+    exit;
+  end loop;
 
   if v_winner is null then
-    insert into public.mission_monthly_winners (month_start, user_id, points)
-    values (v_month_start, null, 0) on conflict (month_start) do nothing;
+    insert into public.mission_monthly_winners (month_start, user_id, points, note)
+    values (v_month_start, null, 0,
+      case when v_checked = 0 then 'ninguem pontuou'
+           else 'sem candidato elegivel: '||v_checked||' checados barrados pelo gate anti-Sybil (Pedro pode premiar manual no admin se for legitimo)' end)
+    on conflict (month_start) do nothing;
     return;
   end if;
 
@@ -285,8 +342,8 @@ begin
       (v_winner, 'active', 'monthly', now(), now() + interval '30 days', true, 'sistema:campeao-pt-mensal', now());
   end if;
 
-  insert into public.mission_monthly_winners (month_start, user_id, points)
-  values (v_month_start, v_winner, v_points) on conflict (month_start) do nothing;
+  insert into public.mission_monthly_winners (month_start, user_id, points, note)
+  values (v_month_start, v_winner, v_points, 'ok') on conflict (month_start) do nothing;
 
   insert into public.notifications (user_id, kind, title, body, url, created_at)
   values (v_winner, 'broadcast', 'Você é o campeão do mês! 🏆',
