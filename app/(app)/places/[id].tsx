@@ -32,6 +32,17 @@ import { useToast } from '@/providers/toast-provider';
 
 const ADMIN_EMAIL = 'pedrocobron@gmail.com';
 const MAX_PLACE_PHOTOS = 12;
+const MAX_REVIEW_PHOTOS = 4;
+
+// Categorias de nota estilo Google Maps (todas opcionais; a nota geral é o `rating`).
+const ASPECTS = [
+  { key: 'rating_service', label: 'Atendimento', emoji: '🤝' },
+  { key: 'rating_price', label: 'Custo-benefício', emoji: '💸' },
+  { key: 'rating_cleanliness', label: 'Limpeza', emoji: '🧼' },
+  { key: 'rating_petfriendly', label: 'Pet-friendly', emoji: '🐾' },
+] as const;
+
+type AspectKey = (typeof ASPECTS)[number]['key'];
 
 export default function PlaceDetailScreen() {
   return (
@@ -60,7 +71,7 @@ function PlaceDetailInner() {
   });
 
   const place = placeQuery.data;
-  const reviews = reviewsQuery.data ?? [];
+  const reviews = useMemo(() => reviewsQuery.data ?? [], [reviewsQuery.data]);
   const myReview = reviews.find((r) => r.user_id === session?.user.id) ?? null;
   const meta = place ? placeKindMeta(place.kind) : null;
 
@@ -102,6 +113,17 @@ function PlaceDetailInner() {
       if (r.rating >= 1 && r.rating <= 5) counts[r.rating - 1]++;
     }
     return counts;
+  }, [reviews]);
+
+  // Médias por categoria (estilo Google Maps): só aspectos que alguém avaliou.
+  const aspectAverages = useMemo(() => {
+    return ASPECTS.map((a) => {
+      const vals = reviews
+        .map((r) => r[a.key])
+        .filter((v): v is number => v != null);
+      const avg = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+      return { ...a, avg, count: vals.length };
+    }).filter((a) => a.avg != null);
   }, [reviews]);
 
   if (placeQuery.isLoading) {
@@ -412,6 +434,52 @@ function PlaceDetailInner() {
             </View>
           ) : null}
 
+          {/* Médias por categoria — estilo Google Maps */}
+          {aspectAverages.length > 0 ? (
+            <View style={{ backgroundColor: theme.surface, borderRadius: 14, padding: 14, gap: 10 }}>
+              <Text
+                style={{
+                  fontFamily: FONTS.bodyBold,
+                  fontSize: 11,
+                  letterSpacing: 1.2,
+                  textTransform: 'uppercase',
+                  color: theme.textDim,
+                }}
+              >
+                Notas por categoria
+              </Text>
+              {aspectAverages.map((a) => (
+                <View key={a.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={{ fontSize: 15, width: 22 }}>{a.emoji}</Text>
+                  <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 13, color: theme.text }}>
+                    {a.label}
+                  </Text>
+                  <View
+                    style={{
+                      flex: 1.4,
+                      height: 6,
+                      backgroundColor: theme.borderLight,
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: `${((a.avg ?? 0) / 5) * 100}%`,
+                        height: '100%',
+                        backgroundColor: '#F59E0B',
+                        borderRadius: 3,
+                      }}
+                    />
+                  </View>
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.text, width: 30, textAlign: 'right' }}>
+                    {a.avg!.toFixed(1)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
           <View style={{ height: 1, backgroundColor: theme.border, marginVertical: 2 }} />
 
           <Text
@@ -693,13 +761,17 @@ function InfoRow({ icon, text, onPress }: { icon: keyof typeof Ionicons.glyphMap
 
 function ReviewCard({ review }: { review: PlaceReviewWithProfile }) {
   const { theme } = useTheme();
+  const [viewer, setViewer] = useState<string | null>(null);
+  const photos = review.photo_urls ?? [];
+  const filledAspects = ASPECTS.filter((a) => review[a.key] != null);
+
   return (
     <View
       style={{
         backgroundColor: theme.surface,
         borderRadius: 12,
         padding: 12,
-        gap: 6,
+        gap: 8,
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -720,11 +792,71 @@ function ReviewCard({ review }: { review: PlaceReviewWithProfile }) {
           {formatDistanceToNow(new Date(review.created_at), { locale: ptBR, addSuffix: true })}
         </Text>
       </View>
+
+      {/* Sub-notas por categoria (estilo Google Maps) */}
+      {filledAspects.length > 0 ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+          {filledAspects.map((a) => (
+            <View
+              key={a.key}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 3,
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 999,
+                backgroundColor: theme.borderLight,
+              }}
+            >
+              <Text style={{ fontSize: 11 }}>{a.emoji}</Text>
+              <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textMuted }}>
+                {a.label}
+              </Text>
+              <Ionicons name="star" size={10} color="#F59E0B" />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.text }}>
+                {review[a.key]}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       {review.comment ? (
         <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.textMuted, lineHeight: 18 }}>
           {review.comment}
         </Text>
       ) : null}
+
+      {/* Fotos da avaliação */}
+      {photos.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          {photos.map((url) => (
+            <Pressable key={url} onPress={() => setViewer(url)}>
+              <Image
+                source={{ uri: url }}
+                style={{ width: 92, height: 92, borderRadius: 10, backgroundColor: theme.borderLight }}
+                resizeMode="cover"
+              />
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : null}
+
+      <Modal visible={!!viewer} transparent animationType="fade" onRequestClose={() => setViewer(null)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center' }}>
+          <Pressable
+            onPress={() => setViewer(null)}
+            style={{ position: 'absolute', top: 50, right: 20, zIndex: 2, padding: 8 }}
+            hitSlop={12}
+          >
+            <Ionicons name="close" size={30} color="#FFFFFF" />
+          </Pressable>
+          {viewer ? (
+            <Image source={{ uri: viewer }} style={{ width: '100%', height: '70%' }} resizeMode="contain" />
+          ) : null}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -742,8 +874,67 @@ function ReviewForm({
 }) {
   const { theme } = useTheme();
   const { session } = useSession();
+  const toast = useToast();
   const [rating, setRating] = useState(existing?.rating ?? 5);
   const [comment, setComment] = useState(existing?.comment ?? '');
+  const [aspects, setAspects] = useState<Record<AspectKey, number | null>>({
+    rating_service: existing?.rating_service ?? null,
+    rating_price: existing?.rating_price ?? null,
+    rating_cleanliness: existing?.rating_cleanliness ?? null,
+    rating_petfriendly: existing?.rating_petfriendly ?? null,
+  });
+  const [photoUrls, setPhotoUrls] = useState<string[]>(existing?.photo_urls ?? []);
+  const [uploading, setUploading] = useState(false);
+  // Fotos que JÁ estão salvas na review: não apagar do storage até o save confirmar
+  // (senão cancelar a edição deixaria link morto na review persistida).
+  const originalPhotos = existing?.photo_urls ?? [];
+
+  const pickPhoto = async () => {
+    if (!session?.user.id) return;
+    if (photoUrls.length >= MAX_REVIEW_PHOTOS) {
+      toast.info(`Máximo ${MAX_REVIEW_PHOTOS} fotos por avaliação`);
+      return;
+    }
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      toast.error('Permissão negada', 'Libere o acesso à galeria pra anexar foto');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    setUploading(true);
+    try {
+      const asset = result.assets[0];
+      const ext = guessExtension(asset.uri, 'jpg');
+      const url = await uploadToBucket('posts', session.user.id, asset.uri, ext);
+      setPhotoUrls((prev) => [...prev, url]);
+    } catch (e) {
+      toast.error('Erro no upload', e instanceof Error ? e.message : '');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (url: string) => {
+    setPhotoUrls((prev) => prev.filter((u) => u !== url));
+    // Só apaga do storage AGORA se a foto foi subida nesta sessão (não persistida).
+    // Foto que já estava na review é apagada só quando o save confirmar (ver onSuccess).
+    if (!originalPhotos.includes(url)) {
+      deleteFromBucket('posts', url).catch(() => undefined);
+    }
+  };
+
+  // Cancelar: limpa do storage as fotos subidas nesta sessão que não foram salvas.
+  const handleCancel = () => {
+    for (const url of photoUrls) {
+      if (!originalPhotos.includes(url)) deleteFromBucket('posts', url).catch(() => undefined);
+    }
+    onCancel();
+  };
 
   const saveMut = useMutation({
     mutationFn: () =>
@@ -752,8 +943,19 @@ function ReviewForm({
         user_id: session!.user.id,
         rating,
         comment: comment.trim() || undefined,
+        photo_urls: photoUrls,
+        rating_service: aspects.rating_service,
+        rating_price: aspects.rating_price,
+        rating_cleanliness: aspects.rating_cleanliness,
+        rating_petfriendly: aspects.rating_petfriendly,
       }),
-    onSuccess: onSaved,
+    onSuccess: () => {
+      // Save confirmado: agora sim apaga do storage as fotos originais que foram removidas.
+      for (const url of originalPhotos) {
+        if (!photoUrls.includes(url)) deleteFromBucket('posts', url).catch(() => undefined);
+      }
+      onSaved();
+    },
   });
 
   return (
@@ -767,7 +969,7 @@ function ReviewForm({
         borderColor: theme.border,
       }}
     >
-      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }}>Sua avaliação</Text>
+      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }}>Nota geral</Text>
       <View style={{ flexDirection: 'row', gap: 4 }}>
         {[1, 2, 3, 4, 5].map((n) => (
           <Pressable key={n} onPress={() => setRating(n)} hitSlop={6}>
@@ -775,6 +977,37 @@ function ReviewForm({
           </Pressable>
         ))}
       </View>
+
+      {/* Notas por categoria (opcionais) — estilo Google Maps */}
+      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.textDim }}>
+        Avalie por categoria (opcional)
+      </Text>
+      {ASPECTS.map((a) => (
+        <View key={a.key} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.text }}>
+            {a.emoji} {a.label}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 2 }}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Pressable
+                key={n}
+                hitSlop={4}
+                onPress={() =>
+                  // toca na estrela já marcada = limpa a categoria
+                  setAspects((prev) => ({ ...prev, [a.key]: prev[a.key] === n ? null : n }))
+                }
+              >
+                <Ionicons
+                  name={(aspects[a.key] ?? 0) >= n ? 'star' : 'star-outline'}
+                  size={22}
+                  color="#F59E0B"
+                />
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      ))}
+
       <TextInput
         value={comment}
         onChangeText={setComment}
@@ -793,12 +1026,75 @@ function ReviewForm({
           textAlignVertical: 'top',
         }}
       />
+
+      {/* Fotos da avaliação */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+        {photoUrls.map((url) => (
+          <View key={url}>
+            <Image
+              source={{ uri: url }}
+              style={{ width: 70, height: 70, borderRadius: 10, backgroundColor: theme.borderLight }}
+              resizeMode="cover"
+            />
+            <Pressable
+              onPress={() => removePhoto(url)}
+              hitSlop={6}
+              style={{
+                position: 'absolute',
+                top: -6,
+                right: -6,
+                backgroundColor: '#DC2626',
+                borderRadius: 999,
+                width: 20,
+                height: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="close" size={13} color="#FFFFFF" />
+            </Pressable>
+          </View>
+        ))}
+        {photoUrls.length < MAX_REVIEW_PHOTOS ? (
+          <Pressable
+            onPress={pickPhoto}
+            disabled={uploading}
+            style={{
+              width: 70,
+              height: 70,
+              borderRadius: 10,
+              borderWidth: 1.5,
+              borderColor: theme.border,
+              borderStyle: 'dashed',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 2,
+            }}
+          >
+            {uploading ? (
+              <ActivityIndicator size="small" color={theme.accent.color} />
+            ) : (
+              <>
+                <Ionicons name="camera" size={20} color={theme.accent.color} />
+                <Text style={{ fontFamily: FONTS.body, fontSize: 9, color: theme.textDim }}>Foto</Text>
+              </>
+            )}
+          </Pressable>
+        ) : null}
+      </View>
+
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <View style={{ flex: 1 }}>
-          <Button title="Cancelar" variant="secondary" onPress={onCancel} fullWidth />
+          <Button title="Cancelar" variant="secondary" onPress={handleCancel} fullWidth />
         </View>
         <View style={{ flex: 1 }}>
-          <Button title="Enviar" onPress={() => saveMut.mutate()} loading={saveMut.isPending} fullWidth />
+          <Button
+            title="Enviar"
+            onPress={() => saveMut.mutate()}
+            loading={saveMut.isPending}
+            disabled={uploading}
+            fullWidth
+          />
         </View>
       </View>
     </View>

@@ -10,14 +10,17 @@
  *  Se o volume crescer, mover pra uma edge function com User-Agent próprio.
  */
 
-export async function geocodeAddress(query: string): Promise<{ lat: number; lng: number } | null> {
+export async function geocodeAddress(
+  query: string,
+  signal?: AbortSignal,
+): Promise<{ lat: number; lng: number } | null> {
   const q = query.trim();
   if (q.length < 4) return null;
   try {
     const url =
       'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&q=' +
       encodeURIComponent(q);
-    const res = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+    const res = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' }, signal });
     if (!res.ok) return null;
     const arr = (await res.json()) as { lat?: string; lon?: string }[];
     if (!Array.isArray(arr) || arr.length === 0) return null;

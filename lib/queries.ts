@@ -2483,10 +2483,42 @@ export async function upsertPlaceReview(input: {
   user_id: string;
   rating: number;
   comment?: string;
+  photo_urls?: string[];
+  rating_service?: number | null;
+  rating_price?: number | null;
+  rating_cleanliness?: number | null;
+  rating_petfriendly?: number | null;
 }): Promise<void> {
+  // Payload explícito: garante que limpar uma sub-nota/foto grave null/[] no upsert
+  // (em vez de manter o valor antigo).
+  const payload = {
+    place_id: input.place_id,
+    user_id: input.user_id,
+    rating: input.rating,
+    comment: input.comment ?? null,
+    photo_urls: input.photo_urls ?? [],
+    rating_service: input.rating_service ?? null,
+    rating_price: input.rating_price ?? null,
+    rating_cleanliness: input.rating_cleanliness ?? null,
+    rating_petfriendly: input.rating_petfriendly ?? null,
+  };
   const { error } = await supabase
     .from('place_reviews')
-    .upsert(input, { onConflict: 'place_id,user_id' });
+    .upsert(payload, { onConflict: 'place_id,user_id' });
+  if (error) throw error;
+}
+
+/**
+ * Preenche lat/lng de um lugar SÓ se ainda estiver sem coordenada (geocode
+ * comunitário, via RPC SECURITY DEFINER — RLS de places não deixa qualquer um
+ * dar UPDATE). Idempotente; não move lugar já posicionado.
+ */
+export async function setPlaceCoords(placeId: string, lat: number, lng: number): Promise<void> {
+  const { error } = await supabase.rpc('set_place_coords', {
+    p_place_id: placeId,
+    p_lat: lat,
+    p_lng: lng,
+  });
   if (error) throw error;
 }
 

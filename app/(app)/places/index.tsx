@@ -1,17 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
 import { PlacesMap } from '@/components/places-map';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
+import { buildPlaceQuery, geocodeAddress } from '@/lib/geocode';
 import { formatDistance, getCurrentPosition, haversineKm, type Coords } from '@/lib/geo';
 import { PLACE_KIND_META, placeKindMeta } from '@/lib/places-meta';
-import { fetchPlaces, qk } from '@/lib/queries';
+import { fetchPlaces, qk, setPlaceCoords } from '@/lib/queries';
 import type { PlaceKind, PlaceSpecies, PlaceWithStats } from '@/lib/types';
 import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useTheme } from '@/providers/theme-provider';
@@ -68,6 +69,10 @@ function PlacesInner() {
   const [myLoc, setMyLoc] = useState<Coords | null>(null);
   const [locating, setLocating] = useState(false);
   const [nearMeTried, setNearMeTried] = useState(false);
+  const qc = useQueryClient();
+  // Lugares já tentados geocodar nesta sessão (evita re-tentar falhas em loop).
+  const geocodeTriedRef = useRef<Set<string>>(new Set());
+  const [geocodingLeft, setGeocodingLeft] = useState(0);
 
   // Toggle "perto de mim": pega localização e ordena por distância (sobrepõe o sort).
   const toggleNearMe = async () => {
@@ -132,6 +137,60 @@ function PlacesInner() {
       return sp === 'all' || sp === species;
     });
   }, [query.data, sort, species, myLoc]);
+
+  // LISTA ↔ MAPA: ao abrir o Mapa, geocoda (Nominatim/OSM, grátis) os lugares que
+  // têm endereço mas ainda não têm coordenada, e grava de volta (RPC set_place_coords).
+  // Assim todo lugar da lista também aparece no mapa. Throttle de 1,2s respeita o
+  // ToS do Nominatim (≤1 req/s); cap de 20 por abertura pra não martelar o serviço.
+  useEffect(() => {
+    if (view !== 'map') return;
+    const all = query.data ?? [];
+    const pending = all.filter(
+      (p) =>
+        p.latitude == null &&
+        p.address &&
+        p.address.trim().length > 3 &&
+        !geocodeTriedRef.current.has(p.id),
+    );
+    if (pending.length === 0) return;
+
+    let cancelled = false;
+    const controller = new AbortController();
+    (async () => {
+      const batch = pending.slice(0, 20);
+      setGeocodingLeft(batch.length);
+      let filled = 0;
+      for (const p of batch) {
+        if (cancelled) break;
+        geocodeTriedRef.current.add(p.id);
+        try {
+          const g = await geocodeAddress(
+            buildPlaceQuery(p.address, p.city ?? undefined, p.state ?? undefined),
+            controller.signal,
+          );
+          if (g) {
+            await setPlaceCoords(p.id, g.lat, g.lng);
+            filled++;
+          }
+        } catch {
+          // best-effort (inclui abort) — segue/encerra
+        }
+        if (cancelled) break;
+        setGeocodingLeft((n) => Math.max(0, n - 1));
+        // throttle pro ToS do Nominatim (1 req/s)
+        await new Promise((r) => setTimeout(r, 1200));
+      }
+      if (!cancelled) {
+        setGeocodingLeft(0);
+        if (filled > 0) qc.invalidateQueries({ queryKey: ['places'] });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      controller.abort(); // aborta o fetch em voo → sem 2 requests concorrentes no toggle rápido
+    };
+  }, [view, query.data, qc]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -394,17 +453,39 @@ function PlacesInner() {
       </View>
 
       {view === 'map' ? (
-        <PlacesMap
-          places={places.map((p) => ({
-            id: p.id,
-            name: p.name,
-            latitude: p.latitude,
-            longitude: p.longitude,
-            emoji: placeKindMeta(p.kind).emoji,
-          }))}
-          onSelect={(id) => router.push({ pathname: '/places/[id]', params: { id } } as never)}
-          accent={theme.accent.color}
-        />
+        <View style={{ flex: 1 }}>
+          {geocodingLeft > 0 ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                backgroundColor: theme.accent.surface,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.border,
+              }}
+            >
+              <ActivityIndicator size="small" color={theme.accent.color} />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.accent.dark }}>
+                Localizando lugares no mapa… ({geocodingLeft})
+              </Text>
+            </View>
+          ) : null}
+          <PlacesMap
+            places={places.map((p) => ({
+              id: p.id,
+              name: p.name,
+              latitude: p.latitude,
+              longitude: p.longitude,
+              emoji: placeKindMeta(p.kind).emoji,
+            }))}
+            onSelect={(id) => router.push({ pathname: '/places/[id]', params: { id } } as never)}
+            accent={theme.accent.color}
+          />
+        </View>
       ) : (
       <FlatList
         data={places}

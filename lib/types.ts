@@ -692,6 +692,11 @@ export interface PlaceReview {
   user_id: string;
   rating: number;
   comment: string | null;
+  photo_urls: string[];
+  rating_service: number | null;
+  rating_price: number | null;
+  rating_cleanliness: number | null;
+  rating_petfriendly: number | null;
   created_at: string;
   updated_at: string;
 }
