@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { DateTimePickerInput } from '@/components/ui/datetime-picker';
 import { Input } from '@/components/ui/input';
@@ -47,6 +48,7 @@ function toISODate(s: string): string {
 
 export default function PetDiaryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { session } = useSession();
   const { activePet } = useActivePet();
   const qc = useQueryClient();
@@ -186,6 +188,8 @@ export default function PetDiaryScreen() {
       },
     ]);
   };
+
+  if (healthGate) return healthGate;
 
   return (
     <ScrollView className="flex-1" contentContainerClassName="pb-12" style={{ backgroundColor: '#FFFBF5' }}>

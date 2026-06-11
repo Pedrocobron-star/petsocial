@@ -9,6 +9,7 @@ import { Alert, Image, Pressable, ScrollView, Text, TextInput, View } from 'reac
 
 import { EmptyState } from '@/components/empty-state';
 import { HealthListSkeleton } from '@/components/health/health-list-skeleton';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import {
@@ -69,6 +70,7 @@ const BODY_PART_CHIPS = [
 
 export default function SymptomsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const qc = useQueryClient();
   const toast = useToast();
@@ -131,6 +133,8 @@ export default function SymptomsScreen() {
       toast.error('Erro ao gerar PDF', e instanceof Error ? e.message : '');
     }
   };
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

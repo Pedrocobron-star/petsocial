@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 
 import { PaywallCard } from '@/components/paywall-card';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { PremiumBadge } from '@/components/premium-badge';
 import { TypingDots } from '@/components/typing-dots';
 import { UpgradeModal } from '@/components/upgrade-modal';
@@ -44,6 +45,7 @@ const FREE_AI_DAILY_LIMIT = 5;
 
 export default function AiAssistantScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const { session } = useSession();
   const isPro = useIsPro();
@@ -170,6 +172,8 @@ export default function AiAssistantScreen() {
       ],
     );
   };
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

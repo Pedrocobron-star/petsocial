@@ -12,6 +12,7 @@ import { EventForm } from '@/components/agenda/event-form';
 import { EventMoodLog } from '@/components/agenda/event-mood-log';
 import { EventTemplatePicker } from '@/components/agenda/event-template-picker';
 import { EmptyState } from '@/components/empty-state';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { groupByDay, mergeIntoAgenda } from '@/lib/agenda-merge';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
@@ -55,6 +56,7 @@ const FILTER_OPTIONS: { value: FilterPeriod; label: string }[] = [
  */
 export default function PetAgendaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { session } = useSession();
   const { theme } = useTheme();
   const toast = useToast();
@@ -201,6 +203,8 @@ export default function PetAgendaScreen() {
       return d >= start ? acc + log.actual_cost : acc;
     }, 0);
   }, [rawQuery.data]);
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

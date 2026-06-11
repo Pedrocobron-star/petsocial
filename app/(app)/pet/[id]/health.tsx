@@ -8,6 +8,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { AreaHero } from '@/components/area-hero';
 import { HealthListSkeleton } from '@/components/health/health-list-skeleton';
 import { HealthScoreCard } from '@/components/health/health-score-card';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { HealthRecordPdfButton } from '@/components/health/health-record-pdf-button';
 import { HealthScoreTrend } from '@/components/health/health-score-trend';
 import { HealthShareButton } from '@/components/health/health-share-button';
@@ -47,6 +48,7 @@ export default function HealthHubScreen() {
 
 function HealthHubInner() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
 
   const petQuery = useQuery({ queryKey: qk.pet(id), queryFn: () => fetchPet(id), enabled: !!id });
@@ -98,6 +100,8 @@ function HealthHubInner() {
         (c.key === 'vaccines' || c.key === 'parasites' || c.key === 'vet_visits') &&
         c.status !== 'na',
     ).length === 0;
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

@@ -8,6 +8,7 @@ import { Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'r
 import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
 
 import { EmptyState } from '@/components/empty-state';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import {
@@ -22,6 +23,7 @@ import { useTheme } from '@/providers/theme-provider';
 
 export default function WeightScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const qc = useQueryClient();
   const toast = useToast();
@@ -46,6 +48,8 @@ export default function WeightScreen() {
   const last = records.length > 0 ? records[records.length - 1] : null;
   const first = records.length > 1 ? records[0] : null;
   const diff = last && first ? Number((last.weight_kg - first.weight_kg).toFixed(2)) : 0;
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

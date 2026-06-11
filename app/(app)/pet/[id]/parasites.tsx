@@ -9,6 +9,7 @@ import { Alert, FlatList, Modal, Pressable, ScrollView, Text, View } from 'react
 import { EmptyState } from '@/components/empty-state';
 import { ParasiteProductPicker } from '@/components/parasite-product-picker';
 import { ParasiteTreatmentCard } from '@/components/parasite-treatment-card';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { DateTimePickerInput } from '@/components/ui/datetime-picker';
@@ -63,6 +64,7 @@ interface FormPrefill {
 
 export default function ParasitesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { session } = useSession();
   const { theme } = useTheme();
   const toast = useToast();
@@ -174,6 +176,8 @@ export default function ParasitesScreen() {
       },
     ]);
   };
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

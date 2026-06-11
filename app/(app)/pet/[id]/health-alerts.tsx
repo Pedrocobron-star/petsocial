@@ -6,6 +6,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { HealthListSkeleton } from '@/components/health/health-list-skeleton';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { PaywallCard } from '@/components/paywall-card';
 import { FONTS } from '@/lib/fonts';
 import {
@@ -48,6 +49,7 @@ const CATEGORY_LABELS: Record<AlertCategory, string> = {
 
 export default function HealthAlertsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const isPro = useIsPro();
 
@@ -107,6 +109,8 @@ export default function HealthAlertsScreen() {
     summaryQuery.isLoading ||
     parasitesQuery.isLoading ||
     symptomsQuery.isLoading;
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

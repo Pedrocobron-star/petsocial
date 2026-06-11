@@ -9,6 +9,7 @@ import { Dimensions, FlatList, Modal, Pressable, ScrollView, Text, View } from '
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import { EmptyState } from '@/components/empty-state';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
 import { EVENT_KIND_META } from '@/lib/event-templates';
@@ -52,6 +53,7 @@ const MOOD_EMOJI: Record<number, string> = {
  */
 export default function AgendaPhotosScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
 
   const petQuery = useQuery({
@@ -116,6 +118,8 @@ export default function AgendaPhotosScreen() {
   const SCREEN_W = Dimensions.get('window').width;
   const gridWidth = Math.min(SCREEN_W - FEED_CARD_MARGIN * 2, MAX_FEED_WIDTH);
   const tileSize = (gridWidth - 8) / 3;
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

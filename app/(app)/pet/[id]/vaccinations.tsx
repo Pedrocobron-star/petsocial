@@ -8,6 +8,7 @@ import { Alert, FlatList, Modal, Pressable, ScrollView, Text, View } from 'react
 
 import { EmptyState } from '@/components/empty-state';
 import { HealthListSkeleton } from '@/components/health/health-list-skeleton';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { DateTimePickerInput } from '@/components/ui/datetime-picker';
 import { Input } from '@/components/ui/input';
@@ -53,6 +54,7 @@ function toISODate(d: Date | null): string | null {
 
 export default function VaccinationsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { session } = useSession();
   const qc = useQueryClient();
   const toast = useToast();
@@ -127,6 +129,8 @@ export default function VaccinationsScreen() {
       },
     ]);
   };
+
+  if (healthGate) return healthGate;
 
   return (
     <View className="flex-1 bg-neutral-50">

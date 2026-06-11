@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import {
@@ -31,6 +32,7 @@ const FREQ_LABEL: Record<MedicationFrequency, string> = {
 
 export default function MedicationsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const qc = useQueryClient();
   const toast = useToast();
@@ -73,6 +75,8 @@ export default function MedicationsScreen() {
   const meds = listQuery.data ?? [];
   const active = meds.filter((m) => m.active);
   const inactive = meds.filter((m) => !m.active);
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

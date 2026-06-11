@@ -8,6 +8,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { PetAvatar } from '@/components/pet-avatar';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
 import { fetchPetDocuments } from '@/lib/documents';
@@ -27,6 +28,7 @@ import { useToast } from '@/providers/toast-provider';
 
 export default function PetRecapScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const toast = useToast();
 
@@ -69,6 +71,8 @@ export default function PetRecapScreen() {
       url: petUrl(pet.id),
     });
   };
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#1A1410' }}>

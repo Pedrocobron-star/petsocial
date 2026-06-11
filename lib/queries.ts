@@ -155,6 +155,17 @@ export async function fetchPet(petId: string): Promise<Pet | null> {
   return data;
 }
 
+/**
+ * Posso ver a saúde/histórico privado desse pet? (dono OU co-tutor aceito).
+ * Espelha o RLS `can_view_pet` via RPC `can_view_pet_rpc`. Usado pelo guard das
+ * telas médicas pra mostrar "Informações privadas" ao visitante.
+ */
+export async function canViewPet(petId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('can_view_pet_rpc', { pet_uuid: petId });
+  if (error) return false;
+  return data === true;
+}
+
 export async function fetchPetStats(petId: string) {
   const { data, error } = await supabase
     .from('pet_stats')

@@ -5,6 +5,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, Dimensions, Pressable, ScrollView, Share, Text, View } from 'react-native';
 
 import { PetAvatar } from '@/components/pet-avatar';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { fetchTimeCapsule, qk } from '@/lib/queries';
@@ -15,6 +16,7 @@ const { width: SCREEN_W } = Dimensions.get('window');
 
 export default function TimeCapsuleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const router = useRouter();
 
@@ -24,6 +26,7 @@ export default function TimeCapsuleScreen() {
     enabled: !!id,
   });
 
+  if (healthGate) return healthGate;
   if (!query.data) return null;
   const { pet, topPosts, stats, monthlyHighlights } = query.data;
 

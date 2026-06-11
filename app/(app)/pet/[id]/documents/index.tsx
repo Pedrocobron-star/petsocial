@@ -18,6 +18,7 @@ import {
 import Animated, { FadeIn, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 import { EmptyState } from '@/components/empty-state';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
 import {
@@ -61,6 +62,7 @@ function parseBrDate(s: string): string | null {
 
 export default function PetDocumentsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const toast = useToast();
   const router = useRouter();
@@ -153,6 +155,8 @@ export default function PetDocumentsScreen() {
   });
 
   const pet = petQuery.data;
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

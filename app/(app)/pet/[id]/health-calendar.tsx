@@ -16,6 +16,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { FONTS } from '@/lib/fonts';
 import {
   fetchHealthEventsRange,
@@ -40,6 +41,7 @@ const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
 export default function HealthCalendarScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const [cursor, setCursor] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(new Date());
@@ -65,6 +67,8 @@ export default function HealthCalendarScreen() {
   const selectedEvents = selectedDay
     ? eventsByDay.get(format(selectedDay, 'yyyy-MM-dd')) ?? []
     : [];
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

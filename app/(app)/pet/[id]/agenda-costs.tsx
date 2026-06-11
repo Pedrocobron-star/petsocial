@@ -8,6 +8,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
 
 import { EmptyState } from '@/components/empty-state';
+import { usePetHealthGate } from '@/components/pet-health-gate';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
 import { EVENT_KIND_META } from '@/lib/event-templates';
@@ -31,6 +32,7 @@ const PERIOD_OPTIONS: { value: Period; label: string; months: number }[] = [
  */
 export default function AgendaCostsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const [period, setPeriod] = useState<Period>('last_3');
 
@@ -103,6 +105,8 @@ export default function AgendaCostsScreen() {
   }, [periodLogs, periodMonths]);
 
   const hasData = grandTotal > 0;
+
+  if (healthGate) return healthGate;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
