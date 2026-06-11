@@ -52,6 +52,12 @@ export default function PetProfileScreen() {
     enabled: !!id,
   });
   const pet = petQuery.data;
+  const myUserId = session?.user.id;
+  // Dono = a CONTA é dona do pet (não "é o pet ativo"). Antes usava
+  // activePet?.id === id, então ver um pet PRÓPRIO não-ativo mostrava
+  // "+ Seguir/Mensagem" em vez de "Editar" (bug pra quem tem vários pets).
+  const isOwn = !!pet && pet.owner_id === myUserId;
+
   const statsQuery = useQuery({
     queryKey: qk.petStats(id),
     queryFn: () => fetchPetStats(id),
@@ -62,15 +68,17 @@ export default function PetProfileScreen() {
     queryFn: () => fetchPostsByPet(id, activePet!.id),
     enabled: !!id && !!activePet,
   });
+  // Dados médicos: só busca se for o DONO. Visitante (perfil público) nem
+  // chega a baixar a carteira de vacinas/antiparasitário do pet alheio.
   const vaccinationsQuery = useQuery({
     queryKey: qk.vaccinations(id),
     queryFn: () => fetchVaccinations(id),
-    enabled: !!id,
+    enabled: !!id && isOwn,
   });
   const parasiteSummaryQuery = useQuery({
     queryKey: qk.parasiteSummary(id),
     queryFn: () => fetchParasiteSummary(id),
-    enabled: !!id,
+    enabled: !!id && isOwn,
   });
   const followingQuery = useQuery({
     queryKey: ['following', activePet?.id, id],
@@ -107,7 +115,6 @@ export default function PetProfileScreen() {
   });
 
   const [reportOpen, setReportOpen] = useState(false);
-  const myUserId = session?.user.id;
   const blockedQuery = useQuery({
     queryKey: pet && myUserId ? qk.isBlocked(myUserId, pet.owner_id) : ['is-blocked', 'none'],
     queryFn: () => isUserBlocked(myUserId!, pet!.owner_id),
@@ -158,11 +165,6 @@ export default function PetProfileScreen() {
       },
     ]);
   };
-
-  // Dono = a CONTA é dona do pet (não "é o pet ativo"). Antes usava
-  // activePet?.id === id, então ver um pet PRÓPRIO não-ativo mostrava
-  // "+ Seguir/Mensagem" em vez de "Editar" (bug pra quem tem vários pets).
-  const isOwn = !!pet && pet.owner_id === myUserId;
 
   const onShare = async () => {
     if (!pet) return;
@@ -263,13 +265,17 @@ export default function PetProfileScreen() {
           </CenteredColumn>
         ) : null}
 
-        {/* Quick Actions (Saúde, Vacinas, Diário, IA, Retrospectiva) */}
-        <PetQuickActions
-          petId={id}
-          isOwn={isOwn}
-          vaccinations={vaccinationsQuery.data ?? []}
-          parasiteSummary={parasiteSummaryQuery.data}
-        />
+        {/* Quick Actions (Saúde, Vacinas, Diário, Carteirinha, IA…) — SÓ pro dono.
+            No perfil público (visitante) o perfil é estilo Instagram: só os posts.
+            Nada de vacinas / saúde / diário / carteirinha de pet alheio. */}
+        {isOwn ? (
+          <PetQuickActions
+            petId={id}
+            isOwn={isOwn}
+            vaccinations={vaccinationsQuery.data ?? []}
+            parasiteSummary={parasiteSummaryQuery.data}
+          />
+        ) : null}
 
         {/* Separador antes do grid */}
         <CenteredColumn maxWidth={540}>
