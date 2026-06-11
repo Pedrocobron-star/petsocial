@@ -2355,12 +2355,31 @@ export async function fetchPlaces(filter: {
   kind?: PlaceKind;
   city?: string;
   search?: string;
+  near?: { lat: number; lng: number };
 }): Promise<PlaceWithStats[]> {
+  // "Perto de mim": ordena por distância NO SERVIDOR e traz os mais próximos
+  // (RPC places_nearby) — essencial com milhares de lugares; já vem com stats.
+  if (filter.near) {
+    const { data, error } = await supabase.rpc('places_nearby', {
+      p_lat: filter.near.lat,
+      p_lng: filter.near.lng,
+      p_kind: filter.kind ?? null,
+      p_search: filter.search?.trim() || null,
+      p_limit: 200,
+    });
+    if (error) throw error;
+    return ((data ?? []) as Record<string, unknown>[]).map((p) => ({
+      ...(p as unknown as Place),
+      avg_rating: Number(p.avg_rating ?? 0),
+      review_count: Number(p.review_count ?? 0),
+    }));
+  }
+
   let q = supabase.from('places').select('*');
   if (filter.kind) q = q.eq('kind', filter.kind);
   if (filter.city) q = q.ilike('city', `%${filter.city}%`);
   if (filter.search) q = q.or(`name.ilike.%${filter.search}%,address.ilike.%${filter.search}%`);
-  q = q.order('verified', { ascending: false }).order('created_at', { ascending: false }).limit(60);
+  q = q.order('verified', { ascending: false }).order('created_at', { ascending: false }).limit(150);
   const { data: places, error } = await q;
   if (error) throw error;
   if (!places || places.length === 0) return [];

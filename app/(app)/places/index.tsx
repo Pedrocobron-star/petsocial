@@ -95,8 +95,13 @@ function PlacesInner() {
     }
   }, [params.kind]);
 
-  const filter = { kind: kind === 'all' ? undefined : kind, search: search.trim() || undefined };
-  const filterKey = `${kind}-${search.trim()}`;
+  const filter = {
+    kind: kind === 'all' ? undefined : kind,
+    search: search.trim() || undefined,
+    // "Perto de mim" ativo → o servidor traz os mais próximos (entre milhares).
+    near: myLoc ? { lat: myLoc.lat, lng: myLoc.lng } : undefined,
+  };
+  const filterKey = `${kind}-${search.trim()}-${myLoc ? `${myLoc.lat.toFixed(3)},${myLoc.lng.toFixed(3)}` : 'all'}`;
   const query = useQuery({
     queryKey: qk.places(filterKey),
     queryFn: () => fetchPlaces(filter),

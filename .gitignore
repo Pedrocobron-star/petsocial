@@ -54,3 +54,5 @@ app-example
 # (lista detalhada de bugs/vulnerabilidades + dados internos). Ler localmente.
 AUDIT-REPORT.md
 supabase/audit-fixes-v28.sql
+scripts/.osm/
+supabase/seed-osm-places.sql
