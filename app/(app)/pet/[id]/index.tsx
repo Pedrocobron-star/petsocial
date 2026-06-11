@@ -64,7 +64,10 @@ export default function PetProfileScreen() {
     enabled: !!id,
   });
   const postsQuery = useQuery({
-    queryKey: qk.petPosts(id, activePet!.id),
+    // queryKey null-safe: o `activePet` pode estar null por um instante (logo
+    // após login, antes dos pets carregarem) ou pra conta sem pet. Antes o
+    // `activePet!.id` aqui era avaliado em TODO render e quebrava a tela.
+    queryKey: qk.petPosts(id, activePet?.id ?? 'anon'),
     queryFn: () => fetchPostsByPet(id, activePet!.id),
     enabled: !!id && !!activePet,
   });
