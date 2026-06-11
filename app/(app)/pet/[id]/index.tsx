@@ -8,6 +8,7 @@ import { Alert, Dimensions, FlatList, Pressable, Text, View } from 'react-native
 import { BirthdayBanner } from '@/components/birthday-banner';
 import { EmptyState } from '@/components/empty-state';
 import { MetaTags } from '@/components/meta-tags';
+import { MozartFounderCard } from '@/components/mozart-founder-card';
 import { PetProfileHero } from '@/components/pet-profile-hero';
 import { PetProfileSkeleton } from '@/components/pet-profile-skeleton';
 import { PetQuickActions } from '@/components/pet-quick-actions';
@@ -16,6 +17,7 @@ import { CenteredColumn } from '@/components/ui/centered-column';
 import { FONTS } from '@/lib/fonts';
 import { haptic } from '@/lib/haptics';
 import { MAX_FEED_WIDTH, FEED_CARD_MARGIN } from '@/lib/layout';
+import { isMozartPet } from '@/lib/mozart';
 import { birthdayYears, isBirthdayToday } from '@/lib/pet-age';
 import {
   blockUser,
@@ -267,6 +269,9 @@ export default function PetProfileScreen() {
             </Link>
           </CenteredColumn>
         ) : null}
+
+        {/* Mozart é o anfitrião/dono da plataforma: cartão de apresentação dele. */}
+        {isMozartPet(pet.id) ? <MozartFounderCard /> : null}
 
         {/* Quick Actions (Saúde, Vacinas, Diário, Carteirinha, IA…) — SÓ pro dono.
             No perfil público (visitante) o perfil é estilo Instagram: só os posts.

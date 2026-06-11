@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
@@ -6,6 +7,7 @@ import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { speciesLabel } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
+import { MOZART, isMozartPet } from '@/lib/mozart';
 import { formatCount } from '@/lib/format';
 import { petAgeText } from '@/lib/pet-age';
 import type { Pet } from '@/lib/types';
@@ -53,55 +55,71 @@ export function PetProfileHero({
   const [avatarOpen, setAvatarOpen] = useState(false);
   const ageText = petAgeText(pet.birthdate);
   const personality = pet.personality_type ? PERSONALITY_INFO[pet.personality_type] : null;
+  // O Mozart não é um cão comum: é o maestro/anfitrião oficial da plataforma.
+  // Ganha um Hero especial (banner de maestro + anel dourado + selo verificado).
+  const isMozart = isMozartPet(pet.id);
 
 
   return (
     <View style={{ backgroundColor: theme.surface, paddingBottom: 16 }}>
-      {/* Banner warm com paw decorativos */}
-      <View
-        style={{
-          height: 96,
-          backgroundColor: '#FFEDD5',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <Text
+      {/* Banner — Mozart (maestro/anfitrião) ganha um banner especial escuro
+          com notas musicais; os demais pets têm o banner warm com patinhas. */}
+      {isMozart ? (
+        <View
+          style={{ height: 104, backgroundColor: '#1A1410', position: 'relative', overflow: 'hidden' }}
+        >
+          {/* faixa dourada estilo "oficial" no topo */}
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, flexDirection: 'row' }}>
+            <View style={{ flex: 1, backgroundColor: '#F97316' }} />
+            <View style={{ flex: 1, backgroundColor: '#FBBF24' }} />
+            <View style={{ flex: 1, backgroundColor: '#F97316' }} />
+          </View>
+          <Text style={{ position: 'absolute', top: 16, left: 18, fontSize: 38, opacity: 0.18 }}>🎼</Text>
+          <Text style={{ position: 'absolute', top: 52, left: '38%', fontSize: 22, opacity: 0.16 }}>🎵</Text>
+          <Text style={{ position: 'absolute', top: 20, left: '58%', fontSize: 26, opacity: 0.16 }}>🎶</Text>
+          {/* Mozart maestro (gravata + batuta) à direita */}
+          <Image
+            source={{ uri: MOZART.maestro }}
+            style={{ position: 'absolute', right: 10, bottom: -4, width: 90, height: 90 }}
+            contentFit="contain"
+          />
+        </View>
+      ) : (
+        <View
           style={{
-            position: 'absolute',
-            top: 6,
-            left: 12,
-            fontSize: 80,
-            opacity: 0.12,
+            height: 96,
+            backgroundColor: '#FFEDD5',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
-          🐾
-        </Text>
-        <Text
-          style={{
-            position: 'absolute',
-            top: 20,
-            right: 30,
-            fontSize: 56,
-            opacity: 0.1,
-            transform: [{ rotate: '20deg' }],
-          }}
-        >
-          🐾
-        </Text>
-        <Text
-          style={{
-            position: 'absolute',
-            top: 50,
-            left: '40%',
-            fontSize: 40,
-            opacity: 0.08,
-            transform: [{ rotate: '-15deg' }],
-          }}
-        >
-          🐾
-        </Text>
-      </View>
+          <Text style={{ position: 'absolute', top: 6, left: 12, fontSize: 80, opacity: 0.12 }}>🐾</Text>
+          <Text
+            style={{
+              position: 'absolute',
+              top: 20,
+              right: 30,
+              fontSize: 56,
+              opacity: 0.1,
+              transform: [{ rotate: '20deg' }],
+            }}
+          >
+            🐾
+          </Text>
+          <Text
+            style={{
+              position: 'absolute',
+              top: 50,
+              left: '40%',
+              fontSize: 40,
+              opacity: 0.08,
+              transform: [{ rotate: '-15deg' }],
+            }}
+          >
+            🐾
+          </Text>
+        </View>
+      )}
 
       <CenteredColumn maxWidth={540} withMargin={false} style={{ paddingHorizontal: 16 }}>
         {/* Avatar com overlap no banner — tap pra fullscreen */}
@@ -115,11 +133,12 @@ export function PetProfileHero({
           <PressScale
             onPress={() => pet.avatar_url && setAvatarOpen(true)}
             style={{
-              padding: 4,
+              padding: isMozart ? 5 : 4,
               borderRadius: 999,
-              backgroundColor: theme.surface,
-              shadowColor: '#7C2D12',
-              shadowOpacity: 0.15,
+              // Mozart: anel dourado de "anfitrião oficial".
+              backgroundColor: isMozart ? '#FBBF24' : theme.surface,
+              shadowColor: isMozart ? '#F59E0B' : '#7C2D12',
+              shadowOpacity: isMozart ? 0.4 : 0.15,
               shadowRadius: 16,
               shadowOffset: { width: 0, height: 6 },
             }}
@@ -129,58 +148,101 @@ export function PetProfileHero({
         </Animated.View>
 
         {/* Nome + identidade */}
-        <View style={{ alignItems: 'center', marginTop: 12, gap: 6 }}>
-          <Text
-            style={{
-              fontFamily: FONTS.display,
-              fontSize: 30,
-              color: theme.text,
-              letterSpacing: -0.5,
-            }}
-          >
-            {pet.name}
-          </Text>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-            }}
-          >
+        {isMozart ? (
+          <View style={{ alignItems: 'center', marginTop: 12, gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text
+                style={{ fontFamily: FONTS.display, fontSize: 30, color: theme.text, letterSpacing: -0.5 }}
+              >
+                {pet.name}
+              </Text>
+              {/* selo verificado dourado — perfil oficial */}
+              <View
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 12,
+                  backgroundColor: '#FBBF24',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="checkmark" size={15} color="#1A1410" />
+              </View>
+            </View>
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 4,
-                paddingHorizontal: 10,
-                paddingVertical: 4,
+                gap: 6,
+                paddingHorizontal: 12,
+                paddingVertical: 5,
                 borderRadius: 999,
-                backgroundColor: theme.brandLight,
+                backgroundColor: '#1A1410',
               }}
             >
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.brandDark }}>
-                {speciesLabel(pet.species)}
+              <Text style={{ fontSize: 12 }}>🎼</Text>
+              <Text
+                style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#FBBF24', letterSpacing: 0.3 }}
+              >
+                Maestro e anfitrião do Maestro Pet
               </Text>
-              {pet.breed ? (
-                <>
-                  <Text style={{ fontSize: 10, color: theme.brandDark, opacity: 0.6 }}>·</Text>
-                  <Text
-                    style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.brandDark }}
-                  >
-                    {pet.breed}
-                  </Text>
-                </>
+            </View>
+          </View>
+        ) : (
+          <View style={{ alignItems: 'center', marginTop: 12, gap: 6 }}>
+            <Text
+              style={{
+                fontFamily: FONTS.display,
+                fontSize: 30,
+                color: theme.text,
+                letterSpacing: -0.5,
+              }}
+            >
+              {pet.name}
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 999,
+                  backgroundColor: theme.brandLight,
+                }}
+              >
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.brandDark }}>
+                  {speciesLabel(pet.species)}
+                </Text>
+                {pet.breed ? (
+                  <>
+                    <Text style={{ fontSize: 10, color: theme.brandDark, opacity: 0.6 }}>·</Text>
+                    <Text
+                      style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.brandDark }}
+                    >
+                      {pet.breed}
+                    </Text>
+                  </>
+                ) : null}
+              </View>
+              {ageText ? (
+                <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
+                  · {ageText}
+                </Text>
               ) : null}
             </View>
-            {ageText ? (
-              <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
-                · {ageText}
-              </Text>
-            ) : null}
           </View>
-        </View>
+        )}
 
         {/* Bio */}
         {pet.bio ? (

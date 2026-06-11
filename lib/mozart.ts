@@ -41,3 +41,15 @@ export const MOZART = {
 } as const;
 
 export type MozartKey = keyof typeof MOZART;
+
+/**
+ * Identidade da conta oficial do Mozart (mascote/anfitrião da plataforma).
+ * UUIDs fixos (ver supabase/mozart-profile.sql e mozart-feed.sql).
+ */
+export const MOZART_USER_ID = 'd0c0ffee-0000-4000-8000-00000000cafe';
+export const MOZART_PET_ID = 'd0c0ffee-0000-4000-8000-00000000beef';
+
+/** O perfil/pet é o do Mozart (anfitrião oficial)? Recebe um id de pet. */
+export function isMozartPet(petId?: string | null): boolean {
+  return petId === MOZART_PET_ID;
+}
