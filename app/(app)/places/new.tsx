@@ -1,7 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
@@ -50,6 +51,28 @@ function NewPlaceInner() {
   const [website, setWebsite] = useState('');
   const [hours, setHours] = useState('');
   const [description, setDescription] = useState('');
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+
+  const useMyLocation = () => {
+    if (Platform.OS !== 'web' || typeof navigator === 'undefined' || !navigator.geolocation) {
+      toast.error('Localização indisponível', 'Disponível no app web');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+        toast.success('Localização marcada 📍', 'O lugar vai aparecer no mapa');
+      },
+      () => {
+        setLocating(false);
+        toast.error('Não consegui pegar sua localização', 'Permita o acesso e tente de novo');
+      },
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  };
 
   const createMut = useMutation({
     mutationFn: () =>
@@ -64,6 +87,8 @@ function NewPlaceInner() {
         website: website.trim() || undefined,
         hours: hours.trim() || undefined,
         description: description.trim() || undefined,
+        latitude: coords?.lat,
+        longitude: coords?.lng,
       }),
     onSuccess: (place) => {
       toast.success('Lugar adicionado!');
@@ -122,6 +147,34 @@ function NewPlaceInner() {
         onChange={setAddress}
         placeholder="Rua, número, bairro"
       />
+
+      {/* Marcar posição pro mapa (geolocalização do navegador) */}
+      <Pressable
+        onPress={useMyLocation}
+        disabled={locating}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          paddingVertical: 11,
+          borderRadius: 12,
+          borderWidth: 1.5,
+          borderColor: coords ? '#16A34A' : theme.accent.color,
+          backgroundColor: coords ? '#DCFCE7' : theme.accent.surface,
+          opacity: locating ? 0.6 : 1,
+        }}
+      >
+        <Ionicons
+          name={coords ? 'checkmark-circle' : locating ? 'hourglass-outline' : 'locate'}
+          size={18}
+          color={coords ? '#16A34A' : theme.accent.color}
+        />
+        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: coords ? '#166534' : theme.accent.dark }}>
+          {coords ? 'Posição marcada pro mapa ✓' : locating ? 'Pegando localização...' : '📍 Estou aqui agora (marca no mapa)'}
+        </Text>
+      </Pressable>
+
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <View style={{ flex: 2 }}>
           <Field label="Cidade" value={city} onChange={setCity} placeholder="São Paulo" />

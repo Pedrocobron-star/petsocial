@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { Link, Stack, useLocalSearchParams } from 'expo-router';
+import { Link, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
+import { PlacesMap } from '@/components/places-map';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { PLACE_KIND_META, placeKindMeta } from '@/lib/places-meta';
@@ -54,6 +55,7 @@ export default function PlacesScreen() {
 
 function PlacesInner() {
   const { theme } = useTheme();
+  const router = useRouter();
   const params = useLocalSearchParams<{ kind?: string }>();
   // Aceita ?kind=vet (ou outros) pra pré-filtrar — vindo do health hub etc.
   const initialKind = isValidPlaceKind(params.kind) ? (params.kind as PlaceKind) : 'all';
@@ -61,6 +63,7 @@ function PlacesInner() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('top');
   const [species, setSpecies] = useState<PlaceSpecies>('all');
+  const [view, setView] = useState<'list' | 'map'>('list');
 
   // Se o query param mudar via deep link, sincroniza
   useEffect(() => {
@@ -148,6 +151,53 @@ function PlacesInner() {
               <Ionicons name="close-circle" size={16} color={theme.textDim} />
             </Pressable>
           ) : null}
+        </View>
+
+        {/* Toggle Lista / Mapa */}
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 4,
+            backgroundColor: theme.borderLight,
+            borderRadius: 999,
+            padding: 3,
+            marginTop: 10,
+            alignSelf: 'flex-start',
+          }}
+        >
+          {(['list', 'map'] as const).map((v) => {
+            const active = view === v;
+            return (
+              <Pressable
+                key={v}
+                onPress={() => setView(v)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  paddingHorizontal: 14,
+                  paddingVertical: 7,
+                  borderRadius: 999,
+                  backgroundColor: active ? theme.accent.color : 'transparent',
+                }}
+              >
+                <Ionicons
+                  name={v === 'list' ? 'list' : 'map'}
+                  size={14}
+                  color={active ? theme.accent.onAccent : theme.textDim}
+                />
+                <Text
+                  style={{
+                    fontFamily: FONTS.bodyBold,
+                    fontSize: 12.5,
+                    color: active ? theme.accent.onAccent : theme.textDim,
+                  }}
+                >
+                  {v === 'list' ? 'Lista' : 'Mapa'}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         <ScrollView
@@ -259,6 +309,19 @@ function PlacesInner() {
         ) : null}
       </View>
 
+      {view === 'map' ? (
+        <PlacesMap
+          places={places.map((p) => ({
+            id: p.id,
+            name: p.name,
+            latitude: p.latitude,
+            longitude: p.longitude,
+            emoji: placeKindMeta(p.kind).emoji,
+          }))}
+          onSelect={(id) => router.push({ pathname: '/places/[id]', params: { id } } as never)}
+          accent={theme.accent.color}
+        />
+      ) : (
       <FlatList
         data={places}
         keyExtractor={(p) => p.id}
@@ -288,6 +351,7 @@ function PlacesInner() {
           )
         }
       />
+      )}
     </View>
   );
 }

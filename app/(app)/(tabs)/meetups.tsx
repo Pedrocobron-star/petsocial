@@ -1,246 +1,131 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Link } from 'expo-router';
-import { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AreaHero } from '@/components/area-hero';
-import { EmptyState } from '@/components/empty-state';
 import { HeaderHomeIcon } from '@/components/header-home-logo';
-import { MeetupCard } from '@/components/meetup-card';
-import { Button } from '@/components/ui/button';
-import { SegmentedControl } from '@/components/ui/segmented-control';
 import { FONTS } from '@/lib/fonts';
-import { fetchMeetups, qk, type MeetupFilter } from '@/lib/queries';
-import type { MeetupWithDetails } from '@/lib/types';
-import { useActivePet } from '@/providers/active-pet-provider';
 import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useTheme } from '@/providers/theme-provider';
 
-const FILTERS: { value: MeetupFilter; label: string }[] = [
-  { value: 'upcoming', label: 'Próximos' },
-  { value: 'attending', label: 'Que vou' },
-  { value: 'hosting', label: 'Sou host' },
-  { value: 'past', label: 'Passados' },
-];
-
+// ⚠️ App "Rolês" (Encontros) está EM DESENVOLVIMENTO. O código da feature (lista
+// de encontros, RSVP, criar evento, agenda) está no histórico do git — esta tela
+// é o "em breve" temporário enquanto a experiência não está redonda. Pra reativar,
+// restaure a versão anterior deste arquivo.
 export default function MeetupsScreen() {
   return (
     <AppThemeProvider app="meetups">
-      <MeetupsInner />
+      <ComingSoon />
     </AppThemeProvider>
   );
 }
 
-function MeetupsInner() {
-  const { activePet } = useActivePet();
+const NEXT: { icon: keyof typeof Ionicons.glyphMap; title: string; sub: string }[] = [
+  { icon: 'calendar', title: 'Encontros pet', sub: 'Marque passeios e encontrões com a galera dos pets' },
+  { icon: 'paw', title: 'Quem vai', sub: 'Confirme presença e veja quais pets vão aparecer' },
+  { icon: 'location', title: 'No mapa', sub: 'Encontros perto de você, integrados ao guia de Lugares' },
+];
+
+function ComingSoon() {
   const { theme } = useTheme();
-  const qc = useQueryClient();
-  const [filter, setFilter] = useState<MeetupFilter>('upcoming');
-  const [refreshing, setRefreshing] = useState(false);
-
-  const meetupsQuery = useQuery({
-    queryKey: qk.meetups(filter),
-    queryFn: () => fetchMeetups(activePet!.id, filter),
-    enabled: !!activePet,
-  });
-
-  // "Bombando" — eventos com mais confirmados (curadoria automática por RSVP)
-  const featuredQuery = useQuery({
-    queryKey: qk.meetups('upcoming'),
-    queryFn: () => fetchMeetups(activePet!.id, 'upcoming'),
-    enabled: !!activePet,
-  });
-  const featured = [...(featuredQuery.data ?? [])]
-    .sort((a, b) => b.rsvps_count - a.rsvps_count)
-    .slice(0, 6);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await qc.invalidateQueries({ queryKey: qk.meetups(filter) });
-    setRefreshing(false);
-  };
-
-  const emptyConfig = emptyByFilter(filter);
-
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.bg }}>
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 8,
           borderBottomWidth: 1,
           borderBottomColor: theme.border,
           backgroundColor: theme.surface,
-          paddingHorizontal: 16,
+          paddingHorizontal: 8,
           paddingVertical: 12,
         }}
       >
-        <View style={{ marginLeft: -8 }}>
-          <HeaderHomeIcon />
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Link href="/(app)/agenda" asChild>
-          <Pressable
-            hitSlop={6}
-            accessibilityLabel="Minha agenda"
-            style={{ backgroundColor: theme.borderLight, padding: 8, borderRadius: 999 }}
-          >
-            <Ionicons name="bookmark-outline" size={18} color={theme.text} />
-          </Pressable>
-        </Link>
-        <Link href="/(app)/meetup/new" asChild>
-          <Pressable
-            className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
-            style={{ backgroundColor: theme.accent.color }}
-          >
-            <Ionicons name="add" size={18} color={theme.accent.onAccent} />
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.accent.onAccent }}>Criar</Text>
-          </Pressable>
-        </Link>
-        </View>
+        <HeaderHomeIcon />
+        <Text style={{ fontFamily: FONTS.display, fontSize: 17, color: theme.text, marginLeft: 4 }}>Rolês</Text>
       </View>
 
-      {featured.length >= 3 ? <FeaturedStrip events={featured} /> : null}
+      <ScrollView contentContainerStyle={{ padding: 20, gap: 18, alignItems: 'center', paddingTop: 40 }}>
+        <View
+          style={{
+            width: 88,
+            height: 88,
+            borderRadius: 26,
+            backgroundColor: theme.accent.color,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name="construct" size={42} color={theme.accent.onAccent} />
+        </View>
 
-      <View style={{ borderBottomWidth: 1, borderBottomColor: theme.border, backgroundColor: theme.surface }}>
-        <SegmentedControl options={FILTERS} value={filter} onChange={setFilter} />
-      </View>
-      <FlatList
-        data={meetupsQuery.data ?? []}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <MeetupCard meetup={item} />}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListHeaderComponent={
-          <View style={{ marginHorizontal: -12, marginTop: -12, marginBottom: 12 }}>
-            <AreaHero area="meetups" />
+        <View style={{ alignItems: 'center', gap: 6 }}>
+          <View
+            style={{
+              backgroundColor: theme.borderLight,
+              borderRadius: 999,
+              paddingHorizontal: 12,
+              paddingVertical: 5,
+            }}
+          >
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, letterSpacing: 1, color: theme.accent.color }}>
+              EM DESENVOLVIMENTO
+            </Text>
           </View>
-        }
-        contentContainerStyle={{ padding: 12, flexGrow: 1 }}
-        ListEmptyComponent={
-          meetupsQuery.isLoading ? null : (
-            <EmptyState
-              emoji={emptyConfig.emoji}
-              title={emptyConfig.title}
-              description={emptyConfig.description}
-              action={
-                filter === 'upcoming' || filter === 'hosting' ? (
-                  <Link href="/(app)/meetup/new" asChild>
-                    <Button title="Criar encontro" />
-                  </Link>
-                ) : undefined
-              }
-            />
-          )
-        }
-      />
-    </SafeAreaView>
-  );
-}
+          <Text style={{ fontFamily: FONTS.display, fontSize: 24, color: theme.text, textAlign: 'center', marginTop: 6 }}>
+            Os Rolês tão chegando 🐾
+          </Text>
+          <Text
+            style={{
+              fontFamily: FONTS.body,
+              fontSize: 14,
+              color: theme.textDim,
+              textAlign: 'center',
+              lineHeight: 20,
+              maxWidth: 320,
+            }}
+          >
+            Tô caprichando nos encontros e passeios em grupo pra ficar redondo antes de
+            abrir. Enquanto isso, segue cuidando do seu pet e postando no feed!
+          </Text>
+        </View>
 
-/** Faixa "Bombando" — eventos com mais confirmados, pra descobrir o que tá rolando. */
-function FeaturedStrip({ events }: { events: MeetupWithDetails[] }) {
-  const { theme } = useTheme();
-  return (
-    <View
-      style={{
-        backgroundColor: theme.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-        paddingTop: 12,
-        paddingBottom: 12,
-      }}
-    >
-      <Text
-        style={{
-          fontFamily: FONTS.bodyBold,
-          fontSize: 15,
-          color: theme.text,
-          paddingHorizontal: 16,
-          marginBottom: 10,
-        }}
-      >
-        🔥 Bombando
-      </Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 10, paddingHorizontal: 16 }}
-      >
-        {events.map((m) => {
-          const d = new Date(m.starts_at);
-          return (
-            <Link key={m.id} href={{ pathname: '/meetup/[id]', params: { id: m.id } }} asChild>
-              <Pressable
+        <View style={{ alignSelf: 'stretch', gap: 10, marginTop: 8, maxWidth: 480, width: '100%' }}>
+          {NEXT.map((n) => (
+            <View
+              key={n.title}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                backgroundColor: theme.surface,
+                borderRadius: 14,
+                padding: 14,
+                borderWidth: 1,
+                borderColor: theme.borderLight,
+              }}
+            >
+              <View
                 style={{
-                  width: 190,
-                  borderRadius: 14,
-                  backgroundColor: theme.card,
-                  padding: 12,
-                  borderWidth: 1,
-                  borderColor: theme.borderLight,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: theme.borderLight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.accent.dark }}>
-                  {format(d, "dd 'de' MMM • HH:mm", { locale: ptBR })}
+                <Ionicons name={n.icon} size={20} color={theme.accent.color} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }}>{n.title}</Text>
+                <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim, marginTop: 1 }}>
+                  {n.sub}
                 </Text>
-                <Text
-                  numberOfLines={2}
-                  style={{
-                    fontFamily: FONTS.bodyBold,
-                    fontSize: 14,
-                    color: theme.text,
-                    marginTop: 4,
-                    lineHeight: 18,
-                  }}
-                >
-                  {m.title}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 }}>
-                  <Ionicons name="paw" size={12} color={theme.textDim} />
-                  <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: theme.textMuted }}>
-                    {m.rsvps_count} {m.rsvps_count === 1 ? 'confirmado' : 'confirmados'}
-                  </Text>
-                </View>
-              </Pressable>
-            </Link>
-          );
-        })}
+              </View>
+            </View>
+          ))}
+        </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
-}
-
-function emptyByFilter(filter: MeetupFilter) {
-  switch (filter) {
-    case 'attending':
-      return {
-        emoji: '🐾',
-        title: 'Você não confirmou nada',
-        description: 'Veja os próximos encontros e confirme presença pra aparecerem aqui.',
-      };
-    case 'hosting':
-      return {
-        emoji: '🎉',
-        title: 'Sem encontros como host',
-        description: 'Crie um encontro pra reunir a turma.',
-      };
-    case 'past':
-      return {
-        emoji: '🕰️',
-        title: 'Sem histórico ainda',
-        description: 'Quando passar de um encontro, ele aparece aqui.',
-      };
-    default:
-      return {
-        emoji: '📅',
-        title: 'Sem encontros marcados',
-        description: 'Crie o primeiro encontro e convide outros pets.',
-      };
-  }
 }

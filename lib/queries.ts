@@ -2447,6 +2447,8 @@ export async function createPlace(input: {
   phone?: string;
   website?: string;
   hours?: string;
+  latitude?: number;
+  longitude?: number;
 }): Promise<Place> {
   const { data, error } = await supabase.from('places').insert(input).select('*').single();
   if (error) throw error;
