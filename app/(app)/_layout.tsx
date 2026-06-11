@@ -162,6 +162,7 @@ export default function AppLayout() {
           <Stack.Screen name="admin/mozart" options={{ headerShown: true, title: 'Mozart · Admin' }} />
           <Stack.Screen name="admin/mozart-posts" options={{ headerShown: true, title: 'Posts do Mozart · Admin' }} />
           <Stack.Screen name="admin/daily-missions" options={{ headerShown: true, title: 'Missão do Dia · Admin' }} />
+          <Stack.Screen name="admin/economy" options={{ headerShown: true, title: 'Economia · Admin' }} />
         </Stack>
         </RealtimeProvider>
       </ActivePetProvider>

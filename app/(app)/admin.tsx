@@ -289,6 +289,14 @@ export default function AdminScreen() {
             color="#C2410C"
             bg="#FFEDD5"
           />
+          <NavCard
+            href="/(app)/admin/economy"
+            icon="trophy"
+            label="Economia"
+            sub="Pontos · campeões · referral"
+            color="#92400E"
+            bg="#FEF3C7"
+          />
         </View>
 
         {/* Loading */}
