@@ -14,6 +14,12 @@
 --    do nothing). Salvar vacina/post jamais falha por causa de pontos.
 --  - RANKING MENSAL PONDERADO: social conta 70% (protege o prêmio de Pro).
 --
+-- ⚠️ FONTE ÚNICA das funções da competição mensal (mission_monthly_leaderboard,
+-- mission_my_monthly, award_mission_monthly_winner): elas são definidas AQUI, NÃO
+-- em mission-monthly-prize.sql (esse arquivo só tem a tabela + o cron). Aplicar
+-- ESTE arquivo DEPOIS de mission-monthly-prize.sql, pra estas versões (ledger
+-- ponderado + teto) ficarem por cima da tabela que aquele cria.
+--
 -- Idempotente.
 -- =============================================================================
 

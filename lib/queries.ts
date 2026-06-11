@@ -1419,6 +1419,7 @@ export interface AchievementInput {
   tournamentWins: number;
   missionsCompleted: number;
   missionStreak: number;
+  tutorPoints: number;
 }
 
 export async function fetchAchievementInput(userId: string): Promise<AchievementInput> {
@@ -1437,16 +1438,20 @@ export async function fetchAchievementInput(userId: string): Promise<Achievement
   const tournamentWins = tournamentWinsRes.count ?? 0;
 
   // Missão do dia — total cumprido + streak atual (nível tutor, independe de pet).
-  const [missionCountRes, todayMissionRes] = await Promise.all([
+  const [missionCountRes, todayMissionRes, tutorPointsRes] = await Promise.all([
     supabase
       .from('daily_mission_completions')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId),
     supabase.rpc('get_today_mission'),
+    // Total vitalício de Pontos de Tutor — alimenta as badges pt_* (read-only,
+    // soma o ledger imutável; ?? 0 se a RPC falhar, badges só ficam zeradas).
+    supabase.rpc('my_tutor_points'),
   ]);
   const missionsCompleted = missionCountRes.count ?? 0;
   const missionRow = (todayMissionRes.data as { streak: number }[] | null)?.[0];
   const missionStreak = missionRow?.streak ?? 0;
+  const tutorPoints = (tutorPointsRes.data as number | null) ?? 0;
 
   if (myPets.length === 0) {
     return {
@@ -1461,6 +1466,7 @@ export async function fetchAchievementInput(userId: string): Promise<Achievement
       tournamentWins,
       missionsCompleted,
       missionStreak,
+      tutorPoints,
     };
   }
   const petIds = myPets.map((p) => p.id);
@@ -1497,6 +1503,7 @@ export async function fetchAchievementInput(userId: string): Promise<Achievement
     tournamentWins,
     missionsCompleted,
     missionStreak,
+    tutorPoints,
   };
 }
 

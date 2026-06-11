@@ -1,3 +1,4 @@
+import { TUTOR_TIERS } from './tutor-level';
 import type { Pet, Vaccination } from './types';
 
 export interface AchievementDef {
@@ -9,7 +10,7 @@ export interface AchievementDef {
   tier: 1 | 2 | 3;
 }
 
-export const ACHIEVEMENTS: AchievementDef[] = [
+const BASE_ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'first_pet',
     emoji: '🐾',
@@ -151,6 +152,25 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
 ];
 
+// ============================================================================
+// Conquistas de marco de Pontos de Tutor (economia unificada)
+// Derivadas DIRETO das faixas do Nível de Tutor (TUTOR_TIERS) — sem redigitar
+// limiares, então se as faixas forem recalibradas as badges acompanham sozinhas.
+// São read-only sobre o total imutável de PT (my_tutor_points): não creditam
+// nada, só dão um destino visível ao acúmulo. id = `pt_<min>`.
+// ============================================================================
+const ptBadgeTier = (min: number): 1 | 2 | 3 => (min < 1000 ? 1 : min < 3000 ? 2 : 3);
+
+const PT_ACHIEVEMENTS: AchievementDef[] = TUTOR_TIERS.filter((t) => t.min > 0).map((t) => ({
+  id: `pt_${t.min}`,
+  emoji: t.emoji,
+  title: t.title,
+  description: `Acumulou ${t.min.toLocaleString('pt-BR')} Pontos de Tutor`,
+  tier: ptBadgeTier(t.min),
+}));
+
+export const ACHIEVEMENTS: AchievementDef[] = [...BASE_ACHIEVEMENTS, ...PT_ACHIEVEMENTS];
+
 export interface AchievementUnlockState {
   def: AchievementDef;
   unlocked: boolean;
@@ -169,6 +189,8 @@ interface ComputeInput {
   tournamentWins: number;
   missionsCompleted: number;
   missionStreak: number;
+  /** Total vitalício de Pontos de Tutor (my_tutor_points) — alimenta as badges pt_*. */
+  tutorPoints: number;
 }
 
 /**
@@ -188,11 +210,21 @@ export function computeAchievements(input: ComputeInput): AchievementUnlockState
     tournamentWins,
     missionsCompleted,
     missionStreak,
+    tutorPoints,
   } = input;
 
   return ACHIEVEMENTS.map((def) => {
     let unlocked = false;
     let progress: AchievementUnlockState['progress'] | undefined;
+
+    // Badges de marco de PT: limiar embutido no id (`pt_<min>`), lido do total
+    // imutável de Pontos de Tutor. Sempre mostra progresso (current/target).
+    if (def.id.startsWith('pt_')) {
+      const target = Number(def.id.slice(3));
+      unlocked = tutorPoints >= target;
+      progress = { current: Math.min(tutorPoints, target), target };
+      return { def, unlocked, progress };
+    }
 
     switch (def.id) {
       case 'first_pet':

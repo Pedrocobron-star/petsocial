@@ -19,7 +19,7 @@ interface TutorTier {
 // Limiares calibrados pra PT vindo de VÁRIAS fontes (saúde + missão + social),
 // com teto de 120 PT/dia. Um tutor ativo sobe alguns níveis por mês; Lenda Pet
 // (~9k) leva meses de cuidado consistente.
-const TUTOR_TIERS: TutorTier[] = [
+export const TUTOR_TIERS: TutorTier[] = [
   { min: 0, title: 'Filhote', emoji: '🐣' },
   { min: 150, title: 'Curioso', emoji: '🐶' },
   { min: 500, title: 'Companheiro', emoji: '🦴' },
