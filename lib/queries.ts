@@ -3065,9 +3065,12 @@ export async function fetchHealthTimeline(
 }
 
 /**
- * Carrega TODOS os eventos de saúde dentro de um intervalo de datas (inclusive).
- * Usado pelo calendário visual — pega vacinas, parasitas, consultas, peso,
- * remédios E sintomas no período. Sem limit — assume janela de até 90 dias.
+ * Carrega TODOS os eventos de saúde dentro de uma janela [startISO, endISO).
+ * Limite SUPERIOR é EXCLUSIVO (.lt) — o calendário passa o 1º dia do mês
+ * seguinte como `endISO`. As colunas de data são `date`; comparar com limites
+ * date-only evita o shift de fuso (UTC-3) que descartava o dia 1 e vazava o
+ * dia 1 do mês seguinte. Pega vacinas, parasitas, consultas, peso, remédios e
+ * sintomas. Sem limit — assume janela de até ~1 mês.
  */
 export async function fetchHealthEventsRange(
   petId: string,
@@ -3080,37 +3083,37 @@ export async function fetchHealthEventsRange(
       .select('id,name,applied_at,vet_name')
       .eq('pet_id', petId)
       .gte('applied_at', startISO)
-      .lte('applied_at', endISO),
+      .lt('applied_at', endISO),
     supabase
       .from('parasite_treatments')
       .select('id,product_name,applied_at,kind')
       .eq('pet_id', petId)
       .gte('applied_at', startISO)
-      .lte('applied_at', endISO),
+      .lt('applied_at', endISO),
     supabase
       .from('vet_visits')
       .select('id,visited_at,reason,vet_name,clinic_name')
       .eq('pet_id', petId)
       .gte('visited_at', startISO)
-      .lte('visited_at', endISO),
+      .lt('visited_at', endISO),
     supabase
       .from('weight_records')
       .select('id,weight_kg,weighed_at')
       .eq('pet_id', petId)
       .gte('weighed_at', startISO)
-      .lte('weighed_at', endISO),
+      .lt('weighed_at', endISO),
     supabase
       .from('medications')
       .select('id,name,start_date,dosage')
       .eq('pet_id', petId)
       .gte('start_date', startISO)
-      .lte('start_date', endISO),
+      .lt('start_date', endISO),
     supabase
       .from('pet_symptoms')
       .select('id,description,severity,recorded_at,flagged_for_vet')
       .eq('pet_id', petId)
       .gte('recorded_at', startISO)
-      .lte('recorded_at', endISO),
+      .lt('recorded_at', endISO),
   ]);
 
   const events: HealthTimelineEvent[] = [];

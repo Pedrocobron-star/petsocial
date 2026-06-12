@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import {
   addMonths,
-  endOfMonth,
   format,
   isSameDay,
   isSameMonth,
@@ -50,12 +49,19 @@ export default function HealthCalendarScreen() {
 
   const monthKey = format(cursor, 'yyyy-MM');
   const monthStart = startOfMonth(cursor);
-  const monthEnd = endOfMonth(cursor);
 
   const eventsQuery = useQuery({
     queryKey: qk.healthMonth(id, monthKey),
+    // Limites como DATA pura (não toISOString): as colunas (applied_at, visited_at,
+    // weighed_at, start_date) são `date`. Converter pra UTC empurrava o dia 1 do mês
+    // pra fora da janela (UTC-3 vira 03:00Z) e vazava o dia 1 do mês seguinte.
+    // Início = dia 1; fim = dia 1 do mês seguinte (exclusivo, via .lt no fetch).
     queryFn: () =>
-      fetchHealthEventsRange(id, monthStart.toISOString(), monthEnd.toISOString()),
+      fetchHealthEventsRange(
+        id,
+        format(monthStart, 'yyyy-MM-dd'),
+        format(addMonths(monthStart, 1), 'yyyy-MM-dd'),
+      ),
     enabled: !!id,
   });
 
@@ -312,9 +318,13 @@ function EventRow({ event, petId }: { event: HealthTimelineEvent; petId: string 
               {event.detail}
             </Text>
           ) : null}
-          <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim, marginTop: 2 }}>
-            {format(parseISO(event.date), 'HH:mm', { locale: ptBR })}
-          </Text>
+          {/* Hora só pra eventos com horário real (sintomas = timestamptz).
+              Colunas `date` (vacina/consulta/peso) viriam como 00:00 — sem sentido. */}
+          {event.date.length > 10 ? (
+            <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim, marginTop: 2 }}>
+              {format(parseISO(event.date), 'HH:mm', { locale: ptBR })}
+            </Text>
+          ) : null}
         </View>
         <Ionicons name="chevron-forward" size={14} color={theme.textDim} />
       </Pressable>
