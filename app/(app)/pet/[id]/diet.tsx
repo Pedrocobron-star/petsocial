@@ -47,6 +47,8 @@ export default function DietScreen() {
   const qc = useQueryClient();
   const toast = useToast();
   const [showForm, setShowForm] = useState(false);
+  // dieta sendo editada (null = nova dieta a partir de "Mudar dieta")
+  const [editing, setEditing] = useState<PetDietLog | null>(null);
 
   const petQuery = useQuery({ queryKey: qk.pet(id), queryFn: () => fetchPet(id), enabled: !!id });
   const activeQuery = useQuery({
@@ -85,9 +87,14 @@ export default function DietScreen() {
           <DietForm
             petId={id}
             species={petQuery.data?.species ?? 'dog'}
-            onCancel={() => setShowForm(false)}
+            existing={editing}
+            onCancel={() => {
+              setShowForm(false);
+              setEditing(null);
+            }}
             onSaved={() => {
               setShowForm(false);
+              setEditing(null);
               qc.invalidateQueries({ queryKey: ['pet-diet-active', id] });
               qc.invalidateQueries({ queryKey: ['pet-diet-history', id] });
             }}
@@ -103,7 +110,14 @@ export default function DietScreen() {
             <ActiveDietCard
               diet={active}
               petName={petQuery.data?.name ?? 'seu pet'}
-              onChange={() => setShowForm(true)}
+              onEdit={() => {
+                setEditing(active);
+                setShowForm(true);
+              }}
+              onChange={() => {
+                setEditing(null);
+                setShowForm(true);
+              }}
               onDelete={() =>
                 Alert.alert('Apagar registro?', 'Esta dieta será removida do histórico.', [
                   { text: 'Cancelar', style: 'cancel' },
@@ -159,11 +173,13 @@ export default function DietScreen() {
 function ActiveDietCard({
   diet,
   petName,
+  onEdit,
   onChange,
   onDelete,
 }: {
   diet: PetDietLog;
   petName: string;
+  onEdit: () => void;
   onChange: () => void;
   onDelete: () => void;
 }) {
@@ -313,6 +329,9 @@ function ActiveDietCard({
       ) : null}
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flex: 1 }}>
+          <Button title="Editar" variant="secondary" onPress={onEdit} fullWidth />
+        </View>
         <View style={{ flex: 1 }}>
           <Button title="Mudar dieta" variant="secondary" onPress={onChange} fullWidth />
         </View>

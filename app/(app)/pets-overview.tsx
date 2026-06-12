@@ -21,7 +21,10 @@ import {
   fetchHealthSummary,
   fetchMyPets,
   fetchParasiteSummary,
+  fetchParasiteTreatments,
   fetchPetSymptoms,
+  fetchVetVisits,
+  fetchWeightRecords,
   qk,
 } from '@/lib/queries';
 import type { HealthSummary, Pet, PetSymptom } from '@/lib/types';
@@ -66,15 +69,38 @@ export default function PetsOverviewScreen() {
       queryFn: () => fetchPetSymptoms(pet.id, 'active'),
     })),
   });
+  // Arrays completos — sem eles os alertas de parasita atrasado / variação de peso /
+  // consulta vencida NÃO apareciam aqui, deixando o overview otimista vs o hub.
+  const parasiteTreatmentsQuery = useQueries({
+    queries: pets.map((pet) => ({
+      queryKey: qk.parasiteTreatments(pet.id),
+      queryFn: () => fetchParasiteTreatments(pet.id),
+    })),
+  });
+  const vetVisitsQuery = useQueries({
+    queries: pets.map((pet) => ({
+      queryKey: qk.vetVisits(pet.id),
+      queryFn: () => fetchVetVisits(pet.id),
+    })),
+  });
+  const weightsQuery = useQueries({
+    queries: pets.map((pet) => ({
+      queryKey: qk.weightRecords(pet.id),
+      queryFn: () => fetchWeightRecords(pet.id),
+    })),
+  });
 
   const rows = useMemo(() => {
     return pets.map((pet, i) => {
       const summary = summariesQuery[i]?.data;
       const parasiteSummary = parasitesQuery[i]?.data;
       const symptoms = symptomsQuery[i]?.data ?? [];
+      const parasites = parasiteTreatmentsQuery[i]?.data ?? [];
+      const vetVisits = vetVisitsQuery[i]?.data ?? [];
+      const weights = weightsQuery[i]?.data ?? [];
       const score = summary ? computeHealthScore(summary, parasiteSummary).score : null;
       const alerts: HealthAlert[] = summary
-        ? computeHealthAlerts({ pet, summary, symptoms })
+        ? computeHealthAlerts({ pet, summary, symptoms, parasites, vetVisits, weights })
         : [];
       const counts = countAlertsBySeverity(alerts);
       return {
@@ -91,7 +117,15 @@ export default function PetsOverviewScreen() {
           symptomsQuery[i]?.isLoading,
       };
     });
-  }, [pets, summariesQuery, parasitesQuery, symptomsQuery]);
+  }, [
+    pets,
+    summariesQuery,
+    parasitesQuery,
+    symptomsQuery,
+    parasiteTreatmentsQuery,
+    vetVisitsQuery,
+    weightsQuery,
+  ]);
 
   // Ordena: alertas urgentes primeiro, depois score asc (pior cuidado primeiro)
   const sorted = useMemo(

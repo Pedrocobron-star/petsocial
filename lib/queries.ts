@@ -2962,6 +2962,12 @@ export async function fetchHealthTimeline(
       .eq('pet_id', petId)
       .order('start_date', { ascending: false })
       .limit(limit),
+    supabase
+      .from('pet_symptoms')
+      .select('id,description,severity,recorded_at,flagged_for_vet')
+      .eq('pet_id', petId)
+      .order('recorded_at', { ascending: false })
+      .limit(limit),
   ]);
 
   const events: HealthTimelineEvent[] = [];
@@ -3034,6 +3040,21 @@ export async function fetchHealthTimeline(
         title: `Remédio: ${m.name}`,
         detail: m.dosage,
         source_id: m.id,
+      });
+    }
+  }
+
+  // 5: pet_symptoms (registros pro vet) — pra a timeline recente bater com o calendário
+  if (results[5].status === 'fulfilled' && results[5].value.data) {
+    for (const s of results[5].value.data as {
+      id: string; description: string; severity: number; recorded_at: string; flagged_for_vet: boolean;
+    }[]) {
+      events.push({
+        kind: 'symptom',
+        date: s.recorded_at,
+        title: `Sintoma${s.flagged_for_vet ? ' 🩺' : ''}: ${s.description.slice(0, 60)}${s.description.length > 60 ? '…' : ''}`,
+        detail: `Severidade ${s.severity}/5`,
+        source_id: s.id,
       });
     }
   }
@@ -3225,9 +3246,17 @@ export async function createDietLog(input: {
   notes?: string | null;
   started_at?: string;
 }): Promise<PetDietLog> {
+  const startedAt = input.started_at ?? new Date().toISOString().slice(0, 10);
+  // Arquiva a dieta atual ANTES de criar a nova: senão ficam várias dietas
+  // active=true órfãs e o histórico de "Dietas anteriores" some.
+  await supabase
+    .from('pet_diet_logs')
+    .update({ active: false, ended_at: startedAt })
+    .eq('pet_id', input.pet_id)
+    .eq('active', true);
   const { data, error } = await supabase
     .from('pet_diet_logs')
-    .insert({ ...input, active: true })
+    .insert({ ...input, started_at: startedAt, active: true })
     .select('*')
     .single();
   if (error) throw error;

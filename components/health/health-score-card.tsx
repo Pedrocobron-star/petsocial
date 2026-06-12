@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { Text, View } from 'react-native';
-import { differenceInMonths, parseISO } from 'date-fns';
 
 import { FONTS } from '@/lib/fonts';
+import { computeHealthScore, type ScoreComponent } from '@/lib/health-score';
 import type { ParasiteSummary } from '@/lib/queries';
 import type { HealthSummary } from '@/lib/types';
 
@@ -12,12 +12,14 @@ interface Props {
   parasiteSummary: ParasiteSummary | undefined;
 }
 
-interface BreakdownItem {
-  label: string;
-  emoji: string;
-  status: 'ok' | 'warn' | 'bad' | 'na';
-  detail: string;
-}
+// Emoji por dimensão (o cálculo/label/detalhe vêm da FONTE ÚNICA computeHealthScore).
+const KIND_EMOJI: Record<ScoreComponent['key'], string> = {
+  vaccines: '💉',
+  parasites: '💊',
+  medications: '🧪',
+  vet_visits: '🩺',
+  weight: '⚖️',
+};
 
 /**
  * Card de "Saúde Score" — visão positiva consolidada.
@@ -33,144 +35,19 @@ interface BreakdownItem {
  * Isso evita penalizar pet recém-cadastrado.
  */
 export function HealthScoreCard({ petName, summary, parasiteSummary }: Props) {
-  const { score, items } = useMemo<{ score: number; items: BreakdownItem[] }>(() => {
-    const items: BreakdownItem[] = [];
-
-    // Vacinas
-    if (summary.next_vaccine) {
-      const d = summary.next_vaccine.days_until;
-      if (d <= 0) {
-        items.push({
-          label: 'Vacinas',
-          emoji: '💉',
-          status: 'bad',
-          detail: `${summary.next_vaccine.name} vencida`,
-        });
-      } else if (d <= 7) {
-        items.push({
-          label: 'Vacinas',
-          emoji: '💉',
-          status: 'warn',
-          detail: `Próxima em ${d}d`,
-        });
-      } else {
-        items.push({
-          label: 'Vacinas',
-          emoji: '💉',
-          status: 'ok',
-          detail: 'Em dia',
-        });
-      }
-    } else if (summary.vaccinations_count > 0) {
-      // Tem vacina registrada (sem próxima dose marcada) → reconhece o registro.
-      items.push({ label: 'Vacinas', emoji: '💉', status: 'ok', detail: 'Em dia' });
-    } else {
-      items.push({ label: 'Vacinas', emoji: '💉', status: 'na', detail: 'Sem registro' });
-    }
-
-    // Parasitas
-    if (parasiteSummary && parasiteSummary.total > 0) {
-      if (parasiteSummary.overdue > 0) {
-        items.push({
-          label: 'Vermífugo/Pulga',
-          emoji: '💊',
-          status: 'bad',
-          detail: `${parasiteSummary.overdue} atrasado${parasiteSummary.overdue > 1 ? 's' : ''}`,
-        });
-      } else if (parasiteSummary.next_due && parasiteSummary.next_due.days_until <= 7) {
-        items.push({
-          label: 'Vermífugo/Pulga',
-          emoji: '💊',
-          status: 'warn',
-          detail: `Próximo em ${parasiteSummary.next_due.days_until}d`,
-        });
-      } else {
-        items.push({ label: 'Vermífugo/Pulga', emoji: '💊', status: 'ok', detail: 'Em dia' });
-      }
-    } else {
-      items.push({ label: 'Vermífugo/Pulga', emoji: '💊', status: 'na', detail: 'Sem registro' });
-    }
-
-    // Medicações
-    if (summary.active_medications_count > 0) {
-      if (summary.due_medications_today > 0) {
-        items.push({
-          label: 'Remédios',
-          emoji: '🧪',
-          status: 'warn',
-          detail: `${summary.due_medications_today} dose${summary.due_medications_today > 1 ? 's' : ''} hoje`,
-        });
-      } else {
-        items.push({
-          label: 'Remédios',
-          emoji: '🧪',
-          status: 'ok',
-          detail: `${summary.active_medications_count} ativo${summary.active_medications_count > 1 ? 's' : ''}`,
-        });
-      }
-    } else {
-      items.push({ label: 'Remédios', emoji: '🧪', status: 'ok', detail: 'Sem ativos' });
-    }
-
-    // Consultas
-    if (summary.last_vet_visit) {
-      const monthsAgo = differenceInMonths(new Date(), parseISO(summary.last_vet_visit.visited_at));
-      if (monthsAgo >= 12) {
-        items.push({
-          label: 'Consultas',
-          emoji: '🩺',
-          status: 'warn',
-          detail: 'Última > 1 ano',
-        });
-      } else {
-        items.push({ label: 'Consultas', emoji: '🩺', status: 'ok', detail: `Há ${monthsAgo}m` });
-      }
-    } else {
-      items.push({ label: 'Consultas', emoji: '🩺', status: 'na', detail: 'Sem registro' });
-    }
-
-    // Peso
-    if (summary.latest_weight) {
-      items.push({
-        label: 'Peso',
-        emoji: '⚖️',
-        status: 'ok',
-        detail: `${summary.latest_weight.weight_kg}kg`,
-      });
-    } else {
-      items.push({ label: 'Peso', emoji: '⚖️', status: 'na', detail: 'Sem registro' });
-    }
-
-    // Score ponderado. Essenciais (vacina/vermífugo/consulta) sem registro
-    // PENALIZAM (contam 0) — assim cada registro novo faz o score subir.
-    // Não-essenciais 'na' (peso) seguem ignoradas.
-    const weights = { Vacinas: 30, 'Vermífugo/Pulga': 25, Remédios: 20, Consultas: 15, Peso: 10 };
-    const statusValue = { ok: 100, warn: 50, bad: 0, na: -1 };
-    const ESSENTIAL_LABELS = new Set(['Vacinas', 'Vermífugo/Pulga', 'Consultas']);
-    let totalWeight = 0;
-    let weightedSum = 0;
-    for (const item of items) {
-      const w = weights[item.label as keyof typeof weights] ?? 0;
-      let v = statusValue[item.status];
-      if (v < 0) {
-        if (!ESSENTIAL_LABELS.has(item.label)) continue;
-        v = 0;
-      }
-      totalWeight += w;
-      weightedSum += w * v;
-    }
-    const score = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0;
-    return { score, items };
-  }, [summary, parasiteSummary]);
+  // FONTE ÚNICA: o card, o snapshot mensal e o trend usam a MESMA função.
+  const { score, components } = useMemo(
+    () => computeHealthScore(summary, parasiteSummary),
+    [summary, parasiteSummary],
+  );
 
   // Quantas das dimensões essenciais de prevenção têm registro.
   // Sem NENHUMA (vacina, vermífugo, consulta), o pet não pode aparecer como
-  // "100% cuidado": o cadastro está incompleto e o score seria enganoso —
-  // num app de saúde isso passa falsa segurança.
-  const essentialsRegistered = items.filter(
-    (i) =>
-      (i.label === 'Vacinas' || i.label === 'Vermífugo/Pulga' || i.label === 'Consultas') &&
-      i.status !== 'na',
+  // "100% cuidado": o cadastro está incompleto e o score seria enganoso.
+  const essentialsRegistered = components.filter(
+    (c) =>
+      (c.key === 'vaccines' || c.key === 'parasites' || c.key === 'vet_visits') &&
+      c.status !== 'na',
   ).length;
   const incomplete = essentialsRegistered === 0;
 
@@ -287,9 +164,9 @@ export function HealthScoreCard({ petName, summary, parasiteSummary }: Props) {
 
       {/* Breakdown — 5 mini-chips horizontais */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-        {items.map((item, i) => (
+        {components.map((c) => (
           <View
-            key={i}
+            key={c.key}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -300,35 +177,35 @@ export function HealthScoreCard({ petName, summary, parasiteSummary }: Props) {
               backgroundColor: '#FFFFFF',
               borderWidth: 1,
               borderColor:
-                item.status === 'bad'
+                c.status === 'bad'
                   ? '#FCA5A5'
-                  : item.status === 'warn'
+                  : c.status === 'warn'
                     ? '#FCD34D'
-                    : item.status === 'ok'
+                    : c.status === 'ok'
                       ? '#86EFAC'
                       : '#E5E5E5',
             }}
           >
-            <Text style={{ fontSize: 11 }}>{item.emoji}</Text>
+            <Text style={{ fontSize: 11 }}>{KIND_EMOJI[c.key]}</Text>
             <Text
               style={{
                 fontFamily: FONTS.bodyBold,
                 fontSize: 10,
                 color:
-                  item.status === 'bad'
+                  c.status === 'bad'
                     ? '#991B1B'
-                    : item.status === 'warn'
+                    : c.status === 'warn'
                       ? '#92400E'
-                      : item.status === 'ok'
+                      : c.status === 'ok'
                         ? '#166534'
                         : '#737373',
               }}
             >
-              {item.label}: {item.detail}
+              {c.label}: {c.detail}
             </Text>
-            {item.status === 'ok' ? (
+            {c.status === 'ok' ? (
               <Text style={{ fontSize: 9, color: '#16A34A' }}>✓</Text>
-            ) : item.status === 'bad' ? (
+            ) : c.status === 'bad' ? (
               <Text style={{ fontSize: 9, color: '#DC2626' }}>!</Text>
             ) : null}
           </View>

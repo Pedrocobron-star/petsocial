@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   KeyboardAvoidingView,
@@ -54,6 +53,9 @@ export default function AiAssistantScreen() {
   const listRef = useRef<FlatList<AiMessage>>(null);
 
   const [draft, setDraft] = useState('');
+  // Emergência detectada numa msg JÁ ENVIADA — fica fixa até o tutor dispensar
+  // (o draft é limpo no envio, então não dá pra depender só dele).
+  const [emergencyActive, setEmergencyActive] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
@@ -112,6 +114,7 @@ export default function AiAssistantScreen() {
       return sendAiMessage(convId, text, petQuery.data);
     },
     onMutate: async (text) => {
+      if (detectEmergency(text)) setEmergencyActive(true);
       setDraft('');
       const optimistic: AiMessage = {
         id: `tmp-${Date.now()}`,
@@ -278,39 +281,52 @@ export default function AiAssistantScreen() {
           }
         />
 
-        {/* Emergency banner — só pisca quando user digita palavras críticas */}
-        {detectEmergency(draft) ? (
-          <Pressable
-            onPress={() => {
-              const url = Platform.select({
-                ios: 'https://maps.apple.com/?q=veterinario+24+horas',
-                android: 'geo:0,0?q=veterinario+24+horas',
-                default: 'https://www.google.com/maps/search/?api=1&query=veterinario+24+horas',
-              });
-              Linking.openURL(url!).catch(() => {});
-            }}
+        {/* Emergency banner — aparece ao digitar palavra crítica E permanece quando a
+            msg de emergência foi enviada (a rede de segurança não some no envio). */}
+        {detectEmergency(draft) || emergencyActive ? (
+          <View
             style={{
               marginHorizontal: 12,
               marginBottom: 4,
               backgroundColor: '#DC2626',
               borderRadius: 12,
-              padding: 12,
               flexDirection: 'row',
               alignItems: 'center',
-              gap: 10,
             }}
           >
-            <Text style={{ fontSize: 22 }}>🚨</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FFFFFF' }}>
-                Parece emergência. NÃO espere a IA.
-              </Text>
-              <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#FFFFFF', opacity: 0.9, marginTop: 2 }}>
-                Toque pra ver vets 24h próximos no mapa.
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
-          </Pressable>
+            <Pressable
+              onPress={() => {
+                const url = Platform.select({
+                  ios: 'https://maps.apple.com/?q=veterinario+24+horas',
+                  android: 'geo:0,0?q=veterinario+24+horas',
+                  default: 'https://www.google.com/maps/search/?api=1&query=veterinario+24+horas',
+                });
+                Linking.openURL(url!).catch(() => {});
+              }}
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12 }}
+            >
+              <Text style={{ fontSize: 22 }}>🚨</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FFFFFF' }}>
+                  Parece emergência. NÃO espere a IA.
+                </Text>
+                <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#FFFFFF', opacity: 0.9, marginTop: 2 }}>
+                  Toque pra ver vets 24h próximos no mapa.
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
+            </Pressable>
+            {emergencyActive ? (
+              <Pressable
+                onPress={() => setEmergencyActive(false)}
+                hitSlop={10}
+                accessibilityLabel="Dispensar aviso de emergência"
+                style={{ paddingHorizontal: 12, paddingVertical: 12 }}
+              >
+                <Ionicons name="close" size={18} color="#FFFFFF" />
+              </Pressable>
+            ) : null}
+          </View>
         ) : null}
 
         {/* Indicador Pro ativo */}
