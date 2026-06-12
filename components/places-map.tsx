@@ -19,27 +19,47 @@ export interface MapPlace {
 // "centralizar em mim" via geolocalização do navegador.
 // ----------------------------------------------------------------------------
 
+function injectCss(id: string, href: string) {
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = href;
+  document.head.appendChild(link);
+}
+function injectScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('script-failed:' + src));
+    document.body.appendChild(s);
+  });
+}
+
 let leafletPromise: Promise<unknown> | null = null;
 function loadLeaflet(): Promise<unknown> {
   if (typeof window === 'undefined' || typeof document === 'undefined') return Promise.reject(new Error('no-dom'));
-  const w = window as unknown as { L?: unknown };
-  if (w.L) return Promise.resolve(w.L);
+  const w = window as unknown as { L?: { markerClusterGroup?: unknown } };
+  if (w.L && w.L.markerClusterGroup) return Promise.resolve(w.L);
   if (leafletPromise) return leafletPromise;
-  leafletPromise = new Promise((resolve, reject) => {
-    if (!document.getElementById('leaflet-css')) {
-      const link = document.createElement('link');
-      link.id = 'leaflet-css';
-      link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      document.head.appendChild(link);
+  leafletPromise = (async () => {
+    injectCss('leaflet-css', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+    if (!w.L) await injectScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+    // Plugin de clustering (agrupa pinos no zoom-out). Opcional: se o CDN falhar,
+    // o mapa segue funcionando com pins soltos (fallback no layer).
+    injectCss('leaflet-cluster-css', 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css');
+    injectCss('leaflet-cluster-default-css', 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css');
+    try {
+      if (!w.L?.markerClusterGroup) {
+        await injectScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js');
+      }
+    } catch {
+      /* segue sem cluster */
     }
-    const s = document.createElement('script');
-    s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    s.async = true;
-    s.onload = () => resolve((window as unknown as { L: unknown }).L);
-    s.onerror = () => reject(new Error('leaflet-load-failed'));
-    document.body.appendChild(s);
-  });
+    return w.L;
+  })();
   return leafletPromise;
 }
 
@@ -74,7 +94,18 @@ export function PlacesMap({
           maxZoom: 19,
           attribution: '© OpenStreetMap',
         }).addTo(map);
-        map._placeLayer = L.layerGroup().addTo(map);
+        // Agrupa os pinos no zoom-out (markercluster). Fallback pra layer simples
+        // se o plugin não tiver carregado.
+        map._placeLayer = (
+          L.markerClusterGroup
+            ? L.markerClusterGroup({
+                chunkedLoading: true,
+                maxClusterRadius: 55,
+                showCoverageOnHover: false,
+                spiderfyOnMaxZoom: true,
+              })
+            : L.layerGroup()
+        ).addTo(map);
         mapRef.current = map;
         setReady(true);
       })
@@ -100,9 +131,10 @@ export function PlacesMap({
         iconSize: [28, 28],
         iconAnchor: [14, 28],
       });
-      const m = L.marker([p.latitude, p.longitude], { icon }).addTo(layer);
+      const m = L.marker([p.latitude, p.longitude], { icon });
       m.bindPopup(`<b>${escapeHtml(p.name)}</b><br/><a href="#" data-pid="${p.id}">Ver detalhes</a>`);
       m.on('click', () => onSelect(p.id));
+      layer.addLayer(m); // funciona pra markerClusterGroup E layerGroup
       pts.push([p.latitude, p.longitude]);
     });
     if (pts.length > 0) {

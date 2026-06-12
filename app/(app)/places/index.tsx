@@ -30,6 +30,7 @@ const KIND_FILTERS: { value: PlaceKind | 'all'; label: string; emoji: string }[]
   { value: 'event', label: PLACE_KIND_META.event.label, emoji: PLACE_KIND_META.event.emoji },
   { value: 'beach', label: PLACE_KIND_META.beach.label, emoji: PLACE_KIND_META.beach.emoji },
   { value: 'training', label: PLACE_KIND_META.training.label, emoji: PLACE_KIND_META.training.emoji },
+  { value: 'other', label: PLACE_KIND_META.other.label, emoji: PLACE_KIND_META.other.emoji },
 ];
 
 // Endereço sentinela dos lugares OSM sem rua — não mostrar cru nem geocodar.
