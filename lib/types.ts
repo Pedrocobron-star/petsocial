@@ -23,6 +23,7 @@ export interface Vaccination {
   next_dose_at: string | null;
   vet_name: string | null;
   notes: string | null;
+  photo_urls: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -479,6 +480,7 @@ export interface VetVisit {
   weight_kg: number | null;
   next_visit_at: string | null;
   notes: string | null;
+  photo_urls: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -851,6 +853,8 @@ export interface AiMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   tokens_used: number | null;
+  /** true quando é resposta automática local (IA fora do ar). Não conta na cota. */
+  is_fallback?: boolean;
   created_at: string;
 }
 

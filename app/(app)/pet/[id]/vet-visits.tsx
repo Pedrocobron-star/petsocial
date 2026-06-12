@@ -8,6 +8,7 @@ import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-nativ
 
 import { EmptyState } from '@/components/empty-state';
 import { HealthListSkeleton } from '@/components/health/health-list-skeleton';
+import { HealthPhotoPicker, HealthPhotoThumbs } from '@/components/health/health-photos';
 import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { DateTimePickerInput } from '@/components/ui/datetime-picker';
@@ -150,6 +151,7 @@ function VisitCard({ visit, onDelete }: { visit: VetVisit; onDelete: () => void 
           />
         ) : null}
         {visit.notes ? <Row label="Notas" value={visit.notes} /> : null}
+        <HealthPhotoThumbs photoUrls={visit.photo_urls} />
       </View>
     </View>
   );
@@ -199,6 +201,7 @@ function VisitForm({
   const [weight, setWeight] = useState('');
   const [nextVisit, setNextVisit] = useState('');
   const [notes, setNotes] = useState('');
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
   // string 'YYYY-MM-DD' <-> Date local (sem shift de fuso)
   const toDate = (s: string): Date | null => {
@@ -224,6 +227,7 @@ function VisitForm({
         weight_kg: weight.trim() ? Number(weight) : undefined,
         next_visit_at: nextVisit.trim() || undefined,
         notes: notes.trim() || undefined,
+        photo_urls: photoUrls,
       });
       // Agenda notificação se houver próxima visita marcada
       if (visit?.next_visit_at && petName) {
@@ -278,6 +282,12 @@ function VisitForm({
         minimumDate={new Date()}
       />
       <Field label="Notas" value={notes} onChange={setNotes} placeholder="" multiline />
+      <HealthPhotoPicker
+        photoUrls={photoUrls}
+        onChange={setPhotoUrls}
+        label="Fotos (opcional)"
+        hint="Anexe receitas, exames ou laudos da consulta."
+      />
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <View style={{ flex: 1 }}>

@@ -886,6 +886,7 @@ export async function addVaccination(input: {
   next_dose_at?: string | null;
   vet_name?: string | null;
   notes?: string | null;
+  photo_urls?: string[] | null;
 }): Promise<Vaccination> {
   const { data, error } = await supabase
     .from('vaccinations')
@@ -1941,6 +1942,7 @@ export async function createVetVisit(input: {
   weight_kg?: number;
   next_visit_at?: string;
   notes?: string;
+  photo_urls?: string[] | null;
 }): Promise<VetVisit> {
   const { data, error } = await supabase
     .from('vet_visits')
@@ -2853,6 +2855,9 @@ export async function fetchAiMessagesSentToday(userId: string): Promise<number> 
     .select('id, ai_conversations!inner(user_id)', { count: 'exact', head: true })
     .eq('role', 'user')
     .eq('ai_conversations.user_id', userId)
+    // Mensagens que só receberam resposta automática local (IA fora do ar) NÃO
+    // contam na cota diária — não faz sentido gastar cota numa não-resposta.
+    .eq('is_fallback', false)
     .gte('created_at', dayAgoISO);
   if (error) {
     // Best-effort — em caso de erro, permite envio (não bloqueia user com bug)
@@ -2884,13 +2889,27 @@ export async function sendAiMessage(
       return aiResp.message as AiMessage;
     }
   } catch (err) {
-    console.warn('[sendAiMessage] Edge function não deployada, usando fallback:', err);
-    // Fallback local — resposta canned (dev mode)
+    console.warn('[sendAiMessage] IA indisponível, resposta local:', err);
+    // Fallback local: a IA não respondeu (função fora do ar / erro). Devolve um
+    // texto útil e honesto — SEM jargão técnico de deploy. Marca a mensagem do
+    // user e a resposta como is_fallback=true pra NÃO gastar a cota diária do
+    // plano free (a não-resposta não deve empurrar o tutor pro paywall).
     const petName = pet?.name ?? 'seu pet';
-    const fallback = `Oi! Sou a assistente de saúde do Maestro Pet 🐾\n\nNão consegui acessar a IA agora (a função no servidor ainda não foi deployada). Em produção eu analiso a pergunta sobre ${petName} e respondo com base em conhecimento veterinário.\n\nPara situações urgentes, sempre procure um veterinário próximo!`;
+    const fallback = `Oi! Recebi sua mensagem 🐾\n\nNão consegui gerar uma resposta automática agora. Pra dúvidas sobre a saúde de ${petName}, o ideal é conversar com um veterinário de confiança.\n\nEnquanto isso, registre tudo aqui no app — sintomas, peso, vacinas e consultas — pra levar um histórico completo na próxima visita. Em emergências, procure atendimento na hora.`;
+    // Best-effort: desconta a msg do user da cota (não bloqueia o fluxo se falhar)
+    await supabase
+      .from('ai_messages')
+      .update({ is_fallback: true })
+      .eq('id', (userMsg as AiMessage).id)
+      .then(undefined, () => undefined);
     const { data: aMsg, error: e3 } = await supabase
       .from('ai_messages')
-      .insert({ conversation_id: conversationId, role: 'assistant', content: fallback })
+      .insert({
+        conversation_id: conversationId,
+        role: 'assistant',
+        content: fallback,
+        is_fallback: true,
+      })
       .select('*')
       .single();
     if (e3) throw e3;

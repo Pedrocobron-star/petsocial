@@ -8,6 +8,7 @@ import { Alert, FlatList, Modal, Pressable, ScrollView, Text, View } from 'react
 
 import { EmptyState } from '@/components/empty-state';
 import { HealthListSkeleton } from '@/components/health/health-list-skeleton';
+import { HealthPhotoPicker, HealthPhotoThumbs } from '@/components/health/health-photos';
 import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { DateTimePickerInput } from '@/components/ui/datetime-picker';
@@ -522,6 +523,7 @@ function VaccineCard({
               </Text>
             </View>
           ) : null}
+          <HealthPhotoThumbs photoUrls={vaccine.photo_urls} />
         </View>
         {isOwner ? (
           <View className="flex-row gap-1">
@@ -562,6 +564,7 @@ function VaccineForm({
   const [next, setNext] = useState<Date | null>(toDate(existing?.next_dose_at) ?? prefillNext ?? null);
   const [vet, setVet] = useState(existing?.vet_name ?? '');
   const [notes, setNotes] = useState(existing?.notes ?? '');
+  const [photoUrls, setPhotoUrls] = useState<string[]>(existing?.photo_urls ?? []);
   const [submitting, setSubmitting] = useState(false);
 
   // Reset state quando modal abre/troca de "existing" ou de pré-preenchimento
@@ -571,6 +574,7 @@ function VaccineForm({
     setNext(toDate(existing?.next_dose_at) ?? prefillNext ?? null);
     setVet(existing?.vet_name ?? '');
     setNotes(existing?.notes ?? '');
+    setPhotoUrls(existing?.photo_urls ?? []);
   }, [existing, prefillName, prefillNext, visible]);
 
   const handleSubmit = async () => {
@@ -588,6 +592,7 @@ function VaccineForm({
           next_dose_at: toISODate(next),
           vet_name: vet.trim() || null,
           notes: notes.trim() || null,
+          photo_urls: photoUrls,
         });
         savedVac = {
           ...existing,
@@ -596,6 +601,7 @@ function VaccineForm({
           next_dose_at: toISODate(next),
           vet_name: vet.trim() || null,
           notes: notes.trim() || null,
+          photo_urls: photoUrls,
         };
       } else {
         savedVac = await addVaccination({
@@ -605,6 +611,7 @@ function VaccineForm({
           next_dose_at: toISODate(next),
           vet_name: vet.trim() || null,
           notes: notes.trim() || null,
+          photo_urls: photoUrls,
         });
       }
       // Agenda (ou reagenda) notificações locais — best-effort, não bloqueia o save
@@ -698,6 +705,12 @@ function VaccineForm({
             />
             <Input label="Veterinário (opcional)" value={vet} onChangeText={setVet} placeholder="Dr. Roberto" />
             <TextArea label="Notas (opcional)" value={notes} onChangeText={setNotes} rows={3} placeholder="Lote, reações, observações" />
+            <HealthPhotoPicker
+              photoUrls={photoUrls}
+              onChange={setPhotoUrls}
+              label="Fotos (opcional)"
+              hint="Anexe a carteirinha, a etiqueta do lote ou a nota fiscal."
+            />
             <View className="mt-2">
               <Button
                 title={existing ? 'Salvar alterações' : 'Adicionar vacina'}
