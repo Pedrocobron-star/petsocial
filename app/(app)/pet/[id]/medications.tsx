@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { format, formatDistanceToNow, parseISO } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -37,6 +37,7 @@ export default function MedicationsScreen() {
   const qc = useQueryClient();
   const toast = useToast();
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<MedicationWithLogs | null>(null);
 
   const listQuery = useQuery({
     queryKey: qk.medications(id),
@@ -82,18 +83,31 @@ export default function MedicationsScreen() {
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <Stack.Screen options={{ title: 'Remédios' }} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
-        {showForm ? (
+        {showForm || editing ? (
           <MedicationForm
+            key={editing?.id ?? 'new'}
             petId={id}
-            onCancel={() => setShowForm(false)}
-            onCreated={() => {
+            existing={editing}
+            onCancel={() => {
               setShowForm(false);
+              setEditing(null);
+            }}
+            onSaved={() => {
+              setShowForm(false);
+              setEditing(null);
               qc.invalidateQueries({ queryKey: qk.medications(id) });
               qc.invalidateQueries({ queryKey: qk.healthSummary(id) });
             }}
           />
         ) : (
-          <Button title="+ Adicionar remédio" onPress={() => setShowForm(true)} fullWidth />
+          <Button
+            title="+ Adicionar remédio"
+            onPress={() => {
+              setEditing(null);
+              setShowForm(true);
+            }}
+            fullWidth
+          />
         )}
 
         {active.length === 0 && inactive.length === 0 && !listQuery.isLoading ? (
@@ -112,6 +126,10 @@ export default function MedicationsScreen() {
                 key={m.id}
                 med={m}
                 onLog={() => logMutation.mutate(m.id)}
+                onEdit={() => {
+                  setShowForm(false);
+                  setEditing(m);
+                }}
                 onToggleActive={() => toggleActiveMutation.mutate({ medId: m.id, active: false })}
                 onDelete={() => {
                   Alert.alert('Remover remédio?', `Tem certeza que quer remover "${m.name}"?`, [
@@ -136,6 +154,10 @@ export default function MedicationsScreen() {
                 key={m.id}
                 med={m}
                 onLog={() => {}}
+                onEdit={() => {
+                  setShowForm(false);
+                  setEditing(m);
+                }}
                 onToggleActive={() => toggleActiveMutation.mutate({ medId: m.id, active: true })}
                 onDelete={() => {
                   Alert.alert('Remover remédio?', `Tem certeza que quer remover "${m.name}"?`, [
@@ -177,11 +199,13 @@ function SectionLabel({ title }: { title: string }) {
 function MedicationCard({
   med,
   onLog,
+  onEdit,
   onToggleActive,
   onDelete,
 }: {
   med: MedicationWithLogs;
   onLog: () => void;
+  onEdit: () => void;
   onToggleActive: () => void;
   onDelete: () => void;
 }) {
@@ -214,9 +238,14 @@ function MedicationCard({
             </Text>
           ) : null}
         </View>
-        <Pressable hitSlop={10} onPress={onDelete}>
-          <Ionicons name="trash-outline" size={18} color={theme.textDim} />
-        </Pressable>
+        <View style={{ flexDirection: 'row', gap: 4 }}>
+          <Pressable hitSlop={10} onPress={onEdit}>
+            <Ionicons name="pencil" size={17} color={theme.textDim} />
+          </Pressable>
+          <Pressable hitSlop={10} onPress={onDelete}>
+            <Ionicons name="trash-outline" size={18} color={theme.textDim} />
+          </Pressable>
+        </View>
       </View>
 
       {med.notes ? (
@@ -270,34 +299,47 @@ function MedicationCard({
 
 function MedicationForm({
   petId,
+  existing,
   onCancel,
-  onCreated,
+  onSaved,
 }: {
   petId: string;
+  existing: MedicationWithLogs | null;
   onCancel: () => void;
-  onCreated: () => void;
+  onSaved: () => void;
 }) {
   const { theme } = useTheme();
   const toast = useToast();
-  const [name, setName] = useState('');
-  const [dosage, setDosage] = useState('');
-  const [frequency, setFrequency] = useState<MedicationFrequency>('daily');
-  const [timeOfDay, setTimeOfDay] = useState('');
-  const [notes, setNotes] = useState('');
+  const [name, setName] = useState(existing?.name ?? '');
+  const [dosage, setDosage] = useState(existing?.dosage ?? '');
+  const [frequency, setFrequency] = useState<MedicationFrequency>(existing?.frequency ?? 'daily');
+  const [timeOfDay, setTimeOfDay] = useState(existing?.time_of_day ?? '');
+  const [notes, setNotes] = useState(existing?.notes ?? '');
 
-  const createMut = useMutation({
-    mutationFn: () =>
-      createMedication({
-        pet_id: petId,
-        name: name.trim(),
-        dosage: dosage.trim() || undefined,
-        frequency,
-        time_of_day: timeOfDay.trim() || undefined,
-        notes: notes.trim() || undefined,
-      }),
+  const saveMut = useMutation({
+    mutationFn: async () => {
+      if (existing) {
+        await updateMedication(existing.id, {
+          name: name.trim(),
+          dosage: dosage.trim() || null,
+          frequency,
+          time_of_day: timeOfDay.trim() || null,
+          notes: notes.trim() || null,
+        });
+      } else {
+        await createMedication({
+          pet_id: petId,
+          name: name.trim(),
+          dosage: dosage.trim() || undefined,
+          frequency,
+          time_of_day: timeOfDay.trim() || undefined,
+          notes: notes.trim() || undefined,
+        });
+      }
+    },
     onSuccess: () => {
-      toast.success('Remédio adicionado!');
-      onCreated();
+      toast.success(existing ? 'Remédio atualizado!' : 'Remédio adicionado!');
+      onSaved();
     },
     onError: () => toast.error('Não foi possível salvar'),
   });
@@ -316,7 +358,7 @@ function MedicationForm({
       }}
     >
       <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}>
-        Novo remédio
+        {existing ? 'Editar remédio' : 'Novo remédio'}
       </Text>
       <Field label="Nome *" value={name} onChange={setName} placeholder="ex: Bravecto, Carprofeno" />
       <Field label="Dose" value={dosage} onChange={setDosage} placeholder="ex: 1 comprimido, 5ml" />
@@ -361,10 +403,10 @@ function MedicationForm({
         </View>
         <View style={{ flex: 1 }}>
           <Button
-            title="Salvar"
-            onPress={() => createMut.mutate()}
+            title={existing ? 'Salvar alterações' : 'Salvar'}
+            onPress={() => saveMut.mutate()}
             disabled={!valid}
-            loading={createMut.isPending}
+            loading={saveMut.isPending}
             fullWidth
           />
         </View>
