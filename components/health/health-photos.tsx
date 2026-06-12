@@ -167,44 +167,48 @@ export function HealthPhotoThumbs({
         animationType="fade"
         onRequestClose={() => setActive(null)}
       >
-        <Pressable
-          onPress={() => setActive(null)}
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.92)',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
+        {/* Backdrop é uma View (não Pressable) com os controles como IRMÃOS, não
+            filhos — no RN Web o onClick do Pressable borbulha, então setas dentro
+            de um backdrop "fecha-ao-tocar" fechariam o lightbox. Padrão do
+            places/[id].tsx. O Pressable de fundo (atrás da imagem) fecha ao tocar
+            FORA; tocar numa seta/X dispara só o próprio handler. */}
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center' }}>
+          <Pressable
+            onPress={() => setActive(null)}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          />
           {active !== null ? (
             <Image
               source={{ uri: photoUrls[active] }}
-              style={{ width: '92%', height: '78%' }}
+              style={{ width: '100%', height: '72%' }}
               resizeMode="contain"
             />
           ) : null}
           <Pressable
             onPress={() => setActive(null)}
             hitSlop={12}
-            style={{ position: 'absolute', top: 48, right: 24 }}
+            style={{ position: 'absolute', top: 50, right: 20, zIndex: 2, padding: 8 }}
           >
-            <Ionicons name="close" size={32} color="#fff" />
+            <Ionicons name="close" size={30} color="#fff" />
           </Pressable>
           {photoUrls.length > 1 && active !== null ? (
             <View
               style={{
                 position: 'absolute',
-                bottom: 48,
+                bottom: 50,
+                alignSelf: 'center',
                 flexDirection: 'row',
                 gap: 20,
                 alignItems: 'center',
+                zIndex: 2,
               }}
             >
               <Pressable
                 onPress={() => setActive((active - 1 + photoUrls.length) % photoUrls.length)}
                 hitSlop={12}
+                style={{ padding: 6 }}
               >
-                <Ionicons name="chevron-back" size={32} color="#fff" />
+                <Ionicons name="chevron-back" size={30} color="#fff" />
               </Pressable>
               <Text style={{ color: '#fff', fontFamily: FONTS.body, fontSize: 14 }}>
                 {active + 1}/{photoUrls.length}
@@ -212,12 +216,13 @@ export function HealthPhotoThumbs({
               <Pressable
                 onPress={() => setActive((active + 1) % photoUrls.length)}
                 hitSlop={12}
+                style={{ padding: 6 }}
               >
-                <Ionicons name="chevron-forward" size={32} color="#fff" />
+                <Ionicons name="chevron-forward" size={30} color="#fff" />
               </Pressable>
             </View>
           ) : null}
-        </Pressable>
+        </View>
       </Modal>
     </>
   );
