@@ -32,6 +32,15 @@ import { useToast } from '@/providers/toast-provider';
 
 const ADMIN_EMAIL = 'pedrocobron@gmail.com';
 const MAX_PLACE_PHOTOS = 12;
+// Sentinela dos lugares OSM sem rua — não mostrar cru.
+const NO_ADDRESS = 'Ver no mapa';
+
+/** Texto de localização tratando o sentinela 'Ver no mapa'. */
+function placeLocationText(place: { address: string; city: string | null; state: string | null }): string {
+  const addr = place.address && place.address !== NO_ADDRESS ? place.address : '';
+  const parts = [addr, place.city ?? '', place.state ?? ''].filter((s) => s && s.trim());
+  return parts.length > 0 ? parts.join(', ') : 'Endereço não informado';
+}
 const MAX_REVIEW_PHOTOS = 4;
 
 // Categorias de nota estilo Google Maps (todas opcionais; a nota geral é o `rating`).
@@ -167,7 +176,7 @@ function PlaceDetailInner() {
   }
 
   const handleShare = async () => {
-    const full = `${place.name}\n${meta.label}\n📍 ${place.address}${place.city ? `, ${place.city}` : ''}${place.phone ? `\n📞 ${place.phone}` : ''}${place.website ? `\n🌐 ${place.website}` : ''}`;
+    const full = `${place.name}\n${meta.label}\n📍 ${placeLocationText(place)}${place.phone ? `\n📞 ${place.phone}` : ''}${place.website ? `\n🌐 ${place.website}` : ''}`;
     if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({ title: place.name, text: full });
@@ -360,7 +369,7 @@ function PlaceDetailInner() {
           <View style={{ backgroundColor: theme.surface, borderRadius: 14, padding: 14, gap: 12 }}>
             <InfoRow
               icon="location-outline"
-              text={`${place.address}${place.city ? `, ${place.city}` : ''}${place.state ? ` — ${place.state}` : ''}`}
+              text={placeLocationText(place)}
             />
             {place.phone ? (
               <InfoRow

@@ -108,6 +108,7 @@ export const qk = {
   hashtag: (name: string) => ['hashtag', name] as const,
   trendingHashtags: () => ['trending-hashtags'] as const,
   places: (filter: string) => ['places', filter] as const,
+  placeKindCounts: () => ['place-kind-counts'] as const,
   place: (id: string) => ['place', id] as const,
   placeReviews: (placeId: string) => ['place-reviews', placeId] as const,
   placePhotos: (placeId: string) => ['place-photos', placeId] as const,
@@ -2356,7 +2357,9 @@ export async function fetchPlaces(filter: {
   city?: string;
   search?: string;
   near?: { lat: number; lng: number };
+  limit?: number;
 }): Promise<PlaceWithStats[]> {
+  const limit = filter.limit ?? 150;
   // "Perto de mim": ordena por distância NO SERVIDOR e traz os mais próximos
   // (RPC places_nearby) — essencial com milhares de lugares; já vem com stats.
   if (filter.near) {
@@ -2365,7 +2368,7 @@ export async function fetchPlaces(filter: {
       p_lng: filter.near.lng,
       p_kind: filter.kind ?? null,
       p_search: filter.search?.trim() || null,
-      p_limit: 200,
+      p_limit: limit,
     });
     if (error) throw error;
     return ((data ?? []) as Record<string, unknown>[]).map((p) => ({
@@ -2379,7 +2382,7 @@ export async function fetchPlaces(filter: {
   if (filter.kind) q = q.eq('kind', filter.kind);
   if (filter.city) q = q.ilike('city', `%${filter.city}%`);
   if (filter.search) q = q.or(`name.ilike.%${filter.search}%,address.ilike.%${filter.search}%`);
-  q = q.order('verified', { ascending: false }).order('created_at', { ascending: false }).limit(150);
+  q = q.order('verified', { ascending: false }).order('created_at', { ascending: false }).limit(limit);
   const { data: places, error } = await q;
   if (error) throw error;
   if (!places || places.length === 0) return [];
@@ -2393,6 +2396,17 @@ export async function fetchPlaces(filter: {
     avg_rating: Number(statsMap.get(p.id)?.avg_rating ?? 0),
     review_count: statsMap.get(p.id)?.review_count ?? 0,
   }));
+}
+
+/** Contagem de lugares por categoria (pra esconder chips de kind sem nenhum lugar). */
+export async function fetchPlaceKindCounts(): Promise<Record<string, number>> {
+  const { data, error } = await supabase.rpc('places_kind_counts');
+  if (error) throw error;
+  const out: Record<string, number> = {};
+  for (const row of (data ?? []) as { kind: string; n: number }[]) {
+    out[row.kind] = Number(row.n);
+  }
+  return out;
 }
 
 export async function fetchPlace(id: string): Promise<PlaceWithStats | null> {

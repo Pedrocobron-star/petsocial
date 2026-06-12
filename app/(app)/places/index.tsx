@@ -12,8 +12,8 @@ import { FONTS } from '@/lib/fonts';
 import { buildPlaceQuery, geocodeAddress } from '@/lib/geocode';
 import { formatDistance, getCurrentPosition, haversineKm, type Coords } from '@/lib/geo';
 import { PLACE_KIND_META, placeKindMeta } from '@/lib/places-meta';
-import { fetchPlaces, qk, setPlaceCoords } from '@/lib/queries';
-import type { PlaceKind, PlaceSpecies, PlaceWithStats } from '@/lib/types';
+import { fetchPlaceKindCounts, fetchPlaces, qk, setPlaceCoords } from '@/lib/queries';
+import type { PlaceKind, PlaceWithStats } from '@/lib/types';
 import { AppThemeProvider } from '@/providers/app-theme-provider';
 import { useTheme } from '@/providers/theme-provider';
 
@@ -32,12 +32,10 @@ const KIND_FILTERS: { value: PlaceKind | 'all'; label: string; emoji: string }[]
   { value: 'training', label: PLACE_KIND_META.training.label, emoji: PLACE_KIND_META.training.emoji },
 ];
 
-const SPECIES_FILTERS: { value: PlaceSpecies; label: string; emoji: string }[] = [
-  { value: 'all', label: 'Pra todos', emoji: '🐾' },
-  { value: 'dog', label: 'Cães', emoji: '🐶' },
-  { value: 'cat', label: 'Gatos', emoji: '🐱' },
-  { value: 'other', label: 'Outras', emoji: '🐰' },
-];
+// Endereço sentinela dos lugares OSM sem rua — não mostrar cru nem geocodar.
+const NO_ADDRESS = 'Ver no mapa';
+const PAGE_STEP = 60;
+const MAX_PAGE = 500;
 
 type SortKey = 'top' | 'recent' | 'most_reviewed';
 
@@ -64,15 +62,16 @@ function PlacesInner() {
   const [kind, setKind] = useState<PlaceKind | 'all'>(initialKind);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('top');
-  const [species, setSpecies] = useState<PlaceSpecies>('all');
   const [view, setView] = useState<'list' | 'map'>('list');
   const [myLoc, setMyLoc] = useState<Coords | null>(null);
   const [locating, setLocating] = useState(false);
   const [nearMeTried, setNearMeTried] = useState(false);
+  const [pageSize, setPageSize] = useState(PAGE_STEP);
   const qc = useQueryClient();
   // Lugares já tentados geocodar nesta sessão (evita re-tentar falhas em loop).
   const geocodeTriedRef = useRef<Set<string>>(new Set());
   const [geocodingLeft, setGeocodingLeft] = useState(0);
+  const autoLocTriedRef = useRef(false);
 
   // Toggle "perto de mim": pega localização e ordena por distância (sobrepõe o sort).
   const toggleNearMe = async () => {
@@ -88,6 +87,34 @@ function PlacesInner() {
     setMyLoc(c);
   };
 
+  // Localização AO ABRIR: com milhares de lugares, mostrar "perto de você" por
+  // padrão. Tenta 1x no mount (silencioso). Se negar, cai no default + aviso.
+  useEffect(() => {
+    if (autoLocTriedRef.current) return;
+    autoLocTriedRef.current = true;
+    (async () => {
+      setLocating(true);
+      const c = await getCurrentPosition();
+      setLocating(false);
+      setNearMeTried(true);
+      if (c) setMyLoc(c);
+    })();
+  }, []);
+
+  // Contagem por categoria → esconde chips de kind sem nenhum lugar.
+  const kindCountsQuery = useQuery({
+    queryKey: qk.placeKindCounts(),
+    queryFn: fetchPlaceKindCounts,
+    staleTime: 5 * 60_000,
+  });
+  const kindCounts = kindCountsQuery.data;
+  const visibleKindFilters = useMemo(() => {
+    if (!kindCounts) return KIND_FILTERS;
+    return KIND_FILTERS.filter(
+      (k) => k.value === 'all' || (kindCounts[k.value] ?? 0) > 0 || k.value === kind,
+    );
+  }, [kindCounts, kind]);
+
   // Se o query param mudar via deep link, sincroniza
   useEffect(() => {
     if (isValidPlaceKind(params.kind)) {
@@ -95,17 +122,25 @@ function PlacesInner() {
     }
   }, [params.kind]);
 
+  // Mudou filtro/busca/localização → volta pro 1º "page".
+  useEffect(() => {
+    setPageSize(PAGE_STEP);
+  }, [kind, search, myLoc]);
+
   const filter = {
     kind: kind === 'all' ? undefined : kind,
     search: search.trim() || undefined,
     // "Perto de mim" ativo → o servidor traz os mais próximos (entre milhares).
     near: myLoc ? { lat: myLoc.lat, lng: myLoc.lng } : undefined,
+    limit: pageSize,
   };
-  const filterKey = `${kind}-${search.trim()}-${myLoc ? `${myLoc.lat.toFixed(3)},${myLoc.lng.toFixed(3)}` : 'all'}`;
+  const filterKey = `${kind}-${search.trim()}-${myLoc ? `${myLoc.lat.toFixed(3)},${myLoc.lng.toFixed(3)}` : 'all'}-${pageSize}`;
   const query = useQuery({
     queryKey: qk.places(filterKey),
     queryFn: () => fetchPlaces(filter),
   });
+  // Provavelmente há mais resultados se a página veio cheia.
+  const maybeMore = (query.data?.length ?? 0) >= pageSize && pageSize < MAX_PAGE;
 
   const places = useMemo(() => {
     const all = query.data ?? [];
@@ -135,13 +170,8 @@ function PlacesInner() {
       // recent
       return (a.created_at < b.created_at ? 1 : -1);
     });
-    // Filtro por espécie (client-side): 'all' do lugar aparece em qualquer filtro
-    if (species === 'all') return sorted;
-    return sorted.filter((p) => {
-      const sp = p.species ?? 'all';
-      return sp === 'all' || sp === species;
-    });
-  }, [query.data, sort, species, myLoc]);
+    return sorted;
+  }, [query.data, sort, myLoc]);
 
   // LISTA ↔ MAPA: ao abrir o Mapa, geocoda (Nominatim/OSM, grátis) os lugares que
   // têm endereço mas ainda não têm coordenada, e grava de volta (RPC set_place_coords).
@@ -155,6 +185,7 @@ function PlacesInner() {
         p.latitude == null &&
         p.address &&
         p.address.trim().length > 3 &&
+        p.address.trim() !== NO_ADDRESS &&
         !geocodeTriedRef.current.has(p.id),
     );
     if (pending.length === 0) return;
@@ -203,11 +234,22 @@ function PlacesInner() {
         options={{
           title: 'Pet Map',
           headerRight: () => (
-            <Link href={'/(app)/places/new' as never} asChild>
-              <Pressable hitSlop={10} style={{ paddingHorizontal: 8 }}>
-                <Ionicons name="add" size={26} color={theme.accent.color} />
-              </Pressable>
-            </Link>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Link href={'/(app)/agenda' as never} asChild>
+                <Pressable
+                  hitSlop={10}
+                  style={{ paddingHorizontal: 8 }}
+                  accessibilityLabel="Lugares salvos"
+                >
+                  <Ionicons name="bookmark-outline" size={22} color={theme.accent.color} />
+                </Pressable>
+              </Link>
+              <Link href={'/(app)/places/new' as never} asChild>
+                <Pressable hitSlop={10} style={{ paddingHorizontal: 8 }} accessibilityLabel="Adicionar lugar">
+                  <Ionicons name="add" size={26} color={theme.accent.color} />
+                </Pressable>
+              </Link>
+            </View>
           ),
         }}
       />
@@ -336,11 +378,29 @@ function PlacesInner() {
           </Pressable>
         </View>
 
-        {/* Aviso quando a localização não veio (negada / indisponível) */}
+        {/* Localização negada/indisponível → orienta a ativar ou buscar */}
         {!locating && myLoc === null && nearMeTried ? (
-          <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: theme.textDim, marginTop: 6 }}>
-            Não consegui pegar sua localização. Libere o acesso no navegador e tente de novo.
-          </Text>
+          <Pressable
+            onPress={toggleNearMe}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              marginTop: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 9,
+              borderRadius: 12,
+              backgroundColor: theme.accent.surface,
+              borderWidth: 1,
+              borderColor: theme.accent.color,
+            }}
+          >
+            <Ionicons name="navigate-outline" size={16} color={theme.accent.color} />
+            <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 12, color: theme.accent.dark }}>
+              Ative a localização pra ver o que tá perto de você — ou busque por nome/cidade e use as categorias.
+            </Text>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.accent.color }}>Ativar</Text>
+          </Pressable>
         ) : null}
 
         <ScrollView
@@ -348,7 +408,7 @@ function PlacesInner() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 6, paddingTop: 10, paddingBottom: 4 }}
         >
-          {KIND_FILTERS.map((k) => {
+          {visibleKindFilters.map((k) => {
             const active = kind === k.value;
             return (
               <Pressable
@@ -379,44 +439,30 @@ function PlacesInner() {
           })}
         </ScrollView>
 
-        {/* Filtro por espécie — pra quem é o lugar */}
-        <View style={{ flexDirection: 'row', gap: 6, paddingTop: 8 }}>
-          {SPECIES_FILTERS.map((s) => {
-            const active = species === s.value;
-            return (
-              <Pressable
-                key={s.value}
-                onPress={() => setSpecies(s.value)}
+        {/* Sort options — só quando há resultados pra ordenar */}
+        {places.length > 1 ? (
+          <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+            {/* Quando "perto de mim" tá on, ele sobrepõe o sort — mostra explícito */}
+            {myLoc ? (
+              <View
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 4,
-                  paddingHorizontal: 11,
-                  paddingVertical: 6,
-                  borderRadius: 999,
-                  borderWidth: 1.5,
-                  borderColor: active ? theme.accent.color : theme.border,
-                  backgroundColor: active ? theme.accent.surface : 'transparent',
+                  gap: 3,
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 8,
+                  backgroundColor: theme.accent.surface,
+                  borderWidth: 1,
+                  borderColor: theme.accent.color,
                 }}
               >
-                <Text style={{ fontSize: 12 }}>{s.emoji}</Text>
-                <Text
-                  style={{
-                    fontFamily: FONTS.bodyBold,
-                    fontSize: 11.5,
-                    color: active ? theme.accent.dark : theme.textMuted,
-                  }}
-                >
-                  {s.label}
+                <Ionicons name="navigate" size={11} color={theme.accent.dark} />
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.accent.dark }}>
+                  Por distância
                 </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Sort options — só quando há resultados pra ordenar */}
-        {places.length > 1 ? (
-          <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+              </View>
+            ) : null}
             {SORT_OPTIONS.map((s) => {
               const active = sort === s.value;
               return (
@@ -501,6 +547,32 @@ function PlacesInner() {
           <View style={{ marginHorizontal: -12, marginTop: -12, marginBottom: 12 }}>
             <AreaHero area="places" />
           </View>
+        }
+        ListFooterComponent={
+          maybeMore ? (
+            <Pressable
+              onPress={() => setPageSize((p) => Math.min(p + PAGE_STEP, MAX_PAGE))}
+              disabled={query.isFetching}
+              style={{
+                marginTop: 4,
+                paddingVertical: 12,
+                borderRadius: 12,
+                alignItems: 'center',
+                backgroundColor: theme.surface,
+                borderWidth: 1,
+                borderColor: theme.border,
+                opacity: query.isFetching ? 0.6 : 1,
+              }}
+            >
+              {query.isFetching ? (
+                <ActivityIndicator size="small" color={theme.accent.color} />
+              ) : (
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.accent.color }}>
+                  Carregar mais lugares
+                </Text>
+              )}
+            </Pressable>
+          ) : null
         }
         ListEmptyComponent={
           query.isLoading ? null : (
@@ -624,19 +696,22 @@ function PlaceCard({ place, distanceKm }: { place: PlaceWithStats; distanceKm?: 
         <View style={{ paddingHorizontal: 14, paddingVertical: 12, gap: 6 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
             <Ionicons name="location-outline" size={14} color={theme.textDim} style={{ marginTop: 2 }} />
-            <Text
-              style={{
-                flex: 1,
-                fontFamily: FONTS.body,
-                fontSize: 13,
-                color: theme.text,
-                lineHeight: 18,
-              }}
-              numberOfLines={2}
-            >
-              {place.address}
-              {place.city ? <Text style={{ color: theme.textDim }}> · {place.city}</Text> : null}
-            </Text>
+            {place.address && place.address !== NO_ADDRESS ? (
+              <Text
+                style={{ flex: 1, fontFamily: FONTS.body, fontSize: 13, color: theme.text, lineHeight: 18 }}
+                numberOfLines={2}
+              >
+                {place.address}
+                {place.city ? <Text style={{ color: theme.textDim }}> · {place.city}</Text> : null}
+              </Text>
+            ) : (
+              <Text
+                style={{ flex: 1, fontFamily: FONTS.body, fontSize: 13, color: theme.textDim, lineHeight: 18 }}
+                numberOfLines={2}
+              >
+                {place.city || 'Endereço não informado'}
+              </Text>
+            )}
           </View>
           {distanceKm != null ? (
             <View
