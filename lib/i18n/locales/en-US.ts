@@ -56,9 +56,9 @@ export const enUS: TranslationKeys = {
           'Share moments, meet other owners, and find friends for your pet to play with.',
       },
       ai: {
-        title: 'AI assistant',
+        title: 'Health Q&A',
         description:
-          'Questions about food, behavior, vaccines. Answers in seconds.',
+          'Reference guide on food, behavior, vaccines and warning signs.',
       },
     },
     howItWorks: {

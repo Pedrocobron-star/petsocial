@@ -28,8 +28,8 @@ export default function PrivacyPage() {
           consultas veterinárias, peso, dieta atual, sintomas registrados (com fotos opcionais).
         </LegalListItem>
         <LegalListItem>
-          Mensagens enviadas ao assistente IA — usadas pra gerar respostas + rate-limit do plano
-          free (5/dia).
+          Tira-dúvidas de Saúde — suas perguntas são processadas localmente no app pra mostrar a
+          resposta do guia. Não coletamos nem armazenamos essas perguntas nos nossos servidores.
         </LegalListItem>
         <LegalListItem>
           Push token do device (Expo Push), guardado pra enviar lembretes de saúde — removido
@@ -69,8 +69,8 @@ export default function PrivacyPage() {
           Calcular o Score de Saúde e detectar alertas de saúde proativos (sem diagnosticar).
         </LegalListItem>
         <LegalListItem>
-          Gerar respostas do assistente IA — envio ao modelo OpenAI/Anthropic com contexto do pet
-          (nome, espécie, idade) só pra resposta acertar. Mensagens são guardadas no banco.
+          Mostrar respostas do Tira-dúvidas de Saúde — um guia de referência que roda localmente no
+          app, sem envio das suas perguntas a serviços de IA de terceiros.
         </LegalListItem>
         <LegalListItem>
           Entender uso agregado e melhorar o produto (analytics via eventos sem PII).

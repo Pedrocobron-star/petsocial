@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
-  Alert,
   FlatList,
   KeyboardAvoidingView,
   Linking,
@@ -14,166 +13,91 @@ import {
   View,
 } from 'react-native';
 
-import { PaywallCard } from '@/components/paywall-card';
 import { usePetHealthGate } from '@/components/pet-health-gate';
-import { PremiumBadge } from '@/components/premium-badge';
 import { TypingDots } from '@/components/typing-dots';
-import { UpgradeModal } from '@/components/upgrade-modal';
 import { detectEmergency } from '@/lib/ai-emergency';
-import { track } from '@/lib/analytics';
-import { getAiSuggestions } from '@/lib/ai-suggestions';
 import { copyToClipboard } from '@/lib/clipboard';
 import { FONTS } from '@/lib/fonts';
-import {
-  createAiConversation,
-  fetchAiConversations,
-  fetchAiMessages,
-  fetchAiMessagesSentToday,
-  fetchPet,
-  qk,
-  sendAiMessage,
-} from '@/lib/queries';
-import type { AiMessage } from '@/lib/types';
-import { useSession } from '@/providers/session-provider';
-import { useIsPro } from '@/providers/subscription-provider';
+import { GUIDE_CATEGORIES, GUIDE_TOPICS, matchGuideTopic } from '@/lib/health-guide';
+import { fetchPet, qk } from '@/lib/queries';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
-/** Limite diário de mensagens pro plano free. */
-const FREE_AI_DAILY_LIMIT = 5;
+/**
+ * Tira-dúvidas de Saúde — guia LOCAL de referência (sem IA/LLM, custo zero).
+ *
+ * Responde com base numa base curada (lib/health-guide.ts): geral, nunca
+ * diagnostica nem prescreve. Sem rede, sem limite diário, sem paywall. Mantém
+ * o detector de emergência (rede de segurança) e o disclaimer fixo.
+ */
 
-export default function AiAssistantScreen() {
+interface GuideMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+const EMERGENCY_REPLY =
+  'Isso pode ser uma emergência. NÃO espere por um guia: procure um veterinário ou um pronto-atendimento 24h o quanto antes.\n\nEnquanto vai, mantenha o pet calmo e aquecido, e anote o que aconteceu (o que comeu, quando começou, sintomas). Toque no botão vermelho acima pra ver vets 24h perto de você.';
+
+function buildFallback(petName: string): string {
+  return `Ainda não tenho um guia específico pra essa pergunta sobre ${petName}. 🐾\n\nO mais seguro é registrar o que você observou (sintomas, peso, fotos) aqui no app e levar pra um veterinário, que avalia com precisão.\n\nVocê pode tentar reformular com palavras como "vômito", "vacina", "alimentação", "coceira", ou tocar numa das sugestões.`;
+}
+
+export default function HealthGuideScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
-  const { session } = useSession();
-  const isPro = useIsPro();
-  const toast = useToast();
-  const qc = useQueryClient();
-  const listRef = useRef<FlatList<AiMessage>>(null);
+  const listRef = useRef<FlatList<GuideMessage>>(null);
+  const counter = useRef(0);
 
   const [draft, setDraft] = useState('');
-  // Emergência detectada numa msg JÁ ENVIADA — fica fixa até o tutor dispensar
-  // (o draft é limpo no envio, então não dá pra depender só dele).
+  const [messages, setMessages] = useState<GuideMessage[]>([]);
+  const [thinking, setThinking] = useState(false);
+  // Emergência detectada numa msg JÁ enviada — fica fixa até dispensar.
   const [emergencyActive, setEmergencyActive] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
-  const [showUpgrade, setShowUpgrade] = useState(false);
 
-  const userId = session?.user.id;
+  const petQuery = useQuery({ queryKey: qk.pet(id), queryFn: () => fetchPet(id), enabled: !!id });
+  const pet = petQuery.data;
+  const petName = pet?.name ?? 'seu pet';
 
-  const petQuery = useQuery({
-    queryKey: qk.pet(id),
-    queryFn: () => fetchPet(id),
-    enabled: !!id,
-  });
-  const convsQuery = useQuery({
-    queryKey: userId ? qk.aiConversations(userId) : ['ai-conversations', 'anon'],
-    queryFn: () => fetchAiConversations(userId!),
-    enabled: !!userId,
-  });
-
-  // Pega ou cria a conversation pro pet
-  useEffect(() => {
-    if (!convsQuery.data || !userId || !id || conversationId) return;
-    const existing = convsQuery.data.find((c) => c.pet_id === id);
-    if (existing) {
-      setConversationId(existing.id);
-    }
-  }, [convsQuery.data, userId, id, conversationId]);
-
-  const msgsQuery = useQuery({
-    queryKey: conversationId ? qk.aiMessages(conversationId) : ['ai-messages', 'none'],
-    queryFn: () => fetchAiMessages(conversationId!),
-    enabled: !!conversationId,
-  });
-
-  // Rate limit do plano free — conta mensagens user-sent nas últimas 24h
-  const dailyCountQuery = useQuery({
-    queryKey: userId ? qk.aiMessagesSentToday(userId) : ['ai-msg-today', 'anon'],
-    queryFn: () => fetchAiMessagesSentToday(userId!),
-    enabled: !!userId && !isPro,
-    // Re-fetch a cada minuto pra contagem ficar fresca
-    refetchInterval: 60_000,
-  });
-  const sentToday = isPro ? 0 : dailyCountQuery.data ?? 0;
-  const remaining = isPro ? Infinity : Math.max(0, FREE_AI_DAILY_LIMIT - sentToday);
-  const reachedLimit = !isPro && remaining === 0;
-
-  const sendMut = useMutation({
-    mutationFn: async (text: string) => {
-      let convId = conversationId;
-      if (!convId) {
-        const conv = await createAiConversation(
-          userId!,
-          id,
-          `Sobre ${petQuery.data?.name ?? 'meu pet'}`,
-        );
-        convId = conv.id;
-        setConversationId(convId);
-      }
-      return sendAiMessage(convId, text, petQuery.data);
-    },
-    onMutate: async (text) => {
-      if (detectEmergency(text)) setEmergencyActive(true);
-      setDraft('');
-      const optimistic: AiMessage = {
-        id: `tmp-${Date.now()}`,
-        conversation_id: conversationId ?? 'tmp',
-        role: 'user',
-        content: text,
-        tokens_used: null,
-        created_at: new Date().toISOString(),
-      };
-      if (conversationId) {
-        await qc.cancelQueries({ queryKey: qk.aiMessages(conversationId) });
-        const prev = qc.getQueryData<AiMessage[]>(qk.aiMessages(conversationId)) ?? [];
-        qc.setQueryData<AiMessage[]>(qk.aiMessages(conversationId), [...prev, optimistic]);
-      }
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
-    },
-    onSuccess: () => {
-      if (conversationId) qc.invalidateQueries({ queryKey: qk.aiMessages(conversationId) });
-      // Re-conta limite diário pra refletir mensagem nova
-      if (userId) qc.invalidateQueries({ queryKey: qk.aiMessagesSentToday(userId) });
-    },
-    onError: () => toast.error('Erro ao enviar', 'Tenta de novo'),
-  });
-
-  // Free user: limite diário de FREE_AI_DAILY_LIMIT mensagens (todas conversas)
-  const canSend = isPro || !reachedLimit;
-
-  const onSend = (text?: string) => {
-    const finalText = (text ?? draft).trim();
-    if (!finalText || sendMut.isPending) return;
-    if (!canSend) {
-      track('paywall_blocked', { intent: 'ai-daily-limit', sent_today: sentToday });
-      setShowUpgrade(true);
-      return;
-    }
-    sendMut.mutate(finalText);
+  const nextId = () => {
+    counter.current += 1;
+    return `m${counter.current}`;
   };
 
-  const pet = petQuery.data;
-  const messages = msgsQuery.data ?? [];
+  const send = (raw?: string) => {
+    const text = (raw ?? draft).trim();
+    if (!text || thinking) return;
+    setDraft('');
 
-  const handleNewConversation = () => {
-    if (messages.length === 0) return;
-    Alert.alert(
-      'Nova conversa?',
-      'A IA não terá memória do que conversamos antes. Útil pra começar um tópico totalmente novo.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Começar nova',
-          onPress: () => {
-            setConversationId(null);
-            setDraft('');
-            // Invalida pra mostrar empty state com sugestões
-            qc.invalidateQueries({ queryKey: ['ai-messages'] });
-          },
-        },
-      ],
-    );
+    const isEmergency = detectEmergency(text);
+    if (isEmergency) setEmergencyActive(true);
+
+    const userMsg: GuideMessage = { id: nextId(), role: 'user', content: text };
+    setMessages((prev) => [...prev, userMsg]);
+    setThinking(true);
+    setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
+
+    // Pequena pausa só pra dar ritmo de conversa (resposta é local/instantânea).
+    setTimeout(() => {
+      let answer: string;
+      if (isEmergency) {
+        answer = EMERGENCY_REPLY;
+      } else {
+        const topic = matchGuideTopic(text);
+        answer = topic ? topic.answer : buildFallback(petName);
+      }
+      setMessages((prev) => [...prev, { id: nextId(), role: 'assistant', content: answer }]);
+      setThinking(false);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
+    }, 380);
+  };
+
+  const clear = () => {
+    setMessages([]);
+    setEmergencyActive(false);
+    setDraft('');
   };
 
   if (healthGate) return healthGate;
@@ -185,13 +109,13 @@ export default function AiAssistantScreen() {
           title: '',
           headerTitle: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontSize: 22 }}>🤖</Text>
+              <Text style={{ fontSize: 22 }}>📋</Text>
               <View>
                 <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}>
-                  Assistente Pet
+                  Tira-dúvidas
                 </Text>
                 <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim }}>
-                  Sobre {pet?.name ?? 'seu pet'}
+                  Saúde de {petName}
                 </Text>
               </View>
             </View>
@@ -199,12 +123,12 @@ export default function AiAssistantScreen() {
           headerRight: () =>
             messages.length > 0 ? (
               <Pressable
-                onPress={handleNewConversation}
+                onPress={clear}
                 hitSlop={10}
-                style={{ marginRight: 12, flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                accessibilityLabel="Iniciar nova conversa"
+                style={{ marginRight: 12 }}
+                accessibilityLabel="Limpar conversa"
               >
-                <Ionicons name="add-circle-outline" size={22} color={theme.brand} />
+                <Ionicons name="refresh" size={20} color={theme.brand} />
               </Pressable>
             ) : null,
         }}
@@ -221,17 +145,12 @@ export default function AiAssistantScreen() {
           renderItem={({ item }) => <MessageBubble message={item} />}
           contentContainerStyle={{ padding: 16, gap: 4, flexGrow: 1 }}
           ListEmptyComponent={
-            <View style={{ flex: 1, alignItems: 'center', paddingTop: 32 }}>
-              <Text style={{ fontSize: 56, marginBottom: 12 }}>🤖</Text>
+            <View style={{ flex: 1, alignItems: 'center', paddingTop: 24 }}>
+              <Text style={{ fontSize: 52, marginBottom: 12 }}>📋</Text>
               <Text
-                style={{
-                  fontFamily: FONTS.display,
-                  fontSize: 22,
-                  color: theme.text,
-                  textAlign: 'center',
-                }}
+                style={{ fontFamily: FONTS.display, fontSize: 22, color: theme.text, textAlign: 'center' }}
               >
-                Pergunte sobre {pet?.name ?? 'seu pet'}
+                Tira-dúvidas de saúde
               </Text>
               <Text
                 style={{
@@ -244,25 +163,18 @@ export default function AiAssistantScreen() {
                   lineHeight: 20,
                 }}
               >
-                Saúde, comportamento, alimentação.{'\n'}
+                Respostas de referência sobre cuidados, alimentação e sinais de alerta.{'\n'}
                 <Text style={{ fontFamily: FONTS.bodyBold }}>
-                  Em emergências, sempre procure um veterinário.
+                  Não substituem o veterinário — em emergências, procure atendimento.
                 </Text>
               </Text>
 
-              <AiSuggestions pet={pet ?? undefined} onSelect={(t) => onSend(t)} />
+              <TopicSuggestions onSelect={(q) => send(q)} />
             </View>
           }
           ListFooterComponent={
-            sendMut.isPending ? (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 4,
-                  alignItems: 'flex-start',
-                  marginTop: 8,
-                }}
-              >
+            thinking ? (
+              <View style={{ flexDirection: 'row', marginTop: 8 }}>
                 <View
                   style={{
                     backgroundColor: theme.surface,
@@ -281,8 +193,7 @@ export default function AiAssistantScreen() {
           }
         />
 
-        {/* Emergency banner — aparece ao digitar palavra crítica E permanece quando a
-            msg de emergência foi enviada (a rede de segurança não some no envio). */}
+        {/* Rede de segurança — emergência (ao digitar palavra crítica ou após enviar). */}
         {detectEmergency(draft) || emergencyActive ? (
           <View
             style={{
@@ -308,7 +219,7 @@ export default function AiAssistantScreen() {
               <Text style={{ fontSize: 22 }}>🚨</Text>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FFFFFF' }}>
-                  Parece emergência. NÃO espere a IA.
+                  Parece emergência. Procure um vet agora.
                 </Text>
                 <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#FFFFFF', opacity: 0.9, marginTop: 2 }}>
                   Toque pra ver vets 24h próximos no mapa.
@@ -329,62 +240,6 @@ export default function AiAssistantScreen() {
           </View>
         ) : null}
 
-        {/* Indicador Pro ativo */}
-        {isPro ? (
-          <View
-            style={{
-              marginHorizontal: 12,
-              marginBottom: 4,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-              alignSelf: 'flex-start',
-              backgroundColor: '#FEF3C7',
-              borderRadius: 999,
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-            }}
-          >
-            <PremiumBadge size={12} />
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10, color: '#92400E', letterSpacing: 0.5 }}>
-              PRO · MENSAGENS ILIMITADAS
-            </Text>
-          </View>
-        ) : null}
-
-        {/* Banner contador no plano free */}
-        {!isPro && reachedLimit ? (
-          <View style={{ marginHorizontal: 12, marginBottom: 8 }}>
-            <PaywallCard
-              intent="ai-daily-limit"
-              emoji="🤖"
-              title="Limite diário atingido"
-              description={`Você usou ${FREE_AI_DAILY_LIMIT} mensagens do assistente IA hoje. No Pet Pro é ilimitado — pergunte o quanto quiser sobre cuidados, sintomas, alimentação.`}
-              compact
-            />
-          </View>
-        ) : !isPro && sentToday > 0 ? (
-          <View
-            style={{
-              marginHorizontal: 12,
-              marginBottom: 4,
-              backgroundColor: '#FEF3C7',
-              borderRadius: 10,
-              padding: 8,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            <Text style={{ fontSize: 14 }}>⭐</Text>
-            <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 11, color: '#78350F' }}>
-              {remaining === 1
-                ? 'Última pergunta hoje no plano free. Vire Pro pra ilimitado.'
-                : `${remaining} de ${FREE_AI_DAILY_LIMIT} perguntas restantes hoje. Vire Pro pra ilimitado.`}
-            </Text>
-          </View>
-        ) : null}
-
         <View
           style={{
             flexDirection: 'row',
@@ -401,11 +256,11 @@ export default function AiAssistantScreen() {
           <TextInput
             value={draft}
             onChangeText={setDraft}
-            placeholder={canSend ? 'Pergunte qualquer coisa...' : 'Vire Pro pra mais perguntas'}
+            placeholder="Pergunte sobre cuidados, sintomas, alimentação..."
             placeholderTextColor={theme.textDim}
-            editable={canSend}
             multiline
-            maxLength={1000}
+            maxLength={500}
+            onSubmitEditing={() => send()}
             style={{
               flex: 1,
               backgroundColor: theme.borderLight,
@@ -416,103 +271,86 @@ export default function AiAssistantScreen() {
               fontSize: 15,
               color: theme.text,
               maxHeight: 120,
-              opacity: canSend ? 1 : 0.5,
             }}
           />
           <Pressable
-            onPress={() => onSend()}
-            disabled={!draft.trim() || sendMut.isPending}
+            onPress={() => send()}
+            disabled={!draft.trim() || thinking}
             style={{
               width: 40,
               height: 40,
               borderRadius: 20,
-              backgroundColor: draft.trim() && canSend ? theme.brand : theme.borderLight,
+              backgroundColor: draft.trim() ? theme.brand : theme.borderLight,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Ionicons name="arrow-up" size={20} color={draft.trim() && canSend ? '#fff' : theme.textDim} />
+            <Ionicons name="arrow-up" size={20} color={draft.trim() ? '#fff' : theme.textDim} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-
-      <UpgradeModal
-        visible={showUpgrade}
-        onClose={() => setShowUpgrade(false)}
-        reason="generic"
-      />
     </View>
   );
 }
 
-function AiSuggestions({
-  pet,
-  onSelect,
-}: {
-  pet: { species?: string; breed?: string | null; birthdate?: string | null } | undefined;
-  onSelect: (text: string) => void;
-}) {
+function TopicSuggestions({ onSelect }: { onSelect: (q: string) => void }) {
   const { theme } = useTheme();
-  const categories = getAiSuggestions(pet as never);
   return (
     <View style={{ marginTop: 24, gap: 16, paddingHorizontal: 16, width: '100%' }}>
-      {categories.map((cat) => (
-        <View key={cat.id} style={{ gap: 6 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 4 }}>
-            <Text style={{ fontSize: 14 }}>{cat.emoji}</Text>
-            <Text
-              style={{
-                fontFamily: FONTS.bodyBold,
-                fontSize: 11,
-                letterSpacing: 1.2,
-                textTransform: 'uppercase',
-                color: theme.brand,
-              }}
-            >
-              {cat.label}
-            </Text>
-          </View>
-          <View style={{ gap: 6 }}>
-            {cat.items.map((it) => (
-              <Pressable
-                key={it.text}
-                onPress={() => onSelect(it.text)}
+      {GUIDE_CATEGORIES.map((cat) => {
+        const items = GUIDE_TOPICS.filter((t) => t.category === cat.id);
+        if (items.length === 0) return null;
+        return (
+          <View key={cat.id} style={{ gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 4 }}>
+              <Text style={{ fontSize: 14 }}>{cat.emoji}</Text>
+              <Text
                 style={{
-                  backgroundColor: theme.surface,
-                  paddingVertical: 10,
-                  paddingHorizontal: 12,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
+                  fontFamily: FONTS.bodyBold,
+                  fontSize: 11,
+                  letterSpacing: 1.2,
+                  textTransform: 'uppercase',
+                  color: theme.brand,
                 }}
               >
-                <Text style={{ fontSize: 16 }}>{it.emoji}</Text>
-                <Text
+                {cat.label}
+              </Text>
+            </View>
+            <View style={{ gap: 6 }}>
+              {items.map((it) => (
+                <Pressable
+                  key={it.id}
+                  onPress={() => onSelect(it.question)}
                   style={{
-                    flex: 1,
-                    fontFamily: FONTS.body,
-                    fontSize: 13,
-                    color: theme.text,
+                    backgroundColor: theme.surface,
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
                   }}
                 >
-                  {it.text}
-                </Text>
-              </Pressable>
-            ))}
+                  <Text style={{ fontSize: 16 }}>{it.emoji}</Text>
+                  <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 13, color: theme.text }}>
+                    {it.question}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 }
 
-/** Detecta URLs e renderiza clicáveis (reusa pattern do chat). */
+/** Detecta URLs e renderiza clicáveis. */
 const URL_RE = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
 
-function renderAiContent(content: string, isUser: boolean, linkColor: string) {
+function renderContent(content: string, isUser: boolean, linkColor: string) {
   const parts = content.split(URL_RE);
   return parts.map((part, i) => {
     if (URL_RE.test(part)) {
@@ -537,30 +375,15 @@ function renderAiContent(content: string, isUser: boolean, linkColor: string) {
   });
 }
 
-function MessageBubble({ message }: { message: AiMessage }) {
+function MessageBubble({ message }: { message: GuideMessage }) {
   const { theme } = useTheme();
   const toast = useToast();
   const isUser = message.role === 'user';
-  const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
 
   const handleCopy = async () => {
     const ok = await copyToClipboard(message.content);
     if (ok) toast.success('Copiado!', 'A resposta foi pra área de transferência.');
     else toast.error('Erro', 'Não consegui copiar.');
-  };
-
-  const handleFeedback = (kind: 'up' | 'down') => {
-    if (feedback) return; // só uma vez
-    setFeedback(kind);
-    track('ai_message_feedback', {
-      message_id: message.id,
-      conversation_id: message.conversation_id,
-      feedback: kind,
-    });
-    toast.success(
-      kind === 'up' ? 'Obrigado!' : 'Anotado',
-      kind === 'up' ? 'Vou continuar nessa linha.' : 'Vamos melhorar.',
-    );
   };
 
   return (
@@ -594,57 +417,22 @@ function MessageBubble({ message }: { message: AiMessage }) {
               lineHeight: 20,
             }}
           >
-            {renderAiContent(message.content, isUser, theme.brand)}
+            {renderContent(message.content, isUser, theme.brand)}
           </Text>
         </Pressable>
 
-        {/* Disclaimer + feedback nas respostas da AI */}
-        {!isUser && !message.id.startsWith('tmp-') ? (
-          <View style={{ marginTop: 4, paddingHorizontal: 6 }}>
-            <Text
-              style={{
-                fontFamily: FONTS.body,
-                fontSize: 10,
-                color: theme.textDim,
-                lineHeight: 13,
-              }}
-            >
-              ⚠️ Sou IA — em dúvida séria, procure um veterinário.
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
-              <Pressable
-                onPress={() => handleFeedback('up')}
-                hitSlop={8}
-                disabled={!!feedback}
-                style={{
-                  paddingHorizontal: 6,
-                  paddingVertical: 3,
-                  borderRadius: 10,
-                  backgroundColor: feedback === 'up' ? theme.brandSurface : 'transparent',
-                  opacity: feedback === 'down' ? 0.3 : 1,
-                }}
-              >
-                <Text style={{ fontSize: 13 }}>👍</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => handleFeedback('down')}
-                hitSlop={8}
-                disabled={!!feedback}
-                style={{
-                  paddingHorizontal: 6,
-                  paddingVertical: 3,
-                  borderRadius: 10,
-                  backgroundColor: feedback === 'down' ? theme.brandSurface : 'transparent',
-                  opacity: feedback === 'up' ? 0.3 : 1,
-                }}
-              >
-                <Text style={{ fontSize: 13 }}>👎</Text>
-              </Pressable>
-              <Pressable onPress={handleCopy} hitSlop={8} style={{ paddingHorizontal: 6, paddingVertical: 3 }}>
-                <Ionicons name="copy-outline" size={13} color={theme.textDim} />
-              </Pressable>
-            </View>
-          </View>
+        {!isUser ? (
+          <Text
+            style={{
+              fontFamily: FONTS.body,
+              fontSize: 10,
+              color: theme.textDim,
+              marginTop: 4,
+              paddingHorizontal: 6,
+            }}
+          >
+            Toque e segure pra copiar
+          </Text>
         ) : null}
       </View>
     </View>

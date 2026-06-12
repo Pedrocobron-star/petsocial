@@ -1,11 +1,12 @@
 import type { MeetupCategory, SocialTemperament, Species } from './types';
 
 /**
- * Feature flag — Assistente IA. Desligado por enquanto: a edge function
- * `ai-pet-assistant` chama um LLM pago (custo por mensagem). Religar (true)
- * quando a function estiver deployada com a chave do LLM nas secrets.
+ * Feature flag — Tira-dúvidas de Saúde (`pet/[id]/ai-assistant`).
+ * Hoje é um GUIA LOCAL de referência (lib/health-guide.ts): respostas curadas,
+ * sem LLM, sem rede, custo ZERO. Por isso fica LIGADO. (Antes era um assistente
+ * IA via edge function paga, que ficava desligado pra não gerar custo.)
  */
-export const AI_ASSISTANT_ENABLED = false;
+export const HEALTH_GUIDE_ENABLED = true;
 
 export const SPECIES_OPTIONS: { value: Species; label: string; emoji: string }[] = [
   { value: 'dog', label: 'Cachorro', emoji: '🐶' },

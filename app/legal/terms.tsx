@@ -76,9 +76,9 @@ export default function TermsPage() {
           escrito.
         </LegalListItem>
         <LegalListItem>
-          Não treinamos modelos de IA proprietários com seu conteúdo. Mensagens enviadas ao
-          assistente IA podem passar por OpenAI/Anthropic com termos enterprise que proíbem
-          treinamento.
+          Não treinamos modelos de IA com seu conteúdo. O Tira-dúvidas de Saúde é um guia de
+          referência que roda localmente no app — suas perguntas não são enviadas a serviços de
+          IA de terceiros.
         </LegalListItem>
         <LegalParagraph>
           Esta licença <strong>termina automaticamente</strong> quando você apaga o conteúdo ou
@@ -99,8 +99,8 @@ export default function TermsPage() {
       <LegalSection title="5. Saúde e cuidados — o que somos e NÃO somos">
         <LegalListItem>
           <strong>O Maestro Pet NÃO é veterinário</strong>. Sintomas, severidades, calendários
-          sugeridos e respostas do assistente IA são <strong>referência informativa</strong>, nunca
-          diagnóstico nem prescrição.
+          sugeridos e respostas do Tira-dúvidas de Saúde são <strong>referência informativa</strong>,
+          nunca diagnóstico nem prescrição.
         </LegalListItem>
         <LegalListItem>
           Registros de saúde (vacinas, parasitas, sintomas, peso) são <strong>seus</strong> — você
@@ -116,17 +116,18 @@ export default function TermsPage() {
         </LegalListItem>
       </LegalSection>
 
-      <LegalSection title="6. Assistente IA">
+      <LegalSection title="6. Tira-dúvidas de Saúde">
         <LegalListItem>
-          Plano free: 5 mensagens/dia ao assistente IA. Pet Pro: ilimitado.
+          É um guia de referência GRATUITO e ilimitado, com respostas pré-escritas sobre cuidados
+          gerais. Não é uma IA conversacional e não tem custo nem limite de uso.
         </LegalListItem>
         <LegalListItem>
-          Suas perguntas + contexto mínimo do pet são enviados pra modelos de IA (OpenAI/Anthropic)
-          pra gerar resposta. Mensagens ficam salvas no seu histórico.
+          As respostas são geradas localmente no app a partir de uma base de conteúdo. Suas
+          perguntas não saem do seu dispositivo nem são enviadas a serviços de terceiros.
         </LegalListItem>
         <LegalListItem>
-          A IA NÃO diagnostica. Respostas têm disclaimers claros. Não confie em resposta única —
-          sempre cruze com veterinário.
+          O guia NÃO diagnostica nem prescreve. Respostas têm disclaimers claros. Sempre confirme
+          com um veterinário.
         </LegalListItem>
       </LegalSection>
 

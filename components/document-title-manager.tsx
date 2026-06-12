@@ -53,7 +53,7 @@ const ROUTE_TITLES: { match: RegExp | string; title: string }[] = [
   { match: /^\/pet\/[^/]+\/memorial/, title: 'Memorial' },
   { match: /^\/pet\/[^/]+\/birthday/, title: 'Aniversário' },
   { match: /^\/pet\/[^/]+\/time-capsule/, title: 'Cápsula do tempo' },
-  { match: /^\/pet\/[^/]+\/ai-assistant/, title: 'Assistente IA' },
+  { match: /^\/pet\/[^/]+\/ai-assistant/, title: 'Tira-dúvidas de Saúde' },
   { match: /^\/pet\/[^/]+\/edit/, title: 'Editar pet' },
   { match: /^\/pet\/new/, title: 'Novo pet' },
   { match: /^\/pet\/[^/]+$/, title: 'Pet' },

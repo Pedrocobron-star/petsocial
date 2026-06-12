@@ -14,7 +14,7 @@ import { HealthScoreTrend } from '@/components/health/health-score-trend';
 import { HealthShareButton } from '@/components/health/health-share-button';
 import { HealthTimeline } from '@/components/health/health-timeline';
 import { PaywallCard } from '@/components/paywall-card';
-import { AI_ASSISTANT_ENABLED } from '@/lib/constants';
+import { HEALTH_GUIDE_ENABLED } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
 import { monthlyDietCost } from '@/lib/diet-brands';
 import {
@@ -238,12 +238,12 @@ function HealthHubInner() {
             tint="#FFF7ED"
             textTint="#9A3412"
           />
-          {AI_ASSISTANT_ENABLED ? (
+          {HEALTH_GUIDE_ENABLED ? (
             <ShortcutCard
               href={`/pet/${id}/ai-assistant`}
-              emoji="🤖"
-              label="Assistente IA"
-              sublabel="Dúvidas sobre saúde, vacinas e mais"
+              emoji="📋"
+              label="Tira-dúvidas"
+              sublabel="Guia de cuidados, vacinas, sinais de alerta"
               tint="#1A1410"
               textTint="#FCD34D"
             />

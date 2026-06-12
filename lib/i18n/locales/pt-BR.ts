@@ -62,8 +62,8 @@ export const ptBR = {
           'Compartilhe momentos, conheça outros tutores e encontre amigos da espécie do seu pet.',
       },
       ai: {
-        title: 'Assistente IA',
-        description: 'Dúvidas sobre alimentação, comportamento, vacinas. Resposta em segundos.',
+        title: 'Tira-dúvidas de saúde',
+        description: 'Guia de referência sobre alimentação, comportamento, vacinas e sinais de alerta.',
       },
     },
     howItWorks: {

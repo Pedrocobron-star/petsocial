@@ -3,7 +3,7 @@ import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
-import { AI_ASSISTANT_ENABLED } from '@/lib/constants';
+import { HEALTH_GUIDE_ENABLED } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
 import type { ParasiteSummary } from '@/lib/queries';
 import type { Vaccination } from '@/lib/types';
@@ -227,12 +227,12 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
                   tint="#DCFCE7"
                   tintText="#166534"
                 />
-                {AI_ASSISTANT_ENABLED ? (
+                {HEALTH_GUIDE_ENABLED ? (
                   <QuickCard
                     href={`/pet/${petId}/ai-assistant`}
-                    emoji="🤖"
-                    label="Assistente IA"
-                    sub="Dúvidas de saúde"
+                    emoji="📋"
+                    label="Tira-dúvidas"
+                    sub="Guia de saúde"
                     tint="#DBEAFE"
                     tintText="#1E40AF"
                   />

@@ -57,8 +57,8 @@ export const esES: TranslationKeys = {
           'Comparte momentos, conoce a otros tutores y encuentra amigos de la especie de tu mascota.',
       },
       ai: {
-        title: 'Asistente IA',
-        description: 'Dudas sobre alimentación, comportamiento, vacunas. Respuesta en segundos.',
+        title: 'Dudas de salud',
+        description: 'Guía de referencia sobre alimentación, comportamiento, vacunas y señales de alerta.',
       },
     },
     howItWorks: {
