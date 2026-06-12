@@ -320,6 +320,10 @@ function WeightForm({
 
   const w = Number(weight);
   const valid = !Number.isNaN(w) && w > 0 && w < 200 && /^\d{4}-\d{2}-\d{2}$/.test(date);
+  const weightError =
+    weight.trim() !== '' && (Number.isNaN(w) || w <= 0 || w >= 200)
+      ? 'O peso deve ficar entre 0 e 200 kg.'
+      : null;
 
   return (
     <View
@@ -334,6 +338,11 @@ function WeightForm({
     >
       <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}>Nova pesagem</Text>
       <Field label="Peso (kg) *" value={weight} onChange={setWeight} placeholder="ex: 8.5" />
+      {weightError ? (
+        <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: '#DC2626', marginTop: -4 }}>
+          {weightError}
+        </Text>
+      ) : null}
       <DateField label="Data *" value={date} onChange={setDate} />
       <Field label="Notas" value={notes} onChange={setNotes} placeholder="" multiline />
 

@@ -133,10 +133,13 @@ export function computeHealthScore(
       });
     }
   } else {
+    // Sem remédio ativo = NEUTRO (ignorado no score), não 100% "de graça":
+    // assim o score se concentra nas dimensões de prevenção (vacina/vermífugo/
+    // consulta) que de fato refletem cuidado. Pet saudável não é penalizado.
     components.push({
       key: 'medications',
       label: 'Remédios',
-      status: 'ok',
+      status: 'na',
       detail: 'Sem ativos',
     });
   }

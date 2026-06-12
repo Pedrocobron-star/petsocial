@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/empty-state';
 import { HealthListSkeleton } from '@/components/health/health-list-skeleton';
 import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
+import { DateTimePickerInput } from '@/components/ui/datetime-picker';
 import { FONTS } from '@/lib/fonts';
 import {
   cancelVetVisitReminders,
@@ -199,6 +200,17 @@ function VisitForm({
   const [nextVisit, setNextVisit] = useState('');
   const [notes, setNotes] = useState('');
 
+  // string 'YYYY-MM-DD' <-> Date local (sem shift de fuso)
+  const toDate = (s: string): Date | null => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+  const toISODate = (d: Date): string => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+
   const createMut = useMutation({
     mutationFn: async () => {
       const visit = await createVetVisit({
@@ -249,13 +261,22 @@ function VisitForm({
       <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}>Nova consulta</Text>
 
       <Field label="Motivo *" value={reason} onChange={setReason} placeholder="ex: Check-up anual" />
-      <Field label="Data * (AAAA-MM-DD)" value={visitedAt} onChange={setVisitedAt} placeholder="2026-05-13" />
+      <DateTimePickerInput
+        label="Data da consulta *"
+        value={toDate(visitedAt)}
+        onChange={(d) => setVisitedAt(toISODate(d))}
+      />
       <Field label="Veterinário(a)" value={vetName} onChange={setVetName} placeholder="ex: Dra. Ana" />
       <Field label="Clínica" value={clinic} onChange={setClinic} placeholder="ex: PetVida" />
       <Field label="Diagnóstico" value={diagnosis} onChange={setDiagnosis} placeholder="" multiline />
       <Field label="Tratamento" value={treatment} onChange={setTreatment} placeholder="" multiline />
       <Field label="Peso (kg)" value={weight} onChange={setWeight} placeholder="ex: 8.5" />
-      <Field label="Próxima visita (AAAA-MM-DD)" value={nextVisit} onChange={setNextVisit} placeholder="" />
+      <DateTimePickerInput
+        label="Próxima visita (opcional)"
+        value={toDate(nextVisit)}
+        onChange={(d) => setNextVisit(toISODate(d))}
+        minimumDate={new Date()}
+      />
       <Field label="Notas" value={notes} onChange={setNotes} placeholder="" multiline />
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
