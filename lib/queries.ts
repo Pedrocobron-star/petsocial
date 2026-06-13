@@ -62,6 +62,10 @@ export const qk = {
   feed: (petId: string, filter: string = 'all') => ['feed', petId, filter] as const,
   petPosts: (petId: string, viewerPetId?: string) =>
     ['pet-posts', petId, viewerPetId ?? petId] as const,
+  // Variante paginada (grid do perfil). Compartilha o prefixo ['pet-posts',...]
+  // de propósito: as invalidações existentes de petPosts cobrem essa também.
+  petPostsPaged: (petId: string, viewerPetId?: string) =>
+    ['pet-posts', petId, viewerPetId ?? petId, 'paged'] as const,
   post: (postId: string) => ['post', postId] as const,
   comments: (postId: string) => ['comments', postId] as const,
   meetups: (filter: string = 'upcoming') => ['meetups', filter] as const,
@@ -496,6 +500,63 @@ export async function fetchPostsByPet(petId: string, viewerPetId: string): Promi
       liked_by_me: likedSet.has(r.id),
     })),
   );
+}
+
+/** Página do grid do perfil: posts + cursor (created_at) pra próxima. */
+export interface PetPostsPage {
+  items: PostWithDetails[];
+  nextCursor: string | null;
+}
+
+/**
+ * Posts de um pet PAGINADOS por keyset em created_at (grid do perfil, scroll
+ * infinito). Mesma hidratação de fetchPostsByPet. A galeria (lightbox) segue
+ * usando fetchPostsByPet SEM paginar — como ambos ordenam por created_at desc,
+ * a lista cheia da galeria é um SUPERSET na mesma ordem, então o índice de
+ * mídia calculado no grid continua apontando pra foto certa.
+ */
+export async function fetchPetPostsPage(
+  petId: string,
+  viewerPetId: string,
+  cursor?: string | null,
+): Promise<PetPostsPage> {
+  const PAGE = 18; // múltiplo de 3 (grid de 3 colunas)
+  let query = supabase
+    .from('posts')
+    .select('id, pet_id, caption, created_at, updated_at, reposted_from, pet:pets!posts_pet_id_fkey(*), media:post_media(*)')
+    .eq('pet_id', petId)
+    .order('created_at', { ascending: false })
+    .limit(PAGE);
+  if (cursor) query = query.lt('created_at', cursor);
+
+  const { data, error } = await query.returns<FeedRow[]>();
+  if (error) throw error;
+  const rows = data ?? [];
+  const lastRaw = rows[rows.length - 1];
+  const nextCursor = rows.length === PAGE && lastRaw ? lastRaw.created_at : null;
+  if (rows.length === 0) return { items: [], nextCursor };
+
+  const ids = rows.map((r) => r.id);
+  const [statsRes, likesRes] = await Promise.all([
+    supabase.from('post_stats').select('*').in('post_id', ids),
+    supabase.from('likes').select('post_id').eq('pet_id', viewerPetId).in('post_id', ids),
+  ]);
+  if (statsRes.error) throw statsRes.error;
+  if (likesRes.error) throw likesRes.error;
+
+  const statsByPost = new Map(statsRes.data?.map((s) => [s.post_id, s]) ?? []);
+  const likedSet = new Set(likesRes.data?.map((l) => l.post_id) ?? []);
+
+  const items = await hydrateRepostsAndTags(
+    rows.map((r) => ({
+      ...r,
+      media: [...(r.media ?? [])].sort((a, b) => a.position - b.position),
+      likes_count: statsByPost.get(r.id)?.likes_count ?? 0,
+      comments_count: statsByPost.get(r.id)?.comments_count ?? 0,
+      liked_by_me: likedSet.has(r.id),
+    })),
+  );
+  return { items, nextCursor };
 }
 
 export async function fetchPost(postId: string, viewerPetId: string): Promise<PostWithDetails | null> {

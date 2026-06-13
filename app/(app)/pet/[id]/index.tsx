@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Link, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -24,8 +24,8 @@ import {
   fetchIsFollowing,
   fetchParasiteSummary,
   fetchPet,
+  fetchPetPostsPage,
   fetchPetStats,
-  fetchPostsByPet,
   fetchUserIsPro,
   fetchVaccinations,
   getOrCreateDM,
@@ -66,14 +66,18 @@ export default function PetProfileScreen() {
     queryFn: () => fetchPetStats(id),
     enabled: !!id,
   });
-  const postsQuery = useQuery({
+  const postsQuery = useInfiniteQuery({
     // queryKey null-safe: o `activePet` pode estar null por um instante (logo
-    // após login, antes dos pets carregarem) ou pra conta sem pet. Antes o
-    // `activePet!.id` aqui era avaliado em TODO render e quebrava a tela.
-    queryKey: qk.petPosts(id, activePet?.id ?? 'anon'),
-    queryFn: () => fetchPostsByPet(id, activePet!.id),
+    // após login, antes dos pets carregarem) ou pra conta sem pet.
+    queryKey: qk.petPostsPaged(id, activePet?.id ?? 'anon'),
+    queryFn: ({ pageParam }) => fetchPetPostsPage(id, activePet!.id, pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!id && !!activePet,
   });
+  // Achata as páginas. O índice de mídia (pra galeria) é calculado sobre esta
+  // lista achatada — a galeria usa a lista cheia na mesma ordem, então bate.
+  const posts = postsQuery.data?.pages.flatMap((p) => p.items) ?? [];
   // Dados médicos: só busca se for o DONO. Visitante (perfil público) nem
   // chega a baixar a carteira de vacinas/antiparasitário do pet alheio.
   const vaccinationsQuery = useQuery({
@@ -387,7 +391,7 @@ export default function PetProfileScreen() {
         <PetProfileSkeleton />
       ) : (
       <FlatList
-        data={postsQuery.data ?? []}
+        data={posts}
         keyExtractor={(item) => item.id}
         numColumns={3}
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
@@ -395,10 +399,13 @@ export default function PetProfileScreen() {
           width: gridWidth,
           alignSelf: 'center',
         }}
+        onEndReachedThreshold={0.6}
+        onEndReached={() => {
+          if (postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) postsQuery.fetchNextPage();
+        }}
         ListHeaderComponent={header}
         renderItem={({ item, index: postIndex }) => {
           const cover = item.media[0];
-          const posts = postsQuery.data ?? [];
           let mediaIndex = 0;
           for (let i = 0; i < postIndex; i++) mediaIndex += posts[i].media.length;
           const hasMultiple = item.media.length > 1;
@@ -461,6 +468,15 @@ export default function PetProfileScreen() {
             </Pressable>
           );
         }}
+        ListFooterComponent={
+          postsQuery.isFetchingNextPage ? (
+            <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+              <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
+                Carregando mais…
+              </Text>
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           postsQuery.isLoading ? null : (
             <EmptyState
