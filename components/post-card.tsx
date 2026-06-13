@@ -409,7 +409,7 @@ function PostCardComponent({
                 await repostPost(post.id, activePet.id);
                 toast.success('Repostado!', `Apareceu no perfil de ${activePet.name}`);
                 await qc.invalidateQueries({ queryKey: qk.petPosts(activePet.id) });
-                await qc.invalidateQueries({ queryKey: qk.feed(activePet.id) });
+                await qc.invalidateQueries({ queryKey: ['feed', activePet.id] });
               } catch (e) {
                 toast.error('Erro ao repostar', e instanceof Error ? e.message : 'Tente novamente.');
               }
@@ -607,7 +607,7 @@ function PostCardComponent({
                       await repostPost(post.id, activePet.id);
                       toast.success('Repostado!', `Apareceu no perfil de ${activePet.name}`);
                       await qc.invalidateQueries({ queryKey: qk.petPosts(activePet.id) });
-                      await qc.invalidateQueries({ queryKey: qk.feed(activePet.id) });
+                      await qc.invalidateQueries({ queryKey: ['feed', activePet.id] });
                     } catch (e) {
                       toast.error(
                         'Erro ao repostar',
@@ -644,7 +644,7 @@ function PostCardComponent({
                               await deletePost(post.id);
                               toast.success('Post apagado');
                               if (activePet?.id) {
-                                await qc.invalidateQueries({ queryKey: qk.feed(activePet.id) });
+                                await qc.invalidateQueries({ queryKey: ['feed', activePet.id] });
                                 await qc.invalidateQueries({ queryKey: qk.petPosts(post.pet.id) });
                               }
                             } catch (e) {
@@ -688,7 +688,7 @@ function PostCardComponent({
           await updatePostCaption(post.id, newCaption);
           toast.success('Post editado');
           if (activePet?.id) {
-            await qc.invalidateQueries({ queryKey: qk.feed(activePet.id) });
+            await qc.invalidateQueries({ queryKey: ['feed', activePet.id] });
             await qc.invalidateQueries({ queryKey: qk.petPosts(post.pet.id) });
           }
         }}

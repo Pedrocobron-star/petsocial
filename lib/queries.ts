@@ -290,7 +290,9 @@ export async function fetchFeed(
   filter: FeedFilter = 'all',
   cursor?: string | null,
 ): Promise<FeedPage> {
-  const PAGE = filter === 'top_week' ? 50 : 20;
+  // top_week amostra mais (100) antes de ordenar por likes, pra "Top da semana"
+  // ser representativo de verdade (e não só "os 50 mais recentes reordenados").
+  const PAGE = filter === 'top_week' ? 100 : 20;
   let query = supabase
     .from('posts')
     .select('id, pet_id, caption, created_at, updated_at, reposted_from, pet:pets!posts_pet_id_fkey(*), media:post_media(*)')

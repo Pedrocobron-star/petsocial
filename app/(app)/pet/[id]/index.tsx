@@ -405,10 +405,15 @@ export default function PetProfileScreen() {
           return (
             <Pressable
               onPress={() =>
-                router.push({
-                  pathname: '/pet/[id]/gallery' as never,
-                  params: { id, start: String(mediaIndex) } as never,
-                })
+                cover
+                  ? // Post com mídia → abre a galeria no índice certo.
+                    router.push({
+                      pathname: '/pet/[id]/gallery' as never,
+                      params: { id, start: String(mediaIndex) } as never,
+                    })
+                  : // Post só-texto não tem foto: abre o post (antes abria a
+                    // foto de OUTRO post pelo índice de mídia somado).
+                    router.push({ pathname: '/post/[id]' as never, params: { id: item.id } as never })
               }
               style={{
                 width: tileSize,
