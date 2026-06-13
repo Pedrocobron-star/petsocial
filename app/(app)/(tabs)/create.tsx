@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HeaderHomeIcon } from '@/components/header-home-logo';
 import { PetAvatar } from '@/components/pet-avatar';
 import { PetPicker } from '@/components/pet-picker';
+import { PhotoEditor } from '@/components/photo-editor';
 import { PetTagsPicker } from '@/components/pet-tags-picker';
 import { Button } from '@/components/ui/button';
 import { TextArea } from '@/components/ui/text-area';
@@ -25,7 +26,6 @@ import {
   fetchMyPostsTodayCount,
   FREE_POSTS_PER_DAY,
   notifyMentions,
-  qk,
 } from '@/lib/queries';
 import { guessExtension, uploadToBucket } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
@@ -62,6 +62,8 @@ export default function CreatePostScreen() {
   const [taggedPets, setTaggedPets] = useState<Pet[]>([]);
   const [tagsPickerOpen, setTagsPickerOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  // Índice da mídia (imagem) sendo editada no editor de recorte.
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const isPro = useIsPro();
 
   const userId = session?.user.id;
@@ -431,6 +433,7 @@ export default function CreatePostScreen() {
                   total={media.length}
                   placeholderColor={theme.border}
                   onRemove={() => removeAt(i)}
+                  onEdit={m.type === 'image' ? () => setEditingIndex(i) : undefined}
                   onMoveLeft={() => moveItem(i, i - 1)}
                   onMoveRight={() => moveItem(i, i + 1)}
                 />
@@ -541,6 +544,16 @@ export default function CreatePostScreen() {
         onClose={() => setPaywallOpen(false)}
         reason="maxPostsPerDay"
       />
+
+      <PhotoEditor
+        uri={editingIndex != null ? media[editingIndex]?.uri ?? null : null}
+        visible={editingIndex != null}
+        onCancel={() => setEditingIndex(null)}
+        onDone={(newUri) => {
+          setMedia((cur) => cur.map((m, i) => (i === editingIndex ? { ...m, uri: newUri } : m)));
+          setEditingIndex(null);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -551,6 +564,7 @@ function MediaThumbnail({
   total,
   placeholderColor,
   onRemove,
+  onEdit,
   onMoveLeft,
   onMoveRight,
 }: {
@@ -559,6 +573,7 @@ function MediaThumbnail({
   total: number;
   placeholderColor: string;
   onRemove: () => void;
+  onEdit?: () => void;
   onMoveLeft: () => void;
   onMoveRight: () => void;
 }) {
@@ -585,6 +600,17 @@ function MediaThumbnail({
       >
         <Ionicons name="close" size={14} color="#fff" />
       </Pressable>
+      {/* Botão editar/recortar — só pra imagem */}
+      {onEdit ? (
+        <Pressable
+          onPress={onEdit}
+          hitSlop={8}
+          className="absolute left-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/70"
+          accessibilityLabel="Editar foto"
+        >
+          <Ionicons name="crop" size={13} color="#fff" />
+        </Pressable>
+      ) : null}
       {/* Badge da posição */}
       <View className="absolute bottom-1 left-1 rounded bg-black/55 px-1.5 py-0.5">
         <Text className="text-[10px] font-bold text-white">{index + 1}</Text>
