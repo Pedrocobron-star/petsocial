@@ -650,10 +650,29 @@ export async function repostPost(
   repostingPetId: string,
   caption?: string | null,
 ) {
+  // Aponta sempre pro post ORIGINAL: se o alvo já é um repost, usa a raiz dele
+  // (evita "repost de repost" com reposted_from quebrado).
+  const { data: target } = await supabase
+    .from('posts')
+    .select('reposted_from')
+    .eq('id', originalPostId)
+    .maybeSingle();
+  const rootId = (target as { reposted_from: string | null } | null)?.reposted_from ?? originalPostId;
+
+  // Já repostou esse original? Não duplica (o índice único no banco garante;
+  // checamos antes pra dar um erro amigável em vez de violação de constraint).
+  const { data: existing } = await supabase
+    .from('posts')
+    .select('id')
+    .eq('pet_id', repostingPetId)
+    .eq('reposted_from', rootId)
+    .maybeSingle();
+  if (existing) throw new Error('Você já repostou esse post.');
+
   const { error } = await supabase.from('posts').insert({
     pet_id: repostingPetId,
     caption: caption ?? null,
-    reposted_from: originalPostId,
+    reposted_from: rootId,
   });
   if (error) throw error;
 }
