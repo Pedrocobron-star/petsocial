@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { useRef, useState } from 'react';
 import { FlatList, View, type ViewToken } from 'react-native';
@@ -54,12 +54,17 @@ export default function FeedScreen() {
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const userId = session?.user.id;
 
-  const feedQuery = useQuery({
+  const feedQuery = useInfiniteQuery({
     queryKey: activePet ? qk.feed(activePet.id, filter) : ['feed', 'none', filter],
-    queryFn: () => fetchFeed(activePet!.id, filter),
+    queryFn: ({ pageParam }) => fetchFeed(activePet!.id, filter, pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!activePet,
     staleTime: 60_000,
   });
+
+  // Achata as páginas num array só de posts pro interleave + render.
+  const posts = feedQuery.data?.pages.flatMap((p) => p.items) ?? [];
 
   // Sponsored posts ativos — buscados em paralelo, cache de 2min
   const sponsoredQuery = useQuery({
@@ -100,7 +105,7 @@ export default function FeedScreen() {
 
   // Intercala sponsored a cada 5 posts orgânicos
   const feedItems: FeedItem<PostWithDetails>[] = interleaveSponsored(
-    feedQuery.data ?? [],
+    posts,
     sponsoredQuery.data ?? [],
     5,
   );
@@ -157,7 +162,7 @@ export default function FeedScreen() {
       <Fab href="/(app)/(tabs)/create" icon="camera" />
       <PawRefreshOverlay refreshing={refreshing} />
 
-      {feedQuery.isLoading && (feedQuery.data ?? []).length === 0 ? (
+      {feedQuery.isLoading && posts.length === 0 ? (
         <View style={{ paddingVertical: 8 }}>
           <PostSkeleton />
           <PostSkeleton />
@@ -177,6 +182,17 @@ export default function FeedScreen() {
           viewabilityConfig={viewabilityConfig}
           onViewableItemsChanged={onViewableItemsChanged}
           refreshControl={<PawRefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          onEndReachedThreshold={0.6}
+          onEndReached={() => {
+            if (feedQuery.hasNextPage && !feedQuery.isFetchingNextPage) feedQuery.fetchNextPage();
+          }}
+          ListFooterComponent={
+            feedQuery.isFetchingNextPage ? (
+              <View style={{ paddingVertical: 12 }}>
+                <PostSkeleton />
+              </View>
+            ) : null
+          }
           contentContainerStyle={{ paddingTop: 0, paddingBottom: 24, flexGrow: 1 }}
           ListHeaderComponent={
             <>

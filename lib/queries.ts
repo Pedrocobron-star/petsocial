@@ -271,15 +271,33 @@ async function hydrateRepostsAndTags(
 
 export type FeedFilter = 'all' | 'following' | 'top_week';
 
+/** Uma página do feed: posts + cursor pra próxima (null = acabou). */
+export interface FeedPage {
+  items: PostWithDetails[];
+  nextCursor: string | null;
+}
+
+/**
+ * Feed paginado por KEYSET em `created_at` (scroll infinito). `cursor` = o
+ * created_at do último post da página anterior; `.lt` evita duplicar (e nunca
+ * gera key repetida na FlatList). O filtro de bloqueados acontece DEPOIS, então
+ * o `nextCursor` ancora no último ROW cru (não no último visível) pra não pular
+ * posts. **top_week NÃO pagina** (página única): ele re-ordena por likes, e
+ * keyset por data brigaria com isso — mantém o ranking coerente.
+ */
 export async function fetchFeed(
   viewerPetId: string,
   filter: FeedFilter = 'all',
-): Promise<PostWithDetails[]> {
+  cursor?: string | null,
+): Promise<FeedPage> {
+  const PAGE = filter === 'top_week' ? 50 : 20;
   let query = supabase
     .from('posts')
     .select('id, pet_id, caption, created_at, updated_at, reposted_from, pet:pets!posts_pet_id_fkey(*), media:post_media(*)')
     .order('created_at', { ascending: false })
-    .limit(80);
+    .limit(PAGE);
+
+  if (cursor) query = query.lt('created_at', cursor);
 
   if (filter === 'following') {
     // Pega ids dos pets que o viewer segue
@@ -293,7 +311,6 @@ export async function fetchFeed(
     );
     // Inclui o próprio pet também
     followedIds.push(viewerPetId);
-    if (followedIds.length === 0) return [];
     query = query.in('pet_id', followedIds);
   } else if (filter === 'top_week') {
     // Posts dos últimos 7 dias — ordenação por likes acontece após hidratação
@@ -311,14 +328,18 @@ export async function fetchFeed(
 
   const { data, error } = await query.returns<FeedRow[]>();
   if (error) throw error;
-  let rows = data ?? [];
+  const raw = data ?? [];
+  const rawCount = raw.length;
+  const lastRaw = raw[raw.length - 1];
+  // top_week é página única; senão, há mais se a página cru veio cheia.
+  const nextCursor =
+    filter === 'top_week' ? null : rawCount === PAGE && lastRaw ? lastRaw.created_at : null;
+
+  let rows = raw;
   if (blockedUserIds.size > 0) {
     rows = rows.filter((r) => !blockedUserIds.has(r.pet.owner_id));
   }
-  // Limita a 50 após filtro
-  rows = rows.slice(0, 50);
-
-  if (rows.length === 0) return [];
+  if (rows.length === 0) return { items: [], nextCursor };
 
   const postIds = rows.map((r) => r.id);
   const [statsRes, likesRes] = await Promise.all([
@@ -341,10 +362,8 @@ export async function fetchFeed(
     })),
   );
   // No filtro "top_week", re-ordena por likes desc (mais curtidos primeiro)
-  if (filter === 'top_week') {
-    return [...hydrated].sort((a, b) => b.likes_count - a.likes_count);
-  }
-  return hydrated;
+  const items = filter === 'top_week' ? [...hydrated].sort((a, b) => b.likes_count - a.likes_count) : hydrated;
+  return { items, nextCursor };
 }
 
 export async function toggleLike(postId: string, petId: string, currentlyLiked: boolean) {
@@ -2262,22 +2281,40 @@ export async function attachHashtagsToPost(postId: string, text: string): Promis
   await supabase.from('post_hashtags').upsert(links, { ignoreDuplicates: true });
 }
 
-export async function fetchPostsByHashtag(name: string, viewerPetId: string): Promise<PostWithDetails[]> {
+/** Página da hashtag: posts + cursor (created_at do link) pra próxima. */
+export interface HashtagPage {
+  items: PostWithDetails[];
+  nextCursor: string | null;
+}
+
+export async function fetchPostsByHashtag(
+  name: string,
+  viewerPetId: string,
+  cursor?: string | null,
+): Promise<HashtagPage> {
+  const PAGE = 24;
   const lower = name.toLowerCase();
   const { data: tag } = await supabase
     .from('hashtags')
     .select('id')
     .eq('name', lower)
     .maybeSingle();
-  if (!tag) return [];
-  const { data: links } = await supabase
+  if (!tag) return { items: [], nextCursor: null };
+  // Keyset pela data do LINK post_hashtags (≈ data do post). `.lt` evita dup.
+  let linkQuery = supabase
     .from('post_hashtags')
     .select('post_id, created_at')
     .eq('hashtag_id', tag.id)
     .order('created_at', { ascending: false })
-    .limit(60);
-  const postIds = (links ?? []).map((l) => l.post_id as string);
-  if (postIds.length === 0) return [];
+    .limit(PAGE);
+  if (cursor) linkQuery = linkQuery.lt('created_at', cursor);
+  const { data: links } = await linkQuery;
+  const linkRows = (links ?? []) as { post_id: string; created_at: string }[];
+  const lastLink = linkRows[linkRows.length - 1];
+  const nextCursor = linkRows.length === PAGE && lastLink ? lastLink.created_at : null;
+
+  const postIds = linkRows.map((l) => l.post_id);
+  if (postIds.length === 0) return { items: [], nextCursor };
 
   const { data: rows, error } = await supabase
     .from('posts')
@@ -2286,7 +2323,7 @@ export async function fetchPostsByHashtag(name: string, viewerPetId: string): Pr
     .order('created_at', { ascending: false })
     .returns<FeedRow[]>();
   if (error) throw error;
-  if (!rows || rows.length === 0) return [];
+  if (!rows || rows.length === 0) return { items: [], nextCursor };
 
   const [statsRes, likesRes] = await Promise.all([
     supabase.from('post_stats').select('*').in('post_id', rows.map((r) => r.id)),
@@ -2295,7 +2332,7 @@ export async function fetchPostsByHashtag(name: string, viewerPetId: string): Pr
   const statsByPost = new Map(statsRes.data?.map((s) => [s.post_id, s]) ?? []);
   const likedSet = new Set(likesRes.data?.map((l) => l.post_id) ?? []);
 
-  return hydrateRepostsAndTags(
+  const items = await hydrateRepostsAndTags(
     rows.map((r) => ({
       ...r,
       media: [...(r.media ?? [])].sort((a, b) => a.position - b.position),
@@ -2304,6 +2341,7 @@ export async function fetchPostsByHashtag(name: string, viewerPetId: string): Pr
       liked_by_me: likedSet.has(r.id),
     })),
   );
+  return { items, nextCursor };
 }
 
 export async function fetchTrendingHashtags(): Promise<{ name: string; post_count: number }[]> {

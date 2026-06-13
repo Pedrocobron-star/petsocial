@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, Text, View } from 'react-native';
@@ -25,16 +25,18 @@ export default function HashtagScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [sort, setSort] = useState<TagSort>('recent');
 
-  const postsQuery = useQuery({
+  const postsQuery = useInfiniteQuery({
     queryKey: qk.hashtag(name),
-    queryFn: () => fetchPostsByHashtag(name, activePet!.id),
+    queryFn: ({ pageParam }) => fetchPostsByHashtag(name, activePet!.id, pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!name && !!activePet,
   });
 
   // "Top" reordena por curtidas (desempate por comentários) o conjunto já
   // carregado; "Recentes" mantém a ordem do servidor (created_at desc).
   const posts = useMemo(() => {
-    const list = postsQuery.data ?? [];
+    const list = postsQuery.data?.pages.flatMap((p) => p.items) ?? [];
     if (sort !== 'top') return list;
     return [...list].sort(
       (a, b) =>
@@ -105,6 +107,17 @@ export default function HashtagScreen() {
             tintColor={theme.brand}
             colors={[theme.brand]}
           />
+        }
+        onEndReachedThreshold={0.6}
+        onEndReached={() => {
+          if (postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) postsQuery.fetchNextPage();
+        }}
+        ListFooterComponent={
+          postsQuery.isFetchingNextPage ? (
+            <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={theme.brand} />
+            </View>
+          ) : null
         }
         ListEmptyComponent={
           postsQuery.isLoading ? (
