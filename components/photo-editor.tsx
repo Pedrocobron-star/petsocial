@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image as RNImage,
   Modal,
+  PanResponder,
+  Platform,
   Pressable,
+  ScrollView,
   Text,
   useWindowDimensions,
   View,
@@ -18,13 +21,20 @@ import { FONTS } from '@/lib/fonts';
 import { useToast } from '@/providers/toast-provider';
 
 /**
- * Editor de foto (recorte + proporção) — estilo Instagram, MVP.
+ * Editor de foto (recorte + proporção + filtros) — estilo Instagram.
  *
- * Escolhe 1:1 / 4:5 / 1.91:1, arrasta e dá zoom pra enquadrar, e o
- * expo-image-manipulator recorta de verdade (web + native, custo ZERO).
- * Sem filtros nesta versão (próxima leva). A imagem SEMPRE cobre o quadro
- * (clamp), então nunca aparece fundo vazio.
+ * Recorte: escolhe 1:1 / 4:5 / 1.91:1, arrasta e dá zoom pra enquadrar, e o
+ * expo-image-manipulator recorta de verdade (web + native, custo ZERO). A
+ * imagem SEMPRE cobre o quadro (clamp), então nunca aparece fundo vazio.
+ *
+ * Filtros (SÓ WEB): brilho/contraste/saturação via CSS `filter` no preview e
+ * via <canvas> na hora de salvar (mesma string → preview == resultado).
+ * "Calor" (temperatura) = overlay com mixBlendMode soft-light. Presets prontos
+ * só ajustam esses mesmos controles. Nada de efeito que distorça o pet.
+ * No app nativo a aba de filtros some (só recorte) — sem custo, sem lib pesada.
  */
+
+const isWeb = Platform.OS === 'web';
 
 const RATIOS = [
   { key: 'square', label: 'Quadrado', wh: 1 },
@@ -35,6 +45,96 @@ const RATIOS = [
 const MAX_OUT_WIDTH = 1080; // teto de saída pra não pesar no upload
 const MAX_ZOOM = 4;
 
+// ---- Filtros -------------------------------------------------------------
+
+type Adjust = { b: number; c: number; s: number; t: number; extra: string };
+const NEUTRAL: Adjust = { b: 0, c: 0, s: 0, t: 0, extra: '' };
+
+// Presets = ponto de partida dos 4 controles (b/c/s/t em -100..100) + sépia.
+const PRESETS: { key: string; label: string; v: Adjust }[] = [
+  { key: 'original', label: 'Original', v: { b: 0, c: 0, s: 0, t: 0, extra: '' } },
+  { key: 'vivido', label: 'Vívido', v: { b: 6, c: 14, s: 38, t: 6, extra: '' } },
+  { key: 'quente', label: 'Quente', v: { b: 5, c: 6, s: 12, t: 48, extra: '' } },
+  { key: 'frio', label: 'Frio', v: { b: 3, c: 8, s: 6, t: -48, extra: '' } },
+  { key: 'pb', label: 'P&B', v: { b: 3, c: 12, s: -100, t: 0, extra: '' } },
+  { key: 'vintage', label: 'Vintage', v: { b: 6, c: -8, s: -16, t: 28, extra: 'sepia(0.28)' } },
+];
+
+const SLIDERS = [
+  { key: 'b', label: 'Brilho' },
+  { key: 'c', label: 'Contraste' },
+  { key: 's', label: 'Saturação' },
+  { key: 't', label: 'Calor' },
+] as const;
+
+function cssFromAdjust(a: Adjust): string {
+  const brightness = (1 + (a.b / 100) * 0.6).toFixed(3);
+  const contrast = (1 + (a.c / 100) * 0.5).toFixed(3);
+  const saturate = Math.max(0, 1 + (a.s / 100) * 1).toFixed(3);
+  return `brightness(${brightness}) contrast(${contrast}) saturate(${saturate})${
+    a.extra ? ` ${a.extra}` : ''
+  }`;
+}
+
+// "Calor" vira um overlay quente/frio com blend soft-light.
+function overlayFromTemp(t: number): { color: string; alpha: number } | null {
+  if (!t) return null;
+  const alpha = Math.min(Math.abs(t) / 100, 1) * 0.35;
+  const color = t > 0 ? '255,176,82' : '82,150,255'; // quente / frio
+  return { color, alpha };
+}
+
+function isDirty(a: Adjust): boolean {
+  return !!(a.b || a.c || a.s || a.t || a.extra);
+}
+
+// Aplica o MESMO filtro do preview num <canvas> e devolve um blob URL (web).
+function bakeFilterWeb(
+  srcUri: string,
+  css: string,
+  overlay: { color: string; alpha: number } | null,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const g = globalThis as any;
+    const img = new g.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = g.document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.filter = css;
+        ctx.drawImage(img, 0, 0);
+        if (overlay) {
+          ctx.filter = 'none';
+          ctx.globalCompositeOperation = 'soft-light';
+          ctx.globalAlpha = overlay.alpha;
+          ctx.fillStyle = `rgb(${overlay.color})`;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'source-over';
+        }
+        canvas.toBlob(
+          (blob: any) => {
+            if (!blob) {
+              reject(new Error('toBlob falhou'));
+              return;
+            }
+            resolve(g.URL.createObjectURL(blob));
+          },
+          'image/jpeg',
+          0.9,
+        );
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = () => reject(new Error('Falha ao carregar imagem pro filtro'));
+    img.src = srcUri;
+  });
+}
+
 function getImageSize(uri: string): Promise<{ w: number; h: number }> {
   return new Promise((resolve, reject) => {
     RNImage.getSize(
@@ -44,6 +144,101 @@ function getImageSize(uri: string): Promise<{ w: number; h: number }> {
     );
   });
 }
+
+// ---- Slider (PanResponder, sem worklet) ---------------------------------
+
+function Slider({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const [w, setW] = useState(0);
+  const wRef = useRef(0);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  const responder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderGrant: (e) => {
+          const x = e.nativeEvent.locationX;
+          const width = wRef.current || 1;
+          const f = Math.min(Math.max(x / width, 0), 1);
+          onChangeRef.current(Math.round(f * 200 - 100));
+        },
+        onPanResponderMove: (e) => {
+          const x = e.nativeEvent.locationX;
+          const width = wRef.current || 1;
+          const f = Math.min(Math.max(x / width, 0), 1);
+          onChangeRef.current(Math.round(f * 200 - 100));
+        },
+      }),
+    [],
+  );
+
+  const frac = (value + 100) / 200;
+  const THUMB = 18;
+  const thumbLeft = frac * Math.max(0, w - THUMB);
+
+  return (
+    <View style={{ paddingVertical: 4 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#fff' }}>{label}</Text>
+        <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+          {value > 0 ? `+${value}` : value}
+        </Text>
+      </View>
+      <View
+        {...responder.panHandlers}
+        onLayout={(ev) => {
+          const width = ev.nativeEvent.layout.width;
+          setW(width);
+          wRef.current = width;
+        }}
+        style={{ height: 28, justifyContent: 'center' }}
+      >
+        {/* trilho */}
+        <View
+          style={{ height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.22)' }}
+          pointerEvents="none"
+        />
+        {/* preenchimento do centro até o thumb */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: '#FB923C',
+            left: Math.min(frac, 0.5) * w,
+            width: Math.abs(frac - 0.5) * w,
+          }}
+        />
+        {/* thumb */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: thumbLeft,
+            width: THUMB,
+            height: THUMB,
+            borderRadius: THUMB / 2,
+            backgroundColor: '#fff',
+          }}
+        />
+      </View>
+    </View>
+  );
+}
+
+// ---- Editor --------------------------------------------------------------
 
 export function PhotoEditor({
   uri,
@@ -61,10 +256,14 @@ export function PhotoEditor({
   const [imgSize, setImgSize] = useState<{ w: number; h: number } | null>(null);
   const [ratioWH, setRatioWH] = useState<number>(1);
   const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState<'crop' | 'filter'>('crop');
+  const [presetKey, setPresetKey] = useState('original');
+  const [adjust, setAdjust] = useState<Adjust>(NEUTRAL);
 
-  // Quadro de recorte: cabe na largura e numa fração da altura.
-  const maxFrameW = Math.min(winW - 32, 400);
-  const maxFrameH = winH * 0.52;
+  // Quadro de recorte: tamanho FIXO (não depende da aba, pra trocar de aba
+  // não resetar o enquadramento). Cabe na largura e numa fração da altura.
+  const maxFrameW = Math.min(winW - 32, 380);
+  const maxFrameH = winH * 0.4;
   let fw = maxFrameW;
   let fh = fw / ratioWH;
   if (fh > maxFrameH) {
@@ -90,9 +289,12 @@ export function PhotoEditor({
   const fwSV = useSharedValue(0);
   const fhSV = useSharedValue(0);
 
-  // Carrega o tamanho natural quando abre/troca de imagem.
+  // Ao abrir/trocar de imagem: reseta filtros e aba.
   useEffect(() => {
     if (!visible || !uri) return;
+    setAdjust(NEUTRAL);
+    setPresetKey('original');
+    setTab('crop');
     let alive = true;
     getImageSize(uri)
       .then((s) => {
@@ -170,6 +372,11 @@ export function PhotoEditor({
     savedTy.value = ny;
   };
 
+  const setA = (patch: Partial<Adjust>) => setAdjust((p) => ({ ...p, ...patch }));
+
+  const previewCss = cssFromAdjust(adjust);
+  const overlay = overlayFromTemp(adjust.t);
+
   const apply = async () => {
     if (!uri || !imgSize || saving) return;
     setSaving(true);
@@ -204,7 +411,18 @@ export function PhotoEditor({
         compress: 0.9,
         format: SaveFormat.JPEG,
       });
-      onDone(result.uri);
+
+      // Filtros: só web e só se algo foi mexido.
+      let finalUri = result.uri;
+      if (isWeb && isDirty(adjust)) {
+        try {
+          finalUri = await bakeFilterWeb(result.uri, cssFromAdjust(adjust), overlayFromTemp(adjust.t));
+        } catch {
+          // Se o filtro falhar, ao menos entrega o recorte.
+          finalUri = result.uri;
+        }
+      }
+      onDone(finalUri);
     } catch (e) {
       toast.error('Não consegui recortar', e instanceof Error ? e.message : 'Tente de novo.');
     } finally {
@@ -214,7 +432,7 @@ export function PhotoEditor({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center' }}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.94)' }}>
         {/* Topo: cancelar / título / aplicar */}
         <View
           style={{
@@ -222,6 +440,7 @@ export function PhotoEditor({
             top: 0,
             left: 0,
             right: 0,
+            zIndex: 10,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -238,13 +457,23 @@ export function PhotoEditor({
             {saving ? (
               <ActivityIndicator color="#FB923C" />
             ) : (
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: '#FB923C' }}>Aplicar</Text>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: '#FB923C' }}>
+                Aplicar
+              </Text>
             )}
           </Pressable>
         </View>
 
-        {/* Quadro de recorte */}
-        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        {/* Área da imagem (centralizada, com espaço pro painel embaixo) */}
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingTop: 88,
+            paddingBottom: isWeb ? 280 : 170,
+          }}
+        >
           {!imgSize || !uri ? (
             <View style={{ width: fw, height: fh, alignItems: 'center', justifyContent: 'center' }}>
               <ActivityIndicator color="#fff" />
@@ -272,8 +501,39 @@ export function PhotoEditor({
                     animStyle,
                   ]}
                 >
-                  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} contentFit="fill" />
+                  {/* filtro CSS num View comum (confiável no RN Web) */}
+                  <View
+                    style={[
+                      { width: '100%', height: '100%' },
+                      isWeb ? ({ filter: previewCss } as any) : null,
+                    ]}
+                  >
+                    <Image
+                      source={{ uri }}
+                      style={{ width: '100%', height: '100%' }}
+                      contentFit="fill"
+                    />
+                  </View>
                 </Animated.View>
+
+                {/* Overlay de "Calor" (temperatura) — só web */}
+                {isWeb && overlay ? (
+                  <View
+                    pointerEvents="none"
+                    style={
+                      {
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: `rgba(${overlay.color},${overlay.alpha})`,
+                        mixBlendMode: 'soft-light',
+                      } as any
+                    }
+                  />
+                ) : null}
+
                 {/* Grade de terços (sutil) */}
                 <View
                   pointerEvents="none"
@@ -311,76 +571,183 @@ export function PhotoEditor({
           )}
         </View>
 
-        {/* Controles: zoom (mouse) + proporções */}
-        <View style={{ position: 'absolute', bottom: 36, left: 0, right: 0, gap: 16 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
-            <Pressable
-              onPress={() => bumpZoom(-0.25)}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: 'rgba(255,255,255,0.14)',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              accessibilityLabel="Diminuir zoom"
-            >
-              <Ionicons name="remove" size={22} color="#fff" />
-            </Pressable>
-            <Pressable
-              onPress={() => bumpZoom(0.25)}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: 'rgba(255,255,255,0.14)',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              accessibilityLabel="Aumentar zoom"
-            >
-              <Ionicons name="add" size={22} color="#fff" />
-            </Pressable>
-          </View>
+        {/* Painel de baixo: abas + controles */}
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            paddingBottom: 24,
+            paddingTop: 10,
+            gap: 12,
+          }}
+        >
+          {/* Abas (Recortar / Filtros) — Filtros só no web */}
+          {isWeb ? (
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
+              {(['crop', 'filter'] as const).map((t) => {
+                const active = tab === t;
+                return (
+                  <Pressable key={t} onPress={() => setTab(t)} hitSlop={8}>
+                    <Text
+                      style={{
+                        fontFamily: FONTS.bodyBold,
+                        fontSize: 14,
+                        color: active ? '#FB923C' : 'rgba(255,255,255,0.6)',
+                      }}
+                    >
+                      {t === 'crop' ? 'Recortar' : 'Filtros'}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
 
-          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10 }}>
-            {RATIOS.map((r) => {
-              const active = Math.abs(r.wh - ratioWH) < 0.001;
-              return (
+          {tab === 'crop' || !isWeb ? (
+            <View style={{ gap: 14 }}>
+              {/* Zoom (mouse) */}
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
                 <Pressable
-                  key={r.key}
-                  onPress={() => setRatioWH(r.wh)}
+                  onPress={() => bumpZoom(-0.25)}
                   style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 8,
-                    borderRadius: 999,
-                    backgroundColor: active ? '#FB923C' : 'rgba(255,255,255,0.14)',
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: 'rgba(255,255,255,0.14)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  accessibilityLabel="Diminuir zoom"
+                >
+                  <Ionicons name="remove" size={22} color="#fff" />
+                </Pressable>
+                <Pressable
+                  onPress={() => bumpZoom(0.25)}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: 'rgba(255,255,255,0.14)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  accessibilityLabel="Aumentar zoom"
+                >
+                  <Ionicons name="add" size={22} color="#fff" />
+                </Pressable>
+              </View>
+
+              {/* Proporções */}
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10 }}>
+                {RATIOS.map((r) => {
+                  const active = Math.abs(r.wh - ratioWH) < 0.001;
+                  return (
+                    <Pressable
+                      key={r.key}
+                      onPress={() => setRatioWH(r.wh)}
+                      style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 8,
+                        borderRadius: 999,
+                        backgroundColor: active ? '#FB923C' : 'rgba(255,255,255,0.14)',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: FONTS.bodyBold,
+                          fontSize: 12,
+                          color: active ? '#1A1410' : '#fff',
+                        }}
+                      >
+                        {r.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Text
+                style={{
+                  fontFamily: FONTS.body,
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.6)',
+                  textAlign: 'center',
+                }}
+              >
+                Arraste pra reposicionar · pinça ou +/− pra dar zoom
+              </Text>
+            </View>
+          ) : (
+            <View style={{ gap: 8, paddingHorizontal: 20 }}>
+              {/* Presets */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8, paddingHorizontal: 0 }}
+              >
+                {PRESETS.map((p) => {
+                  const active = presetKey === p.key;
+                  return (
+                    <Pressable
+                      key={p.key}
+                      onPress={() => {
+                        setPresetKey(p.key);
+                        setAdjust(p.v);
+                      }}
+                      style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 8,
+                        borderRadius: 999,
+                        backgroundColor: active ? '#FB923C' : 'rgba(255,255,255,0.14)',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: FONTS.bodyBold,
+                          fontSize: 12,
+                          color: active ? '#1A1410' : '#fff',
+                        }}
+                      >
+                        {p.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Sliders */}
+              <View style={{ gap: 2 }}>
+                {SLIDERS.map((sl) => (
+                  <Slider
+                    key={sl.key}
+                    label={sl.label}
+                    value={adjust[sl.key]}
+                    onChange={(v) => setA({ [sl.key]: v })}
+                  />
+                ))}
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  setAdjust(NEUTRAL);
+                  setPresetKey('original');
+                }}
+                hitSlop={8}
+                style={{ alignSelf: 'center' }}
+              >
+                <Text
+                  style={{
+                    fontFamily: FONTS.bodyBold,
+                    fontSize: 12,
+                    color: 'rgba(255,255,255,0.6)',
                   }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: FONTS.bodyBold,
-                      fontSize: 12,
-                      color: active ? '#1A1410' : '#fff',
-                    }}
-                  >
-                    {r.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <Text
-            style={{
-              fontFamily: FONTS.body,
-              fontSize: 11,
-              color: 'rgba(255,255,255,0.6)',
-              textAlign: 'center',
-            }}
-          >
-            Arraste pra reposicionar · pinça ou +/− pra dar zoom
-          </Text>
+                  Resetar ajustes
+                </Text>
+              </Pressable>
+            </View>
+          )}
         </View>
       </View>
     </Modal>
