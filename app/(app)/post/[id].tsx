@@ -74,7 +74,23 @@ export default function PostDetailScreen() {
 
   const likeMutation = useMutation({
     mutationFn: () => toggleLike(id, activePet!.id, !!postQuery.data?.liked_by_me),
-    onSuccess: () => {
+    // Otimista: coração + contador respondem na hora (espelha o post-card do feed).
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: qk.post(id) });
+      const prev = qc.getQueryData<NonNullable<typeof postQuery.data>>(qk.post(id));
+      if (prev) {
+        qc.setQueryData<NonNullable<typeof postQuery.data>>(qk.post(id), {
+          ...prev,
+          liked_by_me: !prev.liked_by_me,
+          likes_count: prev.likes_count + (prev.liked_by_me ? -1 : 1),
+        });
+      }
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(qk.post(id), ctx.prev);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: qk.post(id) });
     },
   });
@@ -244,7 +260,7 @@ export default function PostDetailScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      className="flex-1 bg-white"
+      style={{ flex: 1, backgroundColor: theme.bg }}
     >
       {post ? (
         <MetaTags
@@ -271,11 +287,11 @@ export default function PostDetailScreen() {
           headerRight: () => (
             <View className="flex-row items-center gap-1 pr-1">
               <Pressable hitSlop={10} onPress={onShare} className="px-2">
-                <Ionicons name="share-outline" size={22} color="#111" />
+                <Ionicons name="share-outline" size={22} color={theme.text} />
               </Pressable>
               {isOwner ? (
                 <Pressable hitSlop={10} onPress={onOwnerMenu} className="px-2">
-                  <Ionicons name="ellipsis-horizontal" size={22} color="#111" />
+                  <Ionicons name="ellipsis-horizontal" size={22} color={theme.text} />
                 </Pressable>
               ) : null}
             </View>
@@ -295,12 +311,12 @@ export default function PostDetailScreen() {
               paddingBottom: 0,
             }}
           >
-            <Ionicons name="repeat" size={14} color="#F97316" />
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#F97316' }}>
+            <Ionicons name="repeat" size={14} color={theme.brand} />
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.brand }}>
               {post.pet.name} repostou
             </Text>
             {post.original_post ? (
-              <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>
+              <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim }}>
                 de {post.original_post.pet.name}
               </Text>
             ) : null}
@@ -311,12 +327,12 @@ export default function PostDetailScreen() {
           <PetAvatar pet={post.pet} size={36} />
           <View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#1A1410' }}>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }}>
                 {post.pet.name}
               </Text>
               {isMozartPet(post.pet.id) ? <OfficialBadge size={14} /> : null}
             </View>
-            <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim }}>
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}
               {post.updated_at &&
               new Date(post.updated_at).getTime() - new Date(post.created_at).getTime() > 60_000
@@ -341,17 +357,17 @@ export default function PostDetailScreen() {
               paddingHorizontal: 14,
               paddingVertical: 10,
               borderLeftWidth: 3,
-              borderLeftColor: '#F97316',
-              backgroundColor: '#FFEDD5',
+              borderLeftColor: theme.brand,
+              backgroundColor: theme.brandSurface,
               borderRadius: 8,
             }}
           >
             <Text
-              style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#9A3412', marginBottom: 4 }}
+              style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.brandDark, marginBottom: 4 }}
             >
               {post.original_post.pet.name} escreveu:
             </Text>
-            <Text style={{ fontFamily: FONTS.body, fontSize: 13, lineHeight: 19, color: '#1A1410' }}>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 13, lineHeight: 19, color: theme.text }}>
               {post.original_post.caption}
             </Text>
           </View>
@@ -369,8 +385,8 @@ export default function PostDetailScreen() {
               alignItems: 'center',
             }}
           >
-            <Ionicons name="pricetag" size={12} color="#737373" />
-            <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#737373' }}>com</Text>
+            <Ionicons name="pricetag" size={12} color={theme.textDim} />
+            <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>com</Text>
             {post.pet_tags.map((tagPet) => (
               <Link
                 key={tagPet.id}
@@ -385,10 +401,10 @@ export default function PostDetailScreen() {
                     paddingHorizontal: 8,
                     paddingVertical: 3,
                     borderRadius: 999,
-                    backgroundColor: '#FFEDD5',
+                    backgroundColor: theme.brandSurface,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#9A3412' }}>
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: theme.brandDark }}>
                     @{tagPet.name}
                   </Text>
                 </Pressable>
@@ -402,38 +418,38 @@ export default function PostDetailScreen() {
             <Ionicons
               name={post.liked_by_me ? 'heart' : 'heart-outline'}
               size={26}
-              color={post.liked_by_me ? '#ef4444' : '#111'}
+              color={post.liked_by_me ? '#ef4444' : theme.text}
             />
-            <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 14, color: '#1A1410' }}>
+            <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 14, color: theme.text }}>
               {post.likes_count}
             </Text>
           </Pressable>
           <View className="flex-row items-center gap-1.5">
-            <Ionicons name="chatbubble-outline" size={24} color="#111" />
-            <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 14, color: '#1A1410' }}>
+            <Ionicons name="chatbubble-outline" size={24} color={theme.text} />
+            <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 14, color: theme.text }}>
               {post.comments_count}
             </Text>
           </View>
           <Pressable hitSlop={6} onPress={onShare} className="ml-auto flex-row items-center gap-1.5">
-            <Ionicons name="share-outline" size={22} color="#111" />
+            <Ionicons name="share-outline" size={22} color={theme.text} />
           </Pressable>
         </View>
 
         {post.caption ? (
           <View className="px-4 pb-3">
-            <Text style={{ fontFamily: FONTS.body, fontSize: 14, lineHeight: 20, color: '#1A1410' }}>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 14, lineHeight: 20, color: theme.text }}>
               <Text style={{ fontFamily: FONTS.bodyBold }}>{post.pet.name}</Text> {post.caption}
             </Text>
           </View>
         ) : null}
 
-        <View className="border-t border-neutral-100 px-4 pt-3">
+        <View style={{ borderTopWidth: 1, borderTopColor: theme.borderLight }} className="px-4 pt-3">
           <Text
             style={{
               fontFamily: FONTS.bodyBold,
               fontSize: 11,
               letterSpacing: 1.4,
-              color: '#F97316',
+              color: theme.brand,
               textTransform: 'uppercase',
               marginBottom: 8,
             }}
@@ -474,7 +490,7 @@ export default function PostDetailScreen() {
                   // Indent visual pra replies — borda esquerda + margem
                   paddingLeft: isReply ? 36 : 0,
                   borderLeftWidth: isReply ? 2 : 0,
-                  borderLeftColor: '#FED7AA',
+                  borderLeftColor: theme.brandLight,
                   marginLeft: isReply ? 14 : 0,
                 }}
               >
@@ -487,7 +503,17 @@ export default function PostDetailScreen() {
                         onChangeText={setEditingCommentText}
                         autoFocus
                         multiline
-                        className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm"
+                        style={{
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.surface,
+                          paddingHorizontal: 12,
+                          paddingVertical: 8,
+                          fontFamily: FONTS.body,
+                          fontSize: 14,
+                          color: theme.text,
+                        }}
                       />
                       <View className="flex-row gap-2">
                         <Button
@@ -512,7 +538,7 @@ export default function PostDetailScreen() {
                     </View>
                   ) : (
                     <>
-                      <Text style={{ fontFamily: FONTS.body, fontSize: 14, lineHeight: 20, color: '#1A1410' }}>
+                      <Text style={{ fontFamily: FONTS.body, fontSize: 14, lineHeight: 20, color: theme.text }}>
                         <Text style={{ fontFamily: FONTS.bodyBold }}>{c.pet.name}</Text> {c.content}
                       </Text>
                       <View
@@ -523,7 +549,7 @@ export default function PostDetailScreen() {
                           marginTop: 4,
                         }}
                       >
-                        <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>
+                        <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim }}>
                           {formatDistanceToNow(new Date(c.created_at), {
                             addSuffix: true,
                             locale: ptBR,
@@ -544,14 +570,14 @@ export default function PostDetailScreen() {
                           <Ionicons
                             name={c.liked_by_me ? 'heart' : 'heart-outline'}
                             size={13}
-                            color={c.liked_by_me ? '#EF4444' : '#737373'}
+                            color={c.liked_by_me ? '#EF4444' : theme.textDim}
                           />
                           {c.likes_count > 0 ? (
                             <Text
                               style={{
                                 fontFamily: FONTS.bodyMedium,
                                 fontSize: 11,
-                                color: c.liked_by_me ? '#EF4444' : '#737373',
+                                color: c.liked_by_me ? '#EF4444' : theme.textDim,
                               }}
                             >
                               {c.likes_count}
@@ -571,7 +597,7 @@ export default function PostDetailScreen() {
                               style={{
                                 fontFamily: FONTS.bodyBold,
                                 fontSize: 11,
-                                color: '#737373',
+                                color: theme.textDim,
                               }}
                             >
                               Responder
@@ -588,14 +614,14 @@ export default function PostDetailScreen() {
                     onPress={() => onCommentMenu(c.id, c.content)}
                     className="px-1"
                   >
-                    <Ionicons name="ellipsis-horizontal" size={16} color="#737373" />
+                    <Ionicons name="ellipsis-horizontal" size={16} color={theme.textDim} />
                   </Pressable>
                 ) : null}
               </View>
             );
           })}
           {(commentsQuery.data ?? []).length === 0 ? (
-            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#737373', paddingVertical: 8 }}>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.textDim, paddingVertical: 8 }}>
               Seja o primeiro a comentar.
             </Text>
           ) : null}
@@ -611,14 +637,14 @@ export default function PostDetailScreen() {
             justifyContent: 'space-between',
             paddingHorizontal: 16,
             paddingVertical: 8,
-            backgroundColor: '#FFEDD5',
+            backgroundColor: theme.brandSurface,
             borderTopWidth: 1,
-            borderTopColor: '#FED7AA',
+            borderTopColor: theme.brandLight,
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="arrow-undo-outline" size={14} color="#9A3412" />
-            <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: '#9A3412' }}>
+            <Ionicons name="arrow-undo-outline" size={14} color={theme.brandDark} />
+            <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: theme.brandDark }}>
               Respondendo a <Text style={{ fontFamily: FONTS.bodyBold }}>{replyingToName}</Text>
             </Text>
           </View>
@@ -629,28 +655,31 @@ export default function PostDetailScreen() {
             }}
             hitSlop={8}
           >
-            <Ionicons name="close" size={16} color="#9A3412" />
+            <Ionicons name="close" size={16} color={theme.brandDark} />
           </Pressable>
         </View>
       ) : null}
 
-      <View className="flex-row items-end gap-2 border-t border-neutral-200 bg-white p-3">
+      <View
+        style={{ borderTopWidth: 1, borderTopColor: theme.border, backgroundColor: theme.surface }}
+        className="flex-row items-end gap-2 p-3"
+      >
         <TextInput
           value={draft}
           onChangeText={setDraft}
           placeholder={replyingToName ? `Responder ${replyingToName}...` : 'Comente como...'}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={theme.textDim}
           multiline
           maxLength={500}
           style={{
             flex: 1,
             fontFamily: FONTS.body,
             fontSize: 14,
-            color: '#1A1410',
+            color: theme.text,
             borderRadius: 20,
             borderWidth: 1,
-            borderColor: draft.length > 0 ? '#F97316' : '#d4d4d4',
-            backgroundColor: '#fff',
+            borderColor: draft.length > 0 ? theme.brand : theme.border,
+            backgroundColor: theme.bg,
             paddingHorizontal: 16,
             paddingVertical: 10,
             minHeight: 40,
@@ -674,11 +703,13 @@ export default function PostDetailScreen() {
         onRequestClose={() => setEditCaptionOpen(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="rounded-t-3xl bg-white p-6 pb-10">
+          <View style={{ backgroundColor: theme.surface }} className="rounded-t-3xl p-6 pb-10">
             <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-lg font-bold text-neutral-900">Editar legenda</Text>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 18, color: theme.text }}>
+                Editar legenda
+              </Text>
               <Pressable hitSlop={10} onPress={() => setEditCaptionOpen(false)}>
-                <Ionicons name="close" size={24} color="#111" />
+                <Ionicons name="close" size={24} color={theme.text} />
               </Pressable>
             </View>
             <TextArea
