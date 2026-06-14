@@ -372,6 +372,20 @@ export function PhotoEditor({
     savedTy.value = ny;
   };
 
+  // Zera o enquadramento (zoom/pan) de forma SÍNCRONA. Usado ao trocar de
+  // proporção: como o novo fw/fh/cover só são calculados no próximo render
+  // (e os mirrors do clamp só no effect, pós-commit), deixar o transform em
+  // identidade já garante que a imagem cobre o quadro novo — sem flash de
+  // borda preta nem pan contra valores antigos por 1 frame.
+  const resetFraming = () => {
+    scale.value = 1;
+    savedScale.value = 1;
+    tx.value = 0;
+    savedTx.value = 0;
+    ty.value = 0;
+    savedTy.value = 0;
+  };
+
   const setA = (patch: Partial<Adjust>) => setAdjust((p) => ({ ...p, ...patch }));
 
   const previewCss = cssFromAdjust(adjust);
@@ -646,7 +660,10 @@ export function PhotoEditor({
                   return (
                     <Pressable
                       key={r.key}
-                      onPress={() => setRatioWH(r.wh)}
+                      onPress={() => {
+                        setRatioWH(r.wh);
+                        resetFraming();
+                      }}
                       style={{
                         paddingHorizontal: 14,
                         paddingVertical: 8,
