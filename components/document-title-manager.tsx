@@ -18,6 +18,7 @@ const ROUTE_TITLES: { match: RegExp | string; title: string }[] = [
   { match: '/legal/privacy', title: 'Privacidade' },
   { match: '/legal/about', title: 'Sobre' },
   { match: '/legal/faq', title: 'FAQ' },
+  { match: '/legal/animais', title: 'Regras de anúncios de animais' },
 
   // App
   { match: /^\/$/, title: 'Feed' },

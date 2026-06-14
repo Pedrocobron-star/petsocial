@@ -7,6 +7,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { ModerationNotice, RulesCheckbox } from '@/components/listing-legal';
 import { Button } from '@/components/ui/button';
 import { DateTimePickerInput } from '@/components/ui/datetime-picker';
 import { Input } from '@/components/ui/input';
@@ -66,6 +67,7 @@ export default function NewLostReportScreen() {
   const [description, setDescription] = useState('');
   const [contact, setContact] = useState('');
   const [media, setMedia] = useState<PickedMedia[]>([]);
+  const [accepted, setAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Hook tem que ser chamado SEMPRE — não pode vir depois de early return
@@ -195,6 +197,10 @@ export default function NewLostReportScreen() {
     }
     if (kind === 'found' && !species) {
       Alert.alert('Espécie', 'Informe a espécie do pet encontrado.');
+      return;
+    }
+    if (!accepted) {
+      Alert.alert('Aceite as regras', 'Marque que leu e concorda com as Regras de Anúncios de Animais.');
       return;
     }
     setSubmitting(true);
@@ -504,6 +510,9 @@ export default function NewLostReportScreen() {
             onChangeText={setContact}
             keyboardType="default"
           />
+
+          <ModerationNotice variant="instant" />
+          <RulesCheckbox checked={accepted} onToggle={() => setAccepted((v) => !v)} />
 
           <View className="mt-2">
             <Button title="Publicar reporte" onPress={handleSubmit} loading={submitting} fullWidth />

@@ -100,7 +100,7 @@ export default function AdminAdoptionScreen() {
               Moderação de adoção
             </Text>
             <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#A3A3A3', marginTop: 2 }}>
-              {listings.length} {listings.length === 1 ? 'anúncio sinalizado' : 'anúncios sinalizados'}
+              {listings.length} {listings.length === 1 ? 'anúncio na fila' : 'anúncios na fila'}
             </Text>
           </View>
         </View>
@@ -110,9 +110,9 @@ export default function AdminAdoptionScreen() {
             Como funciona
           </Text>
           <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#9F1239', lineHeight: 16 }}>
-            Anúncios com link externo, descrição muito curta ou indício de venda entram aqui
-            automaticamente — mas continuam visíveis no mural. Aprove os legítimos (some o flag) ou
-            remova os que violam as regras.
+            Todo anúncio novo entra aqui PENDENTE e NÃO aparece no mural até você aprovar (prazo de
+            até 24h). Os com indício de golpe (link, venda, texto curto) vêm marcados em amarelo —
+            olhe com atenção. Aprove os legítimos ou remova os que violam as regras.
           </Text>
         </View>
 
@@ -184,9 +184,13 @@ function ReviewRow({
 }) {
   const { theme } = useTheme();
   const photo = listing.image_urls[0];
-  const reasonLabel = listing.review_reason
-    ? REVIEW_REASON_LABEL[listing.review_reason] ?? listing.review_reason
-    : 'Sinalizado';
+  // Sinalizado pela heurística (amarelo, com motivo) ou só aguardando aprovação (neutro).
+  const flagged = listing.needs_review;
+  const reasonLabel = flagged
+    ? listing.review_reason
+      ? REVIEW_REASON_LABEL[listing.review_reason] ?? listing.review_reason
+      : 'Sinalizado pela triagem'
+    : 'Aguardando aprovação';
 
   return (
     <View
@@ -233,20 +237,31 @@ function ReviewRow({
         </View>
       </View>
 
-      {/* Motivo do flag */}
+      {/* Status na fila: sinalizado (amarelo) ou só aguardando (azul) */}
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           gap: 6,
-          backgroundColor: '#FEF3C7',
+          backgroundColor: flagged ? '#FEF3C7' : '#E0F2FE',
           borderRadius: 8,
           paddingHorizontal: 10,
           paddingVertical: 6,
         }}
       >
-        <Ionicons name="flag" size={13} color="#92400E" />
-        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#92400E', flex: 1 }}>
+        <Ionicons
+          name={flagged ? 'flag' : 'time-outline'}
+          size={13}
+          color={flagged ? '#92400E' : '#075985'}
+        />
+        <Text
+          style={{
+            fontFamily: FONTS.bodyBold,
+            fontSize: 11,
+            color: flagged ? '#92400E' : '#075985',
+            flex: 1,
+          }}
+        >
           {reasonLabel}
         </Text>
       </View>

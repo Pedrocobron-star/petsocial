@@ -196,6 +196,28 @@ export default function AdoptionDetailScreen() {
               ) : null}
             </View>
 
+            {/* Aviso de moderação (só o dono vê, enquanto pendente) */}
+            {isOwner && !listing.approved ? (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  gap: 8,
+                  backgroundColor: '#FEF3C7',
+                  borderRadius: 12,
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: '#FDE68A',
+                }}
+              >
+                <Ionicons name="time-outline" size={18} color="#92400E" style={{ marginTop: 1 }} />
+                <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 12, color: '#92400E', lineHeight: 17 }}>
+                  <Text style={{ fontFamily: FONTS.bodyBold }}>Em análise. </Text>
+                  Seu anúncio passa por uma revisão e entra no mural em até 24h após a aprovação. Por
+                  enquanto só você está vendo ele.
+                </Text>
+              </View>
+            ) : null}
+
             {/* Chips */}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {chips.map((c, i) => (

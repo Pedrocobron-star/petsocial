@@ -7,6 +7,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
+import { ModerationNotice, RulesCheckbox } from '@/components/listing-legal';
 import { Button } from '@/components/ui/button';
 import {
   createAdoptionListing,
@@ -53,6 +54,7 @@ export default function NewAdoptionScreen() {
   const [specialNeeds, setSpecialNeeds] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [accepted, setAccepted] = useState(false);
   const [saving, setSaving] = useState(false);
 
   if (!session) return <Redirect href="/welcome" />;
@@ -137,6 +139,10 @@ export default function NewAdoptionScreen() {
       toast.error('Adicione uma foto', 'Anúncios sem foto não são publicados — uma foto aumenta muito a chance de adoção.');
       return;
     }
+    if (!accepted) {
+      toast.error('Aceite as regras', 'Marque que leu e concorda com as Regras de Anúncios de Animais.');
+      return;
+    }
     setSaving(true);
     try {
       const listing = await createAdoptionListing(userId, {
@@ -158,7 +164,7 @@ export default function NewAdoptionScreen() {
         video_url: videoUrl,
       });
       await qc.invalidateQueries({ queryKey: ['adoption-listings'] });
-      toast.success('Anúncio publicado! 🏠', 'Obrigado por ajudar a achar um lar.');
+      toast.success('Anúncio enviado! 🐾', 'Passa por uma revisão e entra no ar em até 24h.');
       router.replace({ pathname: '/(app)/adoption/[id]', params: { id: listing.id } } as never);
     } catch (e) {
       toast.error('Erro ao publicar', e instanceof Error ? e.message : 'Tente de novo.');
@@ -339,7 +345,10 @@ export default function NewAdoptionScreen() {
           </Text>
         </View>
 
-        <Button title="Publicar anúncio" onPress={onSubmit} loading={saving} fullWidth />
+        <ModerationNotice variant="review24h" />
+        <RulesCheckbox checked={accepted} onToggle={() => setAccepted((v) => !v)} />
+
+        <Button title="Enviar pra revisão" onPress={onSubmit} loading={saving} fullWidth />
       </ScrollView>
     </View>
   );

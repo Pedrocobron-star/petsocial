@@ -47,11 +47,33 @@ CREATE INDEX IF NOT EXISTS adoption_listings_owner_idx
 
 ALTER TABLE public.adoption_listings ENABLE ROW LEVEL SECURITY;
 
--- SELECT: mural público — todo mundo vê todos os anúncios
-DROP POLICY IF EXISTS adoption_select_all ON public.adoption_listings;
-CREATE POLICY adoption_select_all ON public.adoption_listings
-  FOR SELECT TO anon, authenticated
-  USING (true);
+-- SELECT: mural público.
+-- ATENÇÃO: depois que adoption-approval-gate.sql roda, a visibilidade passa a
+-- ser GATEADA (público vê só aprovados). Como não há migration runner e os
+-- arquivos são aplicados à mão, este bloco é REPLAY-SAFE: se a coluna `approved`
+-- já existe (gate aplicado), re-rodar este arquivo recria a policy RESTRITIVA —
+-- nunca a `USING(true)`, que reabriria todos os anúncios pendentes.
+DO $$
+BEGIN
+  DROP POLICY IF EXISTS adoption_select_all ON public.adoption_listings;
+  DROP POLICY IF EXISTS adoption_select_visible ON public.adoption_listings;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'adoption_listings'
+      AND column_name = 'approved'
+  ) THEN
+    -- Gate já aplicado: policy restritiva (público só aprovados; dono e admin veem tudo).
+    CREATE POLICY adoption_select_visible ON public.adoption_listings
+      FOR SELECT TO anon, authenticated
+      USING (approved OR owner_id = auth.uid() OR public.is_admin());
+  ELSE
+    -- Instalação nova, antes do gate: mural totalmente público.
+    CREATE POLICY adoption_select_all ON public.adoption_listings
+      FOR SELECT TO anon, authenticated
+      USING (true);
+  END IF;
+END $$;
 
 -- WRITE: cada um gerencia os próprios anúncios
 DROP POLICY IF EXISTS adoption_owner_write ON public.adoption_listings;

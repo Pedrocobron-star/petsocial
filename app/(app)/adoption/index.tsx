@@ -7,6 +7,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 
 import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
+import { PendingBadge } from '@/components/listing-legal';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
 import {
@@ -18,6 +19,7 @@ import {
 } from '@/lib/adoption';
 import { FONTS } from '@/lib/fonts';
 import { AppThemeProvider } from '@/providers/app-theme-provider';
+import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 
 export default function AdoptionFeedScreen() {
@@ -31,11 +33,13 @@ export default function AdoptionFeedScreen() {
 function AdoptionFeedInner() {
   const { theme } = useTheme();
   const router = useRouter();
+  const { session } = useSession();
   const [species, setSpecies] = useState<AdoptionSpecies | 'all'>('all');
 
   const query = useQuery({
     queryKey: ['adoption-listings'],
-    queryFn: () => fetchAdoptionListings(),
+    // Passa o viewer pra incluir os anúncios pendentes do PRÓPRIO dono (com selo).
+    queryFn: () => fetchAdoptionListings(undefined, session?.user.id ?? null),
   });
   const all = query.data ?? [];
   const listings = species === 'all' ? all : all.filter((l) => l.species === species);
@@ -171,6 +175,10 @@ function ListingCard({ listing }: { listing: AdoptionListing }) {
               }}
             >
               <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#fff' }}>✓ Adotado</Text>
+            </View>
+          ) : !listing.approved ? (
+            <View style={{ position: 'absolute', top: 10, left: 10 }}>
+              <PendingBadge />
             </View>
           ) : null}
         </View>

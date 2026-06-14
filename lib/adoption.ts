@@ -41,6 +41,8 @@ export interface AdoptionListing {
   needs_review: boolean;
   /** Codigo do motivo do flag (a UI traduz). */
   review_reason: AdoptionReviewReason | null;
+  /** Gate de moderacao: so vai pro mural depois que o admin aprova. */
+  approved: boolean;
 }
 
 export type AdoptionReviewReason = 'external_link' | 'too_short' | 'possible_sale';
@@ -77,14 +79,25 @@ export interface AdoptionFilters {
   uf?: string;
 }
 
-/** Anúncios disponíveis primeiro, depois adotados/pausados. */
-export async function fetchAdoptionListings(filters?: AdoptionFilters): Promise<AdoptionListing[]> {
+/**
+ * Anúncios do mural: só os APROVADOS (passaram pela moderação de 24h).
+ * Se `viewerId` for passado, inclui também os anúncios PENDENTES do próprio
+ * dono — assim quem anuncia continua vendo o seu (com selo "Em análise") mesmo
+ * antes de ir ao ar. Disponíveis primeiro, depois adotados/pausados.
+ */
+export async function fetchAdoptionListings(
+  filters?: AdoptionFilters,
+  viewerId?: string | null,
+): Promise<AdoptionListing[]> {
   let q = supabase
     .from('adoption_listings')
     .select('*')
     .order('status', { ascending: true }) // 'adopted' < 'available' < 'paused' alfabeticamente — reordenamos abaixo
     .order('priority', { ascending: false })
     .order('created_at', { ascending: false });
+  // Gate de moderação: público vê só aprovados; o dono vê também os próprios pendentes.
+  if (viewerId) q = q.or(`approved.eq.true,owner_id.eq.${viewerId}`);
+  else q = q.eq('approved', true);
   if (filters?.species) q = q.eq('species', filters.species);
   if (filters?.uf) q = q.eq('uf', filters.uf);
 
@@ -205,22 +218,26 @@ export async function deleteAdoptionListing(id: string): Promise<void> {
 // Moderação (admin)
 // ============================================================================
 
-/** Fila de moderação: anúncios sinalizados pela heurística, mais recentes 1º. */
+/**
+ * Fila de moderação: anúncios PENDENTES de aprovação (approved=false) OU
+ * sinalizados pela heurística anti-spam (needs_review=true, ex. um aprovado que
+ * foi editado pra algo suspeito). Mais recentes primeiro.
+ */
 export async function adminListAdoptionForReview(): Promise<AdoptionListing[]> {
   const { data, error } = await supabase
     .from('adoption_listings')
     .select('*')
-    .eq('needs_review', true)
+    .or('approved.eq.false,needs_review.eq.true')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as AdoptionListing[];
 }
 
-/** Aprova o anúncio (limpa o flag needs_review). */
+/** Aprova o anúncio: vai pro mural (approved=true) e limpa o flag anti-spam. */
 export async function adminApproveAdoption(id: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_set_adoption_review', {
+  const { error } = await supabase.rpc('admin_set_adoption_approved', {
     p_id: id,
-    p_needs_review: false,
+    p_approved: true,
   });
   if (error) throw error;
   void logAdminAction('approve', 'adoption_listing', id);
