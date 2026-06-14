@@ -5,7 +5,14 @@
 import { supabase } from './supabase';
 
 export type ReportStatus = 'open' | 'reviewed' | 'dismissed' | 'actioned';
-export type ReportTargetKind = 'post' | 'comment' | 'user' | 'pet' | 'message' | 'lost_report';
+export type ReportTargetKind =
+  | 'post'
+  | 'comment'
+  | 'user'
+  | 'pet'
+  | 'message'
+  | 'lost_report'
+  | 'adoption_listing';
 
 export interface AdminReport {
   id: string;
@@ -46,6 +53,13 @@ export async function adminDeleteComment(commentId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Remove um reporte de Achados/Perdidos abusivo. Retorna URLs pra limpar o bucket. */
+export async function adminDeleteLostReport(reportId: string): Promise<string[]> {
+  const { data, error } = await supabase.rpc('admin_delete_lost_report', { p_id: reportId });
+  if (error) throw error;
+  return (data ?? []) as string[];
+}
+
 export async function adminBanUser(userId: string, ban: boolean, reason?: string): Promise<void> {
   const { error } = await supabase.rpc('admin_ban_user', {
     p_user_id: userId,
@@ -73,4 +87,5 @@ export const REPORT_KIND_LABELS: Record<ReportTargetKind, string> = {
   pet: 'Pet',
   message: 'Mensagem',
   lost_report: 'Achado/Perdido',
+  adoption_listing: 'Adoção',
 };

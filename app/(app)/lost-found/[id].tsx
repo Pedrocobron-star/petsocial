@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { differenceInDays, differenceInHours, format, formatDistanceToNow, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -17,6 +17,7 @@ import Animated, {
 import { LostReportShareButton } from '@/components/lost-found/lost-report-share-button';
 import { MediaCarousel } from '@/components/media-carousel';
 import { PetAvatar } from '@/components/pet-avatar';
+import { ReportModal } from '@/components/report-modal';
 import { Button } from '@/components/ui/button';
 import { speciesEmoji, speciesLabel } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
@@ -38,6 +39,7 @@ export default function LostReportDetailScreen() {
   const qc = useQueryClient();
   const { session } = useSession();
   const { theme } = useTheme();
+  const [reportOpen, setReportOpen] = useState(false);
 
   const query = useQuery({
     queryKey: qk.lostReport(id),
@@ -192,20 +194,20 @@ export default function LostReportDetailScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-neutral-50" contentContainerClassName="pb-12">
+    <ScrollView className="flex-1" style={{ backgroundColor: theme.bg }} contentContainerClassName="pb-12">
       <Stack.Screen
         options={{
           title: kindLabel,
           headerRight: isOwner
             ? () => (
                 <Pressable hitSlop={10} onPress={showOwnerMenu} className="pr-2">
-                  <Ionicons name="ellipsis-horizontal" size={22} color="#111" />
+                  <Ionicons name="ellipsis-horizontal" size={22} color={theme.text} />
                 </Pressable>
               )
             : undefined,
         }}
       />
-      <View className="bg-white" style={{ alignItems: 'center' }}>
+      <View style={{ alignItems: 'center', backgroundColor: theme.surface }}>
         {hasMedia ? (
           <MediaCarousel media={carouselMedia} width={carouselWidth} />
         ) : linkedPet ? (
@@ -242,7 +244,7 @@ export default function LostReportDetailScreen() {
         <UrgencyBanner createdAt={r.created_at} petName={displayName} />
       ) : null}
 
-      <View className="bg-white px-4 py-4">
+      <View className="px-4 py-4" style={{ backgroundColor: theme.surface }}>
         <View className="mb-2 flex-row flex-wrap items-center gap-2">
           <View style={{ backgroundColor: kindBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
             <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: kindColor }}>
@@ -257,19 +259,19 @@ export default function LostReportDetailScreen() {
             </View>
           ) : null}
         </View>
-        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: '#1A1410' }}>{displayName}</Text>
-        <Text style={{ fontFamily: FONTS.body, fontSize: 14, color: '#525252', marginTop: 4 }}>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.text }}>{displayName}</Text>
+        <Text style={{ fontFamily: FONTS.body, fontSize: 14, color: theme.textMuted, marginTop: 4 }}>
           {displaySpecies ? speciesLabel(displaySpecies) : 'Espécie não informada'}
           {displayBreed ? ` • ${displayBreed}` : ''}
           {r.color ? ` • ${r.color}` : ''}
         </Text>
 
         <Pressable onPress={openMaps} className="mt-3 flex-row items-center gap-1.5 self-start active:opacity-70">
-          <Ionicons name="location-outline" size={18} color="#F97316" />
-          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: '#C2410C' }}>
+          <Ionicons name="location-outline" size={18} color={theme.brand} />
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.brandDark }}>
             {r.last_seen_location}
           </Text>
-          <Ionicons name="open-outline" size={14} color="#C2410C" />
+          <Ionicons name="open-outline" size={14} color={theme.brandDark} />
         </Pressable>
 
         {/* Botão de compartilhar — CTA principal pra viralizar (só se open) */}
@@ -280,7 +282,7 @@ export default function LostReportDetailScreen() {
               style={{
                 fontFamily: FONTS.body,
                 fontSize: 11,
-                color: '#737373',
+                color: theme.textDim,
                 textAlign: 'center',
                 marginTop: 8,
               }}
@@ -292,8 +294,8 @@ export default function LostReportDetailScreen() {
 
         {r.last_seen_at ? (
           <View className="mt-1 flex-row items-center gap-1.5">
-            <Ionicons name="time-outline" size={16} color="#737373" />
-            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#525252' }}>
+            <Ionicons name="time-outline" size={16} color={theme.textDim} />
+            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.textMuted }}>
               Visto em{' '}
               {format(parseISO(r.last_seen_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
             </Text>
@@ -301,7 +303,7 @@ export default function LostReportDetailScreen() {
         ) : null}
 
         {r.description ? (
-          <Text style={{ fontFamily: FONTS.body, fontSize: 14, lineHeight: 21, color: '#404040', marginTop: 12 }}>
+          <Text style={{ fontFamily: FONTS.body, fontSize: 14, lineHeight: 21, color: theme.text, marginTop: 12 }}>
             {r.description}
           </Text>
         ) : null}
@@ -310,14 +312,14 @@ export default function LostReportDetailScreen() {
           style={{
             marginTop: 16,
             padding: 14,
-            backgroundColor: '#FFF7ED',
+            backgroundColor: theme.brandSurface,
             borderRadius: 14,
           }}
         >
-          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#9A3412', marginBottom: 6 }}>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.brandDark, marginBottom: 6 }}>
             Achou ou viu? Entre em contato:
           </Text>
-          <Text style={{ fontFamily: FONTS.body, fontSize: 15, color: '#1A1410', marginBottom: 10 }}>
+          <Text style={{ fontFamily: FONTS.body, fontSize: 15, color: theme.text, marginBottom: 10 }}>
             {r.contact_info}
           </Text>
           <Button
@@ -364,10 +366,31 @@ export default function LostReportDetailScreen() {
           </Pressable>
         ) : null}
 
-        <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#A3A3A3', marginTop: 12 }}>
+        <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim, marginTop: 12 }}>
           Reportado {formatDistanceToNow(parseISO(r.created_at), { addSuffix: true, locale: ptBR })}
         </Text>
+
+        {/* Denunciar (não-dono, logado) — moderação reativa do Achados */}
+        {session && !isOwner ? (
+          <Pressable
+            onPress={() => setReportOpen(true)}
+            accessibilityRole="button"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 14 }}
+          >
+            <Ionicons name="flag-outline" size={15} color={theme.textDim} />
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: theme.textDim }}>
+              Denunciar este reporte
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
+
+      <ReportModal
+        visible={reportOpen}
+        onClose={() => setReportOpen(false)}
+        targetKind="lost_report"
+        targetId={r.id}
+      />
     </ScrollView>
   );
 }

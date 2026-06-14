@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +14,7 @@ import {
 } from 'react-native';
 
 import { MediaCarousel } from '@/components/media-carousel';
+import { ReportModal } from '@/components/report-modal';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
 import {
@@ -38,6 +40,7 @@ export default function AdoptionDetailScreen() {
   const toast = useToast();
   const qc = useQueryClient();
   const { session } = useSession();
+  const [reportOpen, setReportOpen] = useState(false);
 
   const query = useQuery({
     queryKey: ['adoption-listing', id],
@@ -276,6 +279,20 @@ export default function AdoptionDetailScreen() {
                 </Pressable>
               </View>
             ) : null}
+
+            {/* Denunciar (não-dono, logado) — moderação reativa */}
+            {!isOwner && session ? (
+              <Pressable
+                onPress={() => setReportOpen(true)}
+                accessibilityRole="button"
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 4 }}
+              >
+                <Ionicons name="flag-outline" size={15} color={theme.textDim} />
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: theme.textDim }}>
+                  Denunciar este anúncio
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         </CenteredColumn>
       </ScrollView>
@@ -316,6 +333,13 @@ export default function AdoptionDetailScreen() {
           </CenteredColumn>
         </View>
       ) : null}
+
+      <ReportModal
+        visible={reportOpen}
+        onClose={() => setReportOpen(false)}
+        targetKind="adoption_listing"
+        targetId={listing.id}
+      />
     </View>
   );
 }

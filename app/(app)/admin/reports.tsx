@@ -7,9 +7,11 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
+import { adminDeleteAdoption } from '@/lib/adoption';
 import {
   adminBanUser,
   adminDeleteComment,
+  adminDeleteLostReport,
   adminDeletePost,
   adminResolveReport,
   fetchAdminReports,
@@ -74,9 +76,22 @@ export default function AdminReportsScreen() {
     run(r.id, () => adminResolveReport(r.id, status), label);
 
   const onDelete = (r: AdminReport) => {
-    const isPost = r.target_kind === 'post';
+    const KIND_LABEL: Record<string, string> = {
+      post: 'post',
+      comment: 'comentário',
+      lost_report: 'reporte de Achados',
+      adoption_listing: 'anúncio de adoção',
+    };
+    const deleteFn: () => Promise<unknown> =
+      r.target_kind === 'post'
+        ? () => adminDeletePost(r.target_id)
+        : r.target_kind === 'comment'
+          ? () => adminDeleteComment(r.target_id)
+          : r.target_kind === 'lost_report'
+            ? () => adminDeleteLostReport(r.target_id)
+            : () => adminDeleteAdoption(r.target_id);
     Alert.alert(
-      `Remover ${isPost ? 'post' : 'comentário'}?`,
+      `Remover ${KIND_LABEL[r.target_kind] ?? 'conteúdo'}?`,
       'Hard-delete. Não dá pra desfazer. As denúncias deste alvo viram "tratadas".',
       [
         { text: 'Cancelar', style: 'cancel' },
@@ -86,7 +101,9 @@ export default function AdminReportsScreen() {
           onPress: () =>
             run(
               r.id,
-              () => (isPost ? adminDeletePost(r.target_id) : adminDeleteComment(r.target_id)),
+              async () => {
+                await deleteFn();
+              },
               'Conteúdo removido',
             ),
         },
@@ -114,7 +131,8 @@ export default function AdminReportsScreen() {
     if (r.target_kind === 'post') router.push(`/(app)/post/${r.target_id}` as never);
     else if (r.target_kind === 'user') router.push(`/(app)/admin/users/${r.target_id}` as never);
     else if (r.target_kind === 'pet') router.push(`/(app)/pet/${r.target_id}` as never);
-    else if (r.target_kind === 'lost_report') router.push(`/(app)/lost/${r.target_id}` as never);
+    else if (r.target_kind === 'lost_report') router.push(`/(app)/lost-found/${r.target_id}` as never);
+    else if (r.target_kind === 'adoption_listing') router.push(`/(app)/adoption/${r.target_id}` as never);
     else toast.info('Sem tela direta', `Alvo do tipo "${REPORT_KIND_LABELS[r.target_kind]}"`);
   };
 
@@ -245,7 +263,7 @@ function ReportRow({
   onResolve: (r: AdminReport, status: ReportStatus, label: string) => void;
 }) {
   const { theme } = useTheme();
-  const canDelete = r.target_kind === 'post' || r.target_kind === 'comment';
+  const canDelete = ['post', 'comment', 'lost_report', 'adoption_listing'].includes(r.target_kind);
   const canBan = r.target_kind === 'user';
   const statusColor: Record<ReportStatus, string> = {
     open: '#B45309',

@@ -574,7 +574,14 @@ export interface HealthSummary {
 // Privacy & Moderation
 // ====================
 
-export type ReportTargetKind = 'post' | 'comment' | 'user' | 'pet' | 'message' | 'lost_report';
+export type ReportTargetKind =
+  | 'post'
+  | 'comment'
+  | 'user'
+  | 'pet'
+  | 'message'
+  | 'lost_report'
+  | 'adoption_listing';
 export type ReportReason =
   | 'spam'
   | 'harassment'
