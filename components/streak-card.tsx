@@ -31,7 +31,8 @@ export function StreakCard() {
     let cancelled = false;
     AsyncStorage.getItem(SEEN_KEY).then((v) => {
       if (cancelled) return;
-      const seen = v == null ? null : parseInt(v, 10);
+      const parsed = v == null ? NaN : parseInt(v, 10);
+      const seen = Number.isFinite(parsed) ? parsed : null;
       if (seen != null && data.current_streak > seen && data.played_today) {
         setCelebrate((c) => c + 1);
       }

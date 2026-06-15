@@ -13,7 +13,7 @@ import { TournamentGameBanner } from '@/components/tournament-game-banner';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { haptic } from '@/lib/haptics';
-import { invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
+import { beginGameSession, invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
 import { pickQuizQuestions, type QuizQuestion } from '@/lib/pet-quiz';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
@@ -46,6 +46,7 @@ export default function PetQuizScreen() {
   const [picked, setPicked] = useState<number | null>(null);
   const startRef = useRef(0);
   const paramsRef = useRef(DIFF_PARAMS[2]);
+  const sessionRef = useRef<string | null>(null); // sessão server-side da partida (anti-cheat)
 
   // carrega o tier salvo no mount
   useEffect(() => {
@@ -66,6 +67,12 @@ export default function PetQuizScreen() {
 
   const start = () => {
     paramsRef.current = DIFF_PARAMS[difficulty];
+    sessionRef.current = null;
+    beginGameSession('quiz', difficulty)
+      .then((id) => {
+        sessionRef.current = id;
+      })
+      .catch(() => {});
     setQuestions(pickQuizQuestions(paramsRef.current.questions));
     setIndex(0);
     setScore(0);
@@ -95,7 +102,7 @@ export default function PetQuizScreen() {
       setPhase('over');
       const finalScore = score; // já acumulado
       if (userId && finalScore > 0) {
-        submitGameScore({ game: 'quiz', score: finalScore, petId: activePet?.id ?? null, userId, difficulty })
+        submitGameScore({ game: 'quiz', score: finalScore, petId: activePet?.id ?? null, userId, sessionId: sessionRef.current })
           .then(() => invalidateGameQueries(qc, 'quiz'))
           .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
       }

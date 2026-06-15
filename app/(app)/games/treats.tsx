@@ -12,7 +12,7 @@ import { PetAvatar } from '@/components/pet-avatar';
 import { TournamentGameBanner } from '@/components/tournament-game-banner';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
-import { DIFF_META, invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
+import { beginGameSession, DIFF_META, invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
 import { haptic } from '@/lib/haptics';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
@@ -106,6 +106,7 @@ export default function TreatsGameScreen() {
   const startedAtRef = useRef(0); // timestamp real do início da rodada (ms)
   const pausedAtRef = useRef(0); // != 0 => rodada pausada (aba em background)
   const lastSpawnRef = useRef(0);
+  const sessionRef = useRef<string | null>(null); // sessão server-side da rodada (anti-cheat)
   const idRef = useRef(0);
   const popupIdRef = useRef(0);
   const areaRef = useRef({ w: 0, h: 0 });
@@ -208,7 +209,7 @@ export default function TreatsGameScreen() {
           if (bestKey) AsyncStorage.setItem(bestKey, String(finalScore)).catch(() => {});
         }
         if (userId && finalScore > 0) {
-          submitGameScore({ game: 'treats', score: finalScore, petId, userId, difficulty: difficultyRef.current })
+          submitGameScore({ game: 'treats', score: finalScore, petId, userId, sessionId: sessionRef.current })
             .then(() => invalidateGameQueries(qc, 'treats'))
             .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
         }
@@ -236,6 +237,12 @@ export default function TreatsGameScreen() {
 
   const start = () => {
     difficultyRef.current = difficulty; // trava a dificuldade escolhida pra rodada
+    sessionRef.current = null;
+    beginGameSession('treats', difficulty)
+      .then((id) => {
+        sessionRef.current = id;
+      })
+      .catch(() => {});
     startedAtRef.current = Date.now();
     pausedAtRef.current = 0;
     lastSpawnRef.current = 0;

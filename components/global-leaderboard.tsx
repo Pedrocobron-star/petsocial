@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
 import { fetchGlobalLeaderboard, qkGames, type GlobalLeaderboardEntry } from '@/lib/games';
@@ -23,6 +23,31 @@ export function GlobalLeaderboard({ limit = 30, currentUserId }: { limit?: numbe
   const rows = q.data ?? [];
 
   if (q.isLoading) return <ActivityIndicator color="#FBBF24" style={{ padding: 24 }} />;
+
+  if (q.isError) {
+    return (
+      <View style={{ padding: 22, alignItems: 'center', gap: 8 }}>
+        <Text style={{ fontSize: 30 }}>⚠️</Text>
+        <Text
+          style={{
+            fontFamily: FONTS.bodyMedium,
+            fontSize: 12.5,
+            color: 'rgba(255,255,255,0.6)',
+            textAlign: 'center',
+          }}
+        >
+          Não foi possível carregar o placar geral. Verifica sua conexão.
+        </Text>
+        <Pressable
+          onPress={() => q.refetch()}
+          accessibilityRole="button"
+          style={{ marginTop: 2, backgroundColor: 'rgba(251,191,36,0.18)', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 7 }}
+        >
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: '#FBBF24' }}>Tentar de novo</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   if (rows.length === 0) {
     return (

@@ -12,7 +12,7 @@ import { GameResultShareButton } from '@/components/game-result-share-button';
 import { TournamentGameBanner } from '@/components/tournament-game-banner';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
-import { invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
+import { beginGameSession, invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
 import { haptic } from '@/lib/haptics';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
@@ -127,6 +127,7 @@ export default function CaminhoGameScreen() {
 
   const aliveRef = useRef(true);
   const scoreRef = useRef(0);
+  const sessionRef = useRef<string | null>(null); // sessão server-side da partida (anti-cheat)
   scoreRef.current = score;
   useEffect(() => {
     aliveRef.current = true;
@@ -156,6 +157,12 @@ export default function CaminhoGameScreen() {
 
   const start = () => {
     const first = parseLevel(levels[0]);
+    sessionRef.current = null;
+    beginGameSession('caminho', difficulty)
+      .then((id) => {
+        sessionRef.current = id;
+      })
+      .catch(() => {});
     setLevelIdx(0);
     setScore(0);
     setCommands([]);
@@ -192,7 +199,7 @@ export default function CaminhoGameScreen() {
     } else {
       setPhase('over');
       if (userId && gainedTotal > 0) {
-        submitGameScore({ game: 'caminho', score: gainedTotal, petId: activePet?.id ?? null, userId, difficulty })
+        submitGameScore({ game: 'caminho', score: gainedTotal, petId: activePet?.id ?? null, userId, sessionId: sessionRef.current })
           .then(() => invalidateGameQueries(qc, 'caminho'))
           .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
       }

@@ -145,6 +145,10 @@ where exists (select 1 from cron.job where jobname = 'petsocial-tournament-lifec
 select cron.schedule('petsocial-tournament-lifecycle', '7 * * * *', $$ select public.tournament_lifecycle(); $$);
 
 -- ---- SEED: 1 torneio ativo agora (3 dias, Pega o Petisco, Medio+) ----------
+-- REPLAY-SAFE / anti-duplicata: o `where not exists (... ends_at > now())` cobre
+-- torneio ATIVO e FUTURO, entao reaplicar este arquivo enquanto ja existe um
+-- torneio no ar e no-op (nao cria duplicata). So cria de novo quando NAO ha
+-- nenhum torneio vigente — que e o comportamento desejado (manter sempre 1).
 insert into public.tournaments(title, game, min_difficulty, starts_at, ends_at)
 select 'Torneio Pega o Petisco', 'treats', 2, now(), now() + interval '3 days'
 where not exists (select 1 from public.tournaments where ends_at > now());

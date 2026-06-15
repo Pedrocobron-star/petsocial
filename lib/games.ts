@@ -31,20 +31,37 @@ export interface LeaderboardEntry {
   achieved_at: string;
 }
 
+/**
+ * Abre uma sessão de jogo no SERVIDOR (carimba o início). Chamada no start()
+ * de cada jogo; o id volta pra ser entregue no submit. O servidor mede a
+ * duração real (now() - started_at) pra validar plausibilidade — o cliente não
+ * controla o tempo. null = falhou abrir (offline no start); nesse caso o score
+ * não terá como ser salvo (mesmo desfecho de um submit que falha por rede).
+ */
+export async function beginGameSession(game: GameKey, difficulty: GameDifficulty): Promise<string | null> {
+  const { data, error } = await supabase.rpc('game_begin', { p_game: game, p_difficulty: difficulty });
+  if (error) return null;
+  return (typeof data === 'string' ? data : null);
+}
+
+/**
+ * Grava o placar via RPC `game_submit` (único caminho de escrita em game_scores
+ * — o insert direto foi revogado). A dificuldade vem da SESSÃO (travada no
+ * begin), então não é mais enviada aqui. Sem sessionId não há como salvar.
+ */
 export async function submitGameScore(params: {
   game: GameKey;
   score: number;
   petId: string | null;
   userId: string;
-  difficulty?: GameDifficulty;
+  sessionId: string | null;
 }): Promise<void> {
   if (params.score <= 0) return;
-  const { error } = await supabase.from('game_scores').insert({
-    user_id: params.userId,
-    pet_id: params.petId,
-    game: params.game,
-    score: params.score,
-    difficulty: params.difficulty ?? 2,
+  if (!params.sessionId) throw new Error('sessão de jogo ausente');
+  const { error } = await supabase.rpc('game_submit', {
+    p_session: params.sessionId,
+    p_score: params.score,
+    p_pet_id: params.petId,
   });
   if (error) throw error;
 }
