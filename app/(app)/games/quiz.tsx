@@ -12,7 +12,7 @@ import { GameResultShareButton } from '@/components/game-result-share-button';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { haptic } from '@/lib/haptics';
-import { submitGameScore, type GameDifficulty } from '@/lib/games';
+import { invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
 import { pickQuizQuestions, type QuizQuestion } from '@/lib/pet-quiz';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
@@ -95,11 +95,7 @@ export default function PetQuizScreen() {
       const finalScore = score; // já acumulado
       if (userId && finalScore > 0) {
         submitGameScore({ game: 'quiz', score: finalScore, petId: activePet?.id ?? null, userId, difficulty })
-          .then(() => {
-            qc.invalidateQueries({ queryKey: ['game-leaderboard', 'quiz'] });
-            qc.invalidateQueries({ queryKey: ['game-my-rank', 'quiz'] });
-            qc.invalidateQueries({ queryKey: ['game-streak'] });
-          })
+          .then(() => invalidateGameQueries(qc, 'quiz'))
           .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
       }
     } else {

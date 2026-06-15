@@ -11,7 +11,7 @@ import { GameResultShareButton } from '@/components/game-result-share-button';
 import { PetAvatar } from '@/components/pet-avatar';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
-import { DIFF_META, submitGameScore, type GameDifficulty } from '@/lib/games';
+import { DIFF_META, invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
 import { haptic } from '@/lib/haptics';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
@@ -208,11 +208,7 @@ export default function TreatsGameScreen() {
         }
         if (userId && finalScore > 0) {
           submitGameScore({ game: 'treats', score: finalScore, petId, userId, difficulty: difficultyRef.current })
-            .then(() => {
-              qc.invalidateQueries({ queryKey: ['game-leaderboard', 'treats'] });
-              qc.invalidateQueries({ queryKey: ['game-my-rank', 'treats'] });
-              qc.invalidateQueries({ queryKey: ['game-streak'] });
-            })
+            .then(() => invalidateGameQueries(qc, 'treats'))
             .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
         }
       }

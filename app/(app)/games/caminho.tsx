@@ -11,7 +11,7 @@ import { GameLeaderboard } from '@/components/game-leaderboard';
 import { GameResultShareButton } from '@/components/game-result-share-button';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
-import { submitGameScore, type GameDifficulty } from '@/lib/games';
+import { invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
 import { haptic } from '@/lib/haptics';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
@@ -192,11 +192,7 @@ export default function CaminhoGameScreen() {
       setPhase('over');
       if (userId && gainedTotal > 0) {
         submitGameScore({ game: 'caminho', score: gainedTotal, petId: activePet?.id ?? null, userId, difficulty })
-          .then(() => {
-            qc.invalidateQueries({ queryKey: ['game-leaderboard', 'caminho'] });
-            qc.invalidateQueries({ queryKey: ['game-my-rank', 'caminho'] });
-            qc.invalidateQueries({ queryKey: ['game-streak'] });
-          })
+          .then(() => invalidateGameQueries(qc, 'caminho'))
           .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
       }
     }

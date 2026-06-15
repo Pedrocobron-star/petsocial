@@ -1,3 +1,5 @@
+import type { QueryClient } from '@tanstack/react-query';
+
 import { supabase } from './supabase';
 
 export type GameKey = 'treats' | 'quiz' | 'caminho';
@@ -213,3 +215,22 @@ export const qkGames = {
   weeklyRank: () => ['game-weekly-rank'] as const,
   weeklyLeaderboard: () => ['game-weekly-leaderboard'] as const,
 };
+
+/**
+ * Invalida TODAS as queries afetadas por um novo score: ranking do jogo,
+ * streak, Liga da Semana, Ranking Geral e Desafio do Dia. Antes os jogos só
+ * invalidavam o ranking do próprio jogo + streak → os cards de Liga/Geral/
+ * Desafio no hub ficavam com dado velho até um refetch. Prefixo de key (sem
+ * period/difficulty) cobre todas as variações daquele grupo.
+ */
+export function invalidateGameQueries(qc: QueryClient, game: GameKey): void {
+  qc.invalidateQueries({ queryKey: ['game-leaderboard', game] });
+  qc.invalidateQueries({ queryKey: ['game-my-rank', game] });
+  qc.invalidateQueries({ queryKey: qkGames.streak() });
+  qc.invalidateQueries({ queryKey: qkGames.weeklyRank() });
+  qc.invalidateQueries({ queryKey: qkGames.weeklyLeaderboard() });
+  qc.invalidateQueries({ queryKey: qkGames.global() });
+  qc.invalidateQueries({ queryKey: qkGames.globalMyRank() });
+  qc.invalidateQueries({ queryKey: ['game-daily', game] });
+  qc.invalidateQueries({ queryKey: ['game-daily-my', game] });
+}

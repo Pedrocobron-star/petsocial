@@ -43,7 +43,7 @@ returns table (
                         when 1 then 1.0 when 3 then 2.0 else 1.5 end as eff
     from public.game_scores gs
     where gs.game = p_game
-      and (p_period <> 'week' or gs.created_at >= date_trunc('week', now()))
+      and (p_period <> 'week' or (gs.created_at at time zone 'America/Sao_Paulo') >= date_trunc('week', (now() at time zone 'America/Sao_Paulo')))
   ),
   best as (
     select distinct on (f.user_id)
@@ -78,7 +78,7 @@ language sql security definer set search_path = public as $$
                         when 1 then 1.0 when 3 then 2.0 else 1.5 end as eff
     from public.game_scores gs
     where gs.game = p_game
-      and (p_period <> 'week' or gs.created_at >= date_trunc('week', now()))
+      and (p_period <> 'week' or (gs.created_at at time zone 'America/Sao_Paulo') >= date_trunc('week', (now() at time zone 'America/Sao_Paulo')))
   ),
   best as (
     select distinct on (user_id) user_id, score, created_at, eff
