@@ -89,7 +89,9 @@ export default function AdminReportsScreen() {
           ? () => adminDeleteComment(r.target_id)
           : r.target_kind === 'lost_report'
             ? () => adminDeleteLostReport(r.target_id)
-            : () => adminDeleteAdoption(r.target_id);
+            : r.target_kind === 'adoption_listing'
+              ? () => adminDeleteAdoption(r.target_id)
+              : () => Promise.reject(new Error(`Tipo não removível: ${r.target_kind}`));
     Alert.alert(
       `Remover ${KIND_LABEL[r.target_kind] ?? 'conteúdo'}?`,
       'Hard-delete. Não dá pra desfazer. As denúncias deste alvo viram "tratadas".',

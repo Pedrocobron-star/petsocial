@@ -2,17 +2,12 @@
  * Moderação admin — fila de denúncias (tabela `reports`) + ações destrutivas.
  * Backend: supabase/admin-moderation.sql (RPCs gated por is_admin + audit).
  */
+import type { ReportTargetKind } from './types';
 import { supabase } from './supabase';
 
+// Fonte única do tipo em lib/types.ts (re-exportado aqui pra compat de imports).
+export type { ReportTargetKind };
 export type ReportStatus = 'open' | 'reviewed' | 'dismissed' | 'actioned';
-export type ReportTargetKind =
-  | 'post'
-  | 'comment'
-  | 'user'
-  | 'pet'
-  | 'message'
-  | 'lost_report'
-  | 'adoption_listing';
 
 export interface AdminReport {
   id: string;

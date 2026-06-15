@@ -215,7 +215,7 @@ export default function LostReportDetailScreen() {
             style={{
               width: '100%',
               aspectRatio: 4 / 3,
-              backgroundColor: '#FED7AA',
+              backgroundColor: theme.brandLight,
               alignItems: 'center',
               justifyContent: 'center',
             }}
@@ -227,7 +227,7 @@ export default function LostReportDetailScreen() {
             style={{
               width: '100%',
               aspectRatio: 4 / 3,
-              backgroundColor: '#FED7AA',
+              backgroundColor: theme.brandLight,
               alignItems: 'center',
               justifyContent: 'center',
             }}
