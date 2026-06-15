@@ -27,7 +27,8 @@ export default function NewsCategoryScreen() {
 
   const articlesQuery = useQuery({
     queryKey: qkNews.articles(category?.id),
-    queryFn: () => fetchArticles({ categoryId: category?.id }),
+    // limit explícito alto pra não cortar silenciosamente no default de 20.
+    queryFn: () => fetchArticles({ categoryId: category?.id, limit: 200 }),
     enabled: !!category?.id,
   });
 

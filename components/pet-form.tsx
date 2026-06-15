@@ -231,6 +231,27 @@ export function PetForm({ userId, initial, submitLabel, onSubmit }: Props) {
 
         {carteirinhaExpanded ? (
           <View style={{ gap: 12 }}>
+            {/* Aviso de visibilidade pública (LGPD) — esses dados vão pra carteirinha
+                pública via QR, incluindo telefone de terceiros (contato de
+                emergência, vet). O tutor precisa saber + ter permissão da pessoa. */}
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: 8,
+                backgroundColor: '#FEF3C7',
+                borderRadius: 12,
+                padding: 12,
+                borderWidth: 1,
+                borderColor: '#FCD34D',
+              }}
+            >
+              <Text style={{ fontSize: 16 }}>👁️</Text>
+              <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 12, color: '#78350F', lineHeight: 17 }}>
+                Esses dados aparecem na <Text style={{ fontFamily: FONTS.bodyBold }}>carteirinha pública</Text> do
+                seu pet (qualquer pessoa com o link/QR vê). Cadastre o telefone do contato de emergência ou do
+                vet só com a permissão dessa pessoa.
+              </Text>
+            </View>
             <Input
               label="Número do microchip (opcional)"
               placeholder="Ex: 982000123456789"

@@ -144,12 +144,15 @@ function ArticleRow({ article }: { article: NewsArticle }) {
 }
 
 function StatusBadge({ status }: { status: NewsArticle['status'] }) {
+  const { theme } = useTheme();
+  // Publicada/Agendada = badges semânticos (verde/âmbar, fixos OK). Rascunho é
+  // chrome neutro → usa theme.* pra não destoar do card escuro no dark mode.
   const conf =
     status === 'published'
       ? { bg: '#DCFCE7', color: '#166534', label: 'Publicada' }
       : status === 'scheduled'
         ? { bg: '#FEF3C7', color: '#92400E', label: 'Agendada' }
-        : { bg: '#E5E5E5', color: '#525252', label: 'Rascunho' };
+        : { bg: theme.borderLight, color: theme.textDim, label: 'Rascunho' };
   return (
     <View
       style={{

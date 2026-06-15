@@ -115,6 +115,10 @@ export default function AdminOffersListScreen() {
 function OfferRow({ offer }: { offer: Offer }) {
   const { theme } = useTheme();
   const meta = offerCategoryMeta(offer.category);
+  // Ativa porém vencida = sumiu pros usuários (fetchActiveOffers filtra valid_until),
+  // mas o admin acha que está no ar. Sinaliza pra não enganar.
+  const today = new Date().toISOString().slice(0, 10);
+  const expired = !!offer.valid_until && offer.valid_until < today;
 
   return (
     <Link href={{ pathname: '/(app)/admin/offers/[id]', params: { id: offer.id } }} asChild>
@@ -126,7 +130,7 @@ function OfferRow({ offer }: { offer: Offer }) {
           gap: 6,
           borderWidth: 1,
           borderColor: theme.borderLight,
-          opacity: offer.active ? 1 : 0.55,
+          opacity: offer.active && !expired ? 1 : 0.55,
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -142,6 +146,8 @@ function OfferRow({ offer }: { offer: Offer }) {
           ) : null}
           {!offer.active ? (
             <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10, color: theme.textDim }}>· inativo</Text>
+          ) : offer.active && expired ? (
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10, color: '#DC2626' }}>· vencida (não aparece)</Text>
           ) : null}
           <Text style={{ marginLeft: 'auto', fontFamily: FONTS.body, fontSize: 10, color: theme.textDim }}>
             {offer.clicks_count} cliques

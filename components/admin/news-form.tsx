@@ -406,12 +406,18 @@ export function NewsForm({
         </View>
       ) : null}
 
-      {status !== 'draft' ? (
+      {status !== 'draft' && initial?.status !== 'published' ? (
         <Toggle
           label="📣 Notificar os tutores quando publicar (push pra base toda)"
           value={notifyOnPublish}
           onChange={setNotifyOnPublish}
         />
+      ) : status !== 'draft' && initial?.status === 'published' ? (
+        // Já publicada: o push é one-shot (guarda push_sent_at), não reenvia —
+        // então não adianta mostrar o toggle (admin ligaria e nada aconteceria).
+        <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
+          ✅ A notificação de publicação já foi enviada (não pode ser reenviada).
+        </Text>
       ) : null}
 
       {/* Produtos afiliados */}

@@ -183,12 +183,14 @@ export async function fetchRelatedArticles(opts: {
 
 // ---------- admin (CMS) ----------
 
+/** Teto generoso pra um CMS curado à mão. Se um dia passar disso, paginar. */
+export const ADMIN_ARTICLES_LIMIT = 500;
 export async function fetchAllArticlesAdmin(): Promise<NewsArticle[]> {
   const { data, error } = await supabase
     .from('news_articles')
     .select(ARTICLE_SELECT)
     .order('updated_at', { ascending: false })
-    .limit(100);
+    .limit(ADMIN_ARTICLES_LIMIT);
   if (error) throw error;
   return (data as NewsArticle[] | null) ?? [];
 }

@@ -150,11 +150,14 @@ export default function PublicPetIdScreen() {
 
       <ScrollView contentContainerStyle={{ paddingVertical: 16, paddingBottom: 40 }}>
         <CenteredColumn maxWidth={420}>
-          {/* Header de boas-vindas */}
+          {/* Header de boas-vindas — banner escuro fixo (marca). Borda pra ter
+              separação quando o fundo da página também é escuro (dark mode). */}
           <View
             style={{
               backgroundColor: '#1A1410',
               borderRadius: 20,
+              borderWidth: 1,
+              borderColor: theme.border,
               padding: 18,
               flexDirection: 'row',
               alignItems: 'center',
