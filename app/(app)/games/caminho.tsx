@@ -9,6 +9,7 @@ import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { GameResultShareButton } from '@/components/game-result-share-button';
+import { TournamentGameBanner } from '@/components/tournament-game-banner';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
@@ -296,6 +297,7 @@ export default function CaminhoGameScreen() {
               Dificuldade
             </Text>
             <GameDifficultyPicker value={difficulty} onChange={changeDifficulty} disabled={false} />
+            <TournamentGameBanner game="caminho" difficulty={difficulty} onRaiseDifficulty={changeDifficulty} />
             <Button title="Jogar" onPress={start} fullWidth />
           </View>
         ) : null}

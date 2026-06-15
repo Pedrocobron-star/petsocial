@@ -9,6 +9,7 @@ import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { GameResultShareButton } from '@/components/game-result-share-button';
 import { PetAvatar } from '@/components/pet-avatar';
+import { TournamentGameBanner } from '@/components/tournament-game-banner';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { DIFF_META, invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
@@ -373,6 +374,7 @@ export default function TreatsGameScreen() {
                   <GameGradeBadge game="treats" variant="idle" />
                   {/* só renderiza na tela idle/over — durante a partida o picker some, então nunca fica editável jogando */}
                   <GameDifficultyPicker value={difficulty} onChange={changeDifficulty} disabled={false} />
+                  <TournamentGameBanner game="treats" difficulty={difficulty} onRaiseDifficulty={changeDifficulty} />
                   <Button title="Jogar" onPress={start} fullWidth />
                 </>
               )}

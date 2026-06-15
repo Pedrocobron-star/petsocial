@@ -9,6 +9,7 @@ import { GameDifficultyPicker } from '@/components/game-difficulty-picker';
 import { GameGradeBadge } from '@/components/game-grade-badge';
 import { GameLeaderboard } from '@/components/game-leaderboard';
 import { GameResultShareButton } from '@/components/game-result-share-button';
+import { TournamentGameBanner } from '@/components/tournament-game-banner';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { haptic } from '@/lib/haptics';
@@ -130,6 +131,7 @@ export default function PetQuizScreen() {
               <GameGradeBadge game="quiz" variant="idle" />
               {/* só aparece na tela idle; nunca durante a partida */}
               <GameDifficultyPicker value={difficulty} onChange={onChangeDifficulty} disabled={false} />
+              <TournamentGameBanner game="quiz" difficulty={difficulty} onRaiseDifficulty={onChangeDifficulty} />
               <Button title="Começar" onPress={start} fullWidth />
             </Card>
             <SectionTitle>🏆 Ranking · Quiz Pet</SectionTitle>

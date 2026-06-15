@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'expo-router';
@@ -9,13 +10,18 @@ import { FONTS } from '@/lib/fonts';
 import { DIFF_META, GAME_META, type GameDifficulty } from '@/lib/games';
 import {
   fetchActiveTournament,
+  fetchLastFinishedTournament,
   fetchMyTournamentRank,
   fetchTournamentLeaderboard,
+  fetchTournamentPodium,
   formatCountdown,
   qkTournament,
 } from '@/lib/tournaments';
+import { useSession } from '@/providers/session-provider';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
+const PODIUM_DISMISS_KEY = 'petsocial:tourney-podium-dismissed';
+const PODIUM_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000; // mostra o pódio por até 3 dias
 
 /**
  * Card do Torneio de Cassino ativo — evento temporizado de 1 jogo. Mostra
@@ -50,7 +56,8 @@ export function TournamentCard() {
     return () => clearInterval(id);
   }, []);
 
-  if (!t) return null;
+  // Sem torneio ativo → mostra o pódio do último (em vez de sumir de vez).
+  if (!t) return <LastTournamentPodium />;
 
   const meta = GAME_META[t.game];
   const diff = DIFF_META[(t.min_difficulty as GameDifficulty) ?? 2];
@@ -182,6 +189,134 @@ export function TournamentCard() {
           </Text>
         </Pressable>
       </Link>
+    </View>
+  );
+}
+
+/**
+ * Pódio do último torneio finalizado — preenche o vazio quando não há torneio
+ * ativo (antes o card sumia e a vitória ficava invisível; o push "veja onde
+ * você ficou" caía num hub sem nada). Some sozinho 3 dias após o fim, ou ao
+ * fechar. Destaca a linha do próprio tutor.
+ */
+function LastTournamentPodium() {
+  const { session } = useSession();
+  const myId = session?.user.id ?? null;
+  const [dismissedId, setDismissedId] = useState<string | null>(null);
+  const [loadedDismiss, setLoadedDismiss] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(PODIUM_DISMISS_KEY)
+      .then((v) => setDismissedId(v))
+      .catch(() => {})
+      .finally(() => setLoadedDismiss(true));
+  }, []);
+
+  const lastQuery = useQuery({
+    queryKey: qkTournament.lastFinished(),
+    queryFn: fetchLastFinishedTournament,
+    staleTime: 5 * 60_000,
+  });
+  const t = lastQuery.data ?? null;
+
+  const podiumQuery = useQuery({
+    queryKey: t ? qkTournament.podium(t.id) : ['tournament-podium', 'none'],
+    queryFn: () => fetchTournamentPodium(t!.id),
+    enabled: !!t,
+    staleTime: 5 * 60_000,
+  });
+  const podium = podiumQuery.data ?? [];
+
+  if (!loadedDismiss || !t || podium.length === 0) return null;
+  const ageMs = t.finalized_at ? Date.now() - new Date(t.finalized_at).getTime() : Infinity;
+  if (ageMs > PODIUM_MAX_AGE_MS || dismissedId === t.id) return null;
+
+  const meta = GAME_META[t.game];
+  const dismiss = () => {
+    setDismissedId(t.id);
+    AsyncStorage.setItem(PODIUM_DISMISS_KEY, t.id).catch(() => {});
+  };
+
+  return (
+    <View
+      style={{
+        backgroundColor: '#1E1B3A',
+        borderRadius: 20,
+        padding: 16,
+        marginBottom: 14,
+        borderWidth: 1,
+        borderColor: '#4C1D95',
+        gap: 10,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Text style={{ fontSize: 18 }}>🏁</Text>
+        <Text
+          style={{
+            fontFamily: FONTS.bodyBold,
+            fontSize: 11,
+            letterSpacing: 1.4,
+            color: '#C4B5FD',
+            textTransform: 'uppercase',
+            flex: 1,
+          }}
+        >
+          Resultado do último torneio
+        </Text>
+        <Pressable onPress={dismiss} hitSlop={10} accessibilityRole="button" accessibilityLabel="Fechar resultado">
+          <Ionicons name="close" size={18} color="#A78BFA" />
+        </Pressable>
+      </View>
+
+      <View>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 16, color: '#FFFFFF' }}>{t.title}</Text>
+        <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#A78BFA', marginTop: 1 }}>
+          {meta.emoji} {meta.label} · encerrado
+        </Text>
+      </View>
+
+      <View style={{ gap: 6, marginTop: 2 }}>
+        {podium.slice(0, 5).map((row, i) => {
+          const isMe = !!myId && row.user_id === myId;
+          return (
+            <View
+              key={row.user_id}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 9,
+                backgroundColor: isMe ? 'rgba(251,191,36,0.14)' : 'transparent',
+                borderRadius: 8,
+                paddingVertical: 2,
+                paddingHorizontal: isMe ? 6 : 0,
+              }}
+            >
+              <Text style={{ fontSize: 15, width: 22, textAlign: 'center' }}>{MEDALS[i] ?? `${row.rank}`}</Text>
+              <UserInitialAvatar
+                avatarUrl={row.tutor_avatar}
+                displayName={row.display_name}
+                userId={row.user_id}
+                size={26}
+              />
+              <Text
+                numberOfLines={1}
+                style={{
+                  flex: 1,
+                  fontFamily: isMe ? FONTS.bodyBold : FONTS.bodySemibold,
+                  fontSize: 13,
+                  color: isMe ? '#FBBF24' : '#EDE9FE',
+                }}
+              >
+                {row.display_name}
+                {isMe ? ' (você)' : ''}
+              </Text>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FBBF24' }}>
+                {Math.round(row.score)}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }
