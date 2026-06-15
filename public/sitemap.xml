@@ -11,37 +11,37 @@
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://petsocial.app/</loc>
+    <loc>https://maestropet.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://petsocial.app/welcome</loc>
+    <loc>https://maestropet.com/welcome</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://petsocial.app/pro</loc>
+    <loc>https://maestropet.com/pro</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://petsocial.app/legal/about</loc>
+    <loc>https://maestropet.com/legal/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://petsocial.app/legal/terms</loc>
+    <loc>https://maestropet.com/legal/terms</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://petsocial.app/legal/privacy</loc>
+    <loc>https://maestropet.com/legal/privacy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://petsocial.app/legal/faq</loc>
+    <loc>https://maestropet.com/legal/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

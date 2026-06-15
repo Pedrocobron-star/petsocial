@@ -86,7 +86,7 @@ export default function CaretakersScreen() {
   });
 
   const handleShareInvite = async (c: PetCaretakerWithProfile) => {
-    const url = `https://petsocial.app/invite/${c.invite_token}`;
+    const url = `https://maestropet.com/invite/${c.invite_token}`;
     await sharePost({
       title: `Convite pra cuidar de ${petQuery.data?.name ?? 'um pet'}`,
       message: `${petQuery.data?.name ?? 'Um pet'} te convidou pra ajudar a cuidar dele 🐾 Toque pra aceitar:`,
@@ -95,7 +95,7 @@ export default function CaretakersScreen() {
   };
 
   const handleCopyInvite = async (c: PetCaretakerWithProfile) => {
-    const url = `https://petsocial.app/invite/${c.invite_token}`;
+    const url = `https://maestropet.com/invite/${c.invite_token}`;
     const ok = await copyToClipboard(url);
     if (ok) toast.success('Link copiado!', 'Cola onde quiser');
   };
@@ -466,7 +466,7 @@ function InviteModal({
         invited_by: invitedBy,
       });
       // Mostra o link gerado pra compartilhar
-      setCreatedInvite(`https://petsocial.app/invite/${result.invite_token}`);
+      setCreatedInvite(`https://maestropet.com/invite/${result.invite_token}`);
     } catch (e) {
       toast.error('Erro ao convidar', e instanceof Error ? e.message : 'Tente novamente.');
     } finally {

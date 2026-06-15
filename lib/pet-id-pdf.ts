@@ -331,12 +331,12 @@ export function buildPetIdHtml(pet: Pet, tutor: Profile | null, qrUrl?: string |
 
     <div class="footer">
       <div class="serial">Nº ${serial}</div>
-      <div class="url">petsocial.app · não substitui RGA oficial</div>
+      <div class="url">maestropet.com · não substitui RGA oficial</div>
     </div>
   </div>
 
   <div class="verso">
-    <div class="verso-title">Documento gerado em ${today} · petsocial.app</div>
+    <div class="verso-title">Documento gerado em ${today} · maestropet.com</div>
   </div>
 </body>
 </html>`;
@@ -516,7 +516,7 @@ export function buildPetIdStoryHtml(pet: Pet, tutor: Profile | null, qrUrl?: str
     </div>
     <div class="serial-line">
       <span>Nº ${serial}</span>
-      <span>petsocial.app</span>
+      <span>maestropet.com</span>
     </div>
   </div>
 </body>

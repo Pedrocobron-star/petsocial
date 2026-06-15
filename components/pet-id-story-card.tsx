@@ -374,7 +374,7 @@ export function PetIdStoryCard({ pet, tutorProfile, qrUrl, width = 360 }: Props)
             Nº {serial}
           </Text>
           <Text style={{ fontFamily: FONTS.body, fontSize: 8, color: '#525252', letterSpacing: 0.4 }}>
-            petsocial.app
+            maestropet.com
           </Text>
         </View>
 

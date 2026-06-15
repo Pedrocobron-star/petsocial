@@ -5,7 +5,7 @@ Allow: /
 # têm meta tags completas pra crawlers. Páginas /app/* são SPA — crawlers
 # vão ver shell + meta defaults, conteúdo dinâmico atualizado client-side.
 
-Sitemap: https://petsocial.app/sitemap.xml
+Sitemap: https://maestropet.com/sitemap.xml
 
 # Não indexar telas autenticadas — não tem valor pra busca pública
 Disallow: /onboarding

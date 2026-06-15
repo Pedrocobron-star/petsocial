@@ -21,7 +21,7 @@ const PRICE_IDS: Record<'monthly' | 'yearly', string> = {
   yearly: Deno.env.get('STRIPE_PRICE_YEARLY')!,
 };
 
-const APP_URL = Deno.env.get('APP_URL') ?? 'https://petsocial.app';
+const APP_URL = Deno.env.get('APP_URL') ?? 'https://maestropet.com';
 
 serve(async (req) => {
   const corsHeaders = {

@@ -77,7 +77,7 @@ export default function AdoptionDetailScreen() {
     const base =
       typeof globalThis !== 'undefined' && globalThis.location?.origin
         ? globalThis.location.origin
-        : 'https://petsocial.app';
+        : 'https://maestropet.com';
     await sharePost({
       title: `${listing.pet_name} pra adoção`,
       message: `🏠 ${listing.pet_name} está pra adoção no Maestro Pet! ${listing.city ? `📍 ${listing.city}` : ''}`,

@@ -25,8 +25,8 @@ interface Props {
 function endorseUrl(token: string): string {
   const base =
     Platform.OS === 'web'
-      ? globalThis.location?.origin ?? 'https://petsocial.app'
-      : 'https://petsocial.app';
+      ? globalThis.location?.origin ?? 'https://maestropet.com'
+      : 'https://maestropet.com';
   return `${base}/endorse/${token}`;
 }
 

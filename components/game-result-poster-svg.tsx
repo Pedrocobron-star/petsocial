@@ -86,7 +86,7 @@ export function GameResultPosterSvg({ game, score, difficulty, petName, size = 1
 
         {/* rodapé */}
         <SvgText x={V / 2} y="980" fontSize="28" fontWeight="600" fill="rgba(255,255,255,0.5)" textAnchor="middle">
-          petsocial-tawny.vercel.app
+          maestropet.com
         </SvgText>
       </Svg>
     </View>

@@ -571,7 +571,7 @@ export function PetIdCard({ pet, tutorProfile, qrUrl, endorsement, width = 340 }
             letterSpacing: 0.5,
           }}
         >
-          petsocial.app · não substitui RGA oficial
+          maestropet.com · não substitui RGA oficial
         </Text>
       </View>
     </View>

@@ -48,8 +48,8 @@ export default function PublicPetIdScreen() {
   // URL atual (pra QR mostrar e ser idempotente)
   const baseUrl =
     Platform.OS === 'web'
-      ? globalThis.location?.origin ?? 'https://petsocial.app'
-      : 'https://petsocial.app';
+      ? globalThis.location?.origin ?? 'https://maestropet.com'
+      : 'https://maestropet.com';
   // SEMPRE o token (nunca o pet.id) — o link por id furava a revogação.
   const publicUrl = pet?.id_card_token ? `${baseUrl}/id/${pet.id_card_token}` : '';
 
