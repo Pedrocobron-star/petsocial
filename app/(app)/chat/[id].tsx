@@ -27,6 +27,7 @@ import {
   blockUser,
   fetchConversationOtherUser,
   fetchMessages,
+  fetchOtherLastReadAt,
   fetchUserFirstPet,
   isUserBlocked,
   markConversationRead,
@@ -74,6 +75,14 @@ export default function ChatScreen() {
     enabled: !!id,
   });
 
+  // Recibo de leitura: last_read_at do OUTRO participante (✓ enviado / ✓✓ lido).
+  const otherReadQuery = useQuery({
+    queryKey: id && userId ? ['conv-other-read', id, userId] : ['conv-other-read', 'none'],
+    queryFn: () => fetchOtherLastReadAt(id!, userId!),
+    enabled: !!id && !!userId,
+  });
+  const otherReadAt = otherReadQuery.data ?? null;
+
   const sendMutation = useMutation({
     mutationFn: (content: string) => sendMessage(id!, userId!, content),
     onMutate: async (content) => {
@@ -109,6 +118,7 @@ export default function ChatScreen() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.messages(id!) });
       qc.invalidateQueries({ queryKey: qk.conversations(userId!) });
+      qc.invalidateQueries({ queryKey: ['conv-other-read', id!] });
     },
   });
 
@@ -310,6 +320,7 @@ export default function ChatScreen() {
                   isMe={item.message.sender_id === userId}
                   showGap={item.showGap}
                   showTime={item.showTime}
+                  otherReadAt={otherReadAt}
                 />
               );
             }}
@@ -473,15 +484,22 @@ function MessageBubble({
   isMe,
   showGap,
   showTime,
+  otherReadAt,
 }: {
   message: Message;
   isMe: boolean;
   showGap: boolean;
   showTime: boolean;
+  otherReadAt: string | null;
 }) {
   const { theme } = useTheme();
   const isPending = message.id.startsWith('tmp-');
   const time = format(parseISO(message.created_at), 'HH:mm');
+  // Recibo de leitura: lida quando o last_read_at do outro >= created_at da msg.
+  const isRead =
+    !isPending &&
+    !!otherReadAt &&
+    new Date(message.created_at).getTime() <= new Date(otherReadAt).getTime();
   return (
     <View
       style={{
@@ -528,10 +546,12 @@ function MessageBubble({
             <Text style={{ fontFamily: FONTS.body, fontSize: 10, color: theme.textDim }}>
               {time}
             </Text>
-            {/* Status: clock pra pending, check pra enviado. Só nas minhas msgs. */}
+            {/* Status (só nas minhas): relógio=enviando, ✓=enviado, ✓✓=lido. */}
             {isMe ? (
               isPending ? (
                 <Ionicons name="time-outline" size={11} color={theme.textDim} />
+              ) : isRead ? (
+                <Ionicons name="checkmark-done" size={13} color={theme.accent.color} />
               ) : (
                 <Ionicons name="checkmark" size={11} color={theme.textDim} />
               )

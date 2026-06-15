@@ -1739,84 +1739,26 @@ export async function getOrCreateDM(otherUserId: string): Promise<string> {
   return data as string;
 }
 
-interface ConversationRow {
-  id: string;
-  last_message_at: string;
-  participants: { user_id: string; last_read_at: string }[];
-}
-
-export async function fetchConversations(userId: string): Promise<ConversationSummary[]> {
-  // 1) Pega conversas + participantes (sem embed de profiles — sem FK direta)
-  const { data: convs, error } = await supabase
-    .from('conversations')
-    .select('id, last_message_at, participants:conversation_participants(user_id, last_read_at)')
-    .order('last_message_at', { ascending: false })
-    .returns<ConversationRow[]>();
+export async function fetchConversations(_userId: string): Promise<ConversationSummary[]> {
+  // UMA RPC agregada (get_conversation_summaries) no lugar do N+1 antigo (~2N+2
+  // round-trips). Escopada em auth.uid() no servidor; devolve por conversa a
+  // última msg + contagem de não-lidas + perfil do outro, numa query só.
+  const { data, error } = await supabase.rpc('get_conversation_summaries');
   if (error) throw error;
-  if (!convs || convs.length === 0) return [];
-
-  // 2) Coleta user_ids dos "outros" e busca os profiles
-  const otherIds = Array.from(
-    new Set(
-      convs.flatMap((c) =>
-        c.participants.filter((p) => p.user_id !== userId).map((p) => p.user_id),
-      ),
-    ),
-  );
-  let profileMap = new Map<string, Profile>();
-  if (otherIds.length > 0) {
-    const { data: profiles } = await supabase.from('profiles').select('*').in('id', otherIds);
-    profileMap = new Map((profiles ?? []).map((p) => [p.id, p as Profile]));
-  }
-
-  // 3) Última mensagem + contagem REAL de não-lidas de cada conversa (em paralelo).
-  // Antes contava só a última msg (travava em 1 e escondia não-lidas anteriores).
-  const convMeta = await Promise.all(
-    convs.map(async (c) => {
-      const meP = c.participants.find((p) => p.user_id === userId);
-      const lastReadAt = meP?.last_read_at ?? '1970-01-01T00:00:00Z';
-      const [lastRes, unreadRes] = await Promise.all([
-        supabase
-          .from('messages')
-          .select('*')
-          .eq('conversation_id', c.id)
-          .order('created_at', { ascending: false })
-          .limit(1),
-        supabase
-          .from('messages')
-          .select('id', { count: 'exact', head: true })
-          .eq('conversation_id', c.id)
-          .neq('sender_id', userId)
-          .gt('created_at', lastReadAt),
-      ]);
-      return {
-        convId: c.id,
-        msg: (lastRes.data?.[0] as Message | undefined) ?? null,
-        unread: unreadRes.count ?? 0,
-      };
-    }),
-  );
-  const metaMap = new Map(convMeta.map((x) => [x.convId, x]));
-
-  return convs
-    .map<ConversationSummary | null>((c) => {
-      const me = c.participants.find((p) => p.user_id === userId);
-      const other = c.participants.find((p) => p.user_id !== userId);
-      if (!me || !other) return null;
-      const otherProfile = profileMap.get(other.user_id);
-      if (!otherProfile) return null;
-      const meta = metaMap.get(c.id);
-      const lastMsg = meta?.msg ?? null;
-      const unread = meta?.unread ?? 0;
-      return {
-        id: c.id,
-        last_message_at: c.last_message_at,
-        last_message: lastMsg,
-        other_user: otherProfile,
-        unread_count: unread,
-      };
-    })
-    .filter((x): x is ConversationSummary => x !== null);
+  type Row = {
+    id: string;
+    last_message_at: string;
+    unread_count: number;
+    last_message: Message | null;
+    other_user: Profile;
+  };
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: r.id,
+    last_message_at: r.last_message_at,
+    last_message: r.last_message,
+    other_user: r.other_user,
+    unread_count: r.unread_count,
+  }));
 }
 
 export async function fetchMessages(conversationId: string): Promise<Message[]> {
@@ -1890,29 +1832,28 @@ export async function markConversationRead(conversationId: string, userId: strin
   if (error) throw error;
 }
 
-export async function fetchUnreadMessageCount(userId: string): Promise<number> {
-  // Para cada conversa do user, conta mensagens criadas depois do last_read_at e não enviadas por ele
-  const { data: parts, error } = await supabase
+/**
+ * last_read_at do OUTRO participante — pra recibo de leitura (✓ enviado / ✓✓
+ * lido). Uma msg minha vira "lida" quando o last_read_at do outro passou do
+ * created_at dela. Reusa o dado que já existe; sem coluna nova em messages.
+ */
+export async function fetchOtherLastReadAt(conversationId: string, myUserId: string): Promise<string | null> {
+  const { data, error } = await supabase
     .from('conversation_participants')
-    .select('conversation_id, last_read_at')
-    .eq('user_id', userId);
+    .select('last_read_at')
+    .eq('conversation_id', conversationId)
+    .neq('user_id', myUserId)
+    .maybeSingle();
   if (error) throw error;
-  if (!parts || parts.length === 0) return 0;
+  return (data?.last_read_at as string | undefined) ?? null;
+}
 
-  // Soma em paralelo
-  const counts = await Promise.all(
-    parts.map(async (p) => {
-      const { count } = await supabase
-        .from('messages')
-        .select('id', { count: 'exact', head: true })
-        .eq('conversation_id', p.conversation_id)
-        // Fallback p/ conversas nunca abertas: gt(created_at, null) não casa nada → escondia não-lidas
-        .gt('created_at', p.last_read_at ?? '1970-01-01T00:00:00Z')
-        .neq('sender_id', userId);
-      return count ?? 0;
-    }),
-  );
-  return counts.reduce((a, b) => a + b, 0);
+export async function fetchUnreadMessageCount(_userId: string): Promise<number> {
+  // Total de não-lidas numa query só (RPC unread_message_total, escopada em
+  // auth.uid()). Antes era N+1 (1 COUNT por conversa) rodando em polling.
+  const { data, error } = await supabase.rpc('unread_message_total');
+  if (error) throw error;
+  return typeof data === 'number' ? data : 0;
 }
 
 /**
