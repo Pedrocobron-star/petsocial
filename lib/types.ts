@@ -640,6 +640,13 @@ export interface PublicPetCard {
 export interface PublicPetCardResult {
   pet: PublicPetCard;
   tutor: { display_name: string | null; avatar_url: string | null };
+  /** Selo de endosso assinado mais recente (só nome + CRMV + data). */
+  endorsement?: {
+    vet_name: string | null;
+    crmv_number: string | null;
+    crmv_state: string | null;
+    signed_at: string | null;
+  } | null;
 }
 
 export type PlaceKind =

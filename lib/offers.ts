@@ -48,18 +48,24 @@ export function offerCategoryMeta(c: OfferCategory) {
 // Usuário
 // ============================================================================
 
-/** Ofertas ativas e não vencidas, ordenadas por prioridade. */
+/**
+ * Ofertas ativas e não vencidas, ordenadas por prioridade.
+ * Usa o RPC `offers_active()` (só colunas públicas) em vez de select('*') —
+ * a tabela `offers` guarda `notes` (notas internas do admin: contato/valor pago
+ * do parceiro) e `created_by`, que NÃO podem trafegar pro usuário. O SELECT
+ * direto na tabela agora é admin-only (RLS); o público lê por aqui.
+ */
 export async function fetchActiveOffers(): Promise<Offer[]> {
-  const today = new Date().toISOString().slice(0, 10);
-  const { data, error } = await supabase
-    .from('offers')
-    .select('*')
-    .eq('active', true)
-    .or(`valid_until.is.null,valid_until.gte.${today}`)
-    .order('priority', { ascending: false })
-    .order('created_at', { ascending: false });
+  const { data, error } = await supabase.rpc('offers_active');
   if (error) return [];
-  return (data ?? []) as Offer[];
+  // O RPC não devolve notes/created_by/clicks_count (internos/admin) —
+  // completa o shape do tipo com valores neutros.
+  return ((data ?? []) as Omit<Offer, 'notes' | 'created_by' | 'clicks_count'>[]).map((o) => ({
+    ...o,
+    notes: null,
+    created_by: null,
+    clicks_count: 0,
+  }));
 }
 
 /** Incrementa o contador de cliques. Fire-and-forget. */

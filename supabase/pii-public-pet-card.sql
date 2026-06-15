@@ -54,12 +54,28 @@ begin
     'tutor', json_build_object(
       'display_name', pr.display_name,
       'avatar_url', pr.avatar_url
+    ),
+    -- Selo de endosso (só o mais recente assinado). NUNCA expõe id/token/
+    -- requested_by/vet_notes — só nome + CRMV + data.
+    'endorsement', (
+      select json_build_object(
+        'vet_name', ve.vet_name,
+        'crmv_number', ve.crmv_number,
+        'crmv_state', ve.crmv_state,
+        'signed_at', ve.signed_at
+      )
+      from public.vet_endorsements ve
+      where ve.pet_id = p.id and ve.status = 'signed'
+      order by ve.signed_at desc nulls last
+      limit 1
     )
   ) into result
   from public.pets p
   left join public.profiles pr on pr.id = p.owner_id
-  -- aceita token OU id (a URL cai pra id quando o pet não tem token gerado)
-  where p.id_card_token = p_token or p.id::text = p_token
+  -- SÓ por token (NUNCA pelo id). Aceitar o pet.id como token furava a
+  -- revogação: o id é público e imutável, então girar o token não revogava
+  -- nada. Todo pet tem token (DEFAULT + NOT NULL em pet-id-card-fields.sql).
+  where p.id_card_token = p_token
   limit 1;
 
   return result; -- null se não achou

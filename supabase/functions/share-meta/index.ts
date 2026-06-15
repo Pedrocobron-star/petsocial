@@ -86,6 +86,9 @@ serve(async (req) => {
     } else if (kind === 'id') {
       meta = await fetchIdCardMeta(id);
       redirectPath = `/id/${id}`;
+    } else if (kind === 'news') {
+      meta = await fetchNewsMeta(id);
+      redirectPath = `/ler/${id}`; // leitor público (sem login)
     } else {
       return htmlResponse(notFoundHtml('Rota desconhecida'), 404);
     }
@@ -187,9 +190,11 @@ async function fetchPostMeta(postId: string): Promise<PageMeta | null> {
 }
 
 async function fetchIdCardMeta(token: string): Promise<PageMeta | null> {
+  // NÃO buscar telefones aqui — o HTML/OG não os usa, e fetchá-los só cria risco
+  // de vazamento de PII de terceiro num futuro edit da description (least-privilege).
   const { data, error } = await supabase
     .from('pets')
-    .select('id, name, species, breed, avatar_url, emergency_contact_phone, preferred_vet_phone')
+    .select('id, name, species, breed, avatar_url')
     .eq('id_card_token', token)
     .maybeSingle();
   if (error || !data) return null;
@@ -203,6 +208,38 @@ async function fetchIdCardMeta(token: string): Promise<PageMeta | null> {
     description,
     image: data.avatar_url ?? DEFAULT_IMAGE,
     ogType: 'profile',
+  };
+}
+
+async function fetchNewsMeta(slug: string): Promise<PageMeta | null> {
+  const { data, error } = await supabase
+    .from('news_articles')
+    .select('slug, title, dek, cover_url, published_at, author_name, status')
+    .eq('slug', slug)
+    .eq('status', 'published') // service role ignora RLS — só compartilha publicadas
+    .maybeSingle();
+  if (error || !data) return null;
+
+  const description = data.dek
+    ? truncate(data.dek, 160)
+    : `Leia no Jornal Pet do Maestro Pet.`;
+
+  return {
+    title: `${data.title} · Maestro Pet`,
+    description,
+    image: data.cover_url ?? DEFAULT_IMAGE,
+    ogType: 'article',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'NewsArticle',
+      headline: data.title,
+      description,
+      image: data.cover_url ?? undefined,
+      datePublished: data.published_at ?? undefined,
+      author: { '@type': 'Organization', name: data.author_name ?? 'Maestro Pet' },
+      publisher: { '@type': 'Organization', name: 'Maestro Pet' },
+      url: `${APP_URL}/ler/${slug}`,
+    },
   };
 }
 

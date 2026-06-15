@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 import { PetIdCard } from '@/components/pet-id-card';
@@ -11,6 +11,7 @@ import { VetEndorsementSection } from '@/components/vet-endorsement-section';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
 import { track } from '@/lib/analytics';
+import { fetchLatestSignedEndorsement } from '@/lib/endorsements';
 import { FONTS } from '@/lib/fonts';
 import {
   exportPetIdPdf,
@@ -46,18 +47,70 @@ export default function PetIdCardScreen() {
     enabled: !!petQuery.data,
   });
 
+  // Selo de endosso (CRMV) pra mostrar no card + no PDF gerado.
+  const endorsementQuery = useQuery({
+    queryKey: ['pet-endorsement-signed', id],
+    queryFn: () => fetchLatestSignedEndorsement(id),
+    enabled: !!petQuery.data,
+  });
+
   const [format, setFormat] = useState<CardFormat>('card');
   const [shareOpen, setShareOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const pet = petQuery.data;
   const tutor = tutorQuery.data ?? null;
+  const endorsement = endorsementQuery.data ?? null;
+
+  // fetchPet usa maybeSingle() → null sem throw quando o pet não existe / foi
+  // deletado / não é do usuário. Separar "carregando" de "não encontrado" pra
+  // não prender o usuário num "Carregando..." eterno (deep-link quebrado).
+  if (petQuery.isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.bg, alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+        <Stack.Screen options={{ title: 'Carteirinha' }} />
+        <ActivityIndicator size="large" color={theme.brand} />
+        <Text style={{ fontFamily: FONTS.body, color: theme.textDim }}>Carregando...</Text>
+      </View>
+    );
+  }
 
   if (!pet) {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.bg, alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: theme.bg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 24,
+          gap: 12,
+        }}
+      >
         <Stack.Screen options={{ title: 'Carteirinha' }} />
-        <Text style={{ fontFamily: FONTS.body, color: theme.textDim }}>Carregando...</Text>
+        <Text style={{ fontSize: 56 }}>🐾</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: theme.text, textAlign: 'center' }}>
+          Carteirinha não encontrada
+        </Text>
+        <Text
+          style={{
+            fontFamily: FONTS.body,
+            fontSize: 13,
+            color: theme.textDim,
+            textAlign: 'center',
+            lineHeight: 19,
+          }}
+        >
+          Esse pet não existe mais ou você não tem acesso a ele.
+        </Text>
+        <PressScale
+          onPress={() => router.replace('/(app)/phone' as never)}
+          style={{ marginTop: 8, paddingVertical: 10, paddingHorizontal: 18 }}
+        >
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.brand }}>
+            Voltar pro início
+          </Text>
+        </PressScale>
       </View>
     );
   }
@@ -67,7 +120,8 @@ export default function PetIdCardScreen() {
     Platform.OS === 'web'
       ? globalThis.location?.origin ?? 'https://petsocial.app'
       : 'https://petsocial.app';
-  const publicUrl = `${baseUrl}/id/${pet.id_card_token ?? pet.id}`;
+  // SEMPRE o token (nunca o pet.id) — link por id furava a revogação.
+  const publicUrl = pet.id_card_token ? `${baseUrl}/id/${pet.id_card_token}` : '';
 
   // ============ ACTIONS ============
   const handleDownloadPdf = async () => {
@@ -246,7 +300,13 @@ export default function PetIdCardScreen() {
             style={{ alignItems: 'center', marginBottom: 16 }}
           >
             {format === 'card' ? (
-              <PetIdCard pet={pet} tutorProfile={tutor} qrUrl={publicUrl} width={340} />
+              <PetIdCard
+                pet={pet}
+                tutorProfile={tutor}
+                qrUrl={publicUrl}
+                endorsement={endorsement}
+                width={340}
+              />
             ) : (
               <PetIdStoryCard pet={pet} tutorProfile={tutor} qrUrl={publicUrl} width={280} />
             )}

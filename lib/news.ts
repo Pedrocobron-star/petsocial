@@ -124,6 +124,22 @@ export async function incrementArticleView(id: string): Promise<void> {
 }
 
 /**
+ * As matérias mais lidas sobre o ACERVO INTEIRO (por view_count), não só sobre
+ * as 30 mais recentes — senão um evergreen antigo nunca entra em "Mais lidas".
+ */
+export async function fetchMostReadArticles(limit = 5): Promise<NewsArticle[]> {
+  const { data, error } = await supabase
+    .from('news_articles')
+    .select(ARTICLE_SELECT)
+    .eq('status', 'published')
+    .gt('view_count', 0)
+    .order('view_count', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data as NewsArticle[] | null) ?? [];
+}
+
+/**
  * Matérias relacionadas pro fim do artigo: prioriza a MESMA categoria (mais
  * recentes), e completa com as últimas publicadas se faltar — pra nunca ficar
  * vazio quando a categoria tem só esse texto. Mantém o leitor no portal.
@@ -233,6 +249,7 @@ export const qkNews = {
   categories: () => ['news-categories'] as const,
   articles: (categoryId?: string, featured?: boolean) => ['news-articles', categoryId ?? null, !!featured] as const,
   article: (slug: string) => ['news-article', slug] as const,
+  mostRead: () => ['news-most-read'] as const,
   related: (id: string) => ['news-related', id] as const,
   adminList: () => ['news-admin-list'] as const,
   adminArticle: (id: string) => ['news-admin-article', id] as const,

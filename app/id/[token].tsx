@@ -36,6 +36,7 @@ export default function PublicPetIdScreen() {
   // pet + tutor vêm juntos do RPC público (gated por token), sem expor owner_id/PII.
   const pet = petQuery.data?.pet ?? null;
   const tutor = petQuery.data?.tutor ?? null;
+  const endorsement = petQuery.data?.endorsement ?? null;
 
   // Analytics: log que alguém visualizou a carteirinha pública
   useEffect(() => {
@@ -49,7 +50,8 @@ export default function PublicPetIdScreen() {
     Platform.OS === 'web'
       ? globalThis.location?.origin ?? 'https://petsocial.app'
       : 'https://petsocial.app';
-  const publicUrl = pet ? `${baseUrl}/id/${pet.id_card_token ?? pet.id}` : '';
+  // SEMPRE o token (nunca o pet.id) — o link por id furava a revogação.
+  const publicUrl = pet?.id_card_token ? `${baseUrl}/id/${pet.id_card_token}` : '';
 
   const handleCall = (phone: string | null | undefined) => {
     if (!phone) return;
@@ -69,7 +71,7 @@ export default function PublicPetIdScreen() {
   const handleShareLink = async () => {
     if (!pet) return;
     track('pet_id_public_share');
-    const baseShare = `${baseUrl}/id/${pet.id_card_token ?? pet.id}`;
+    const baseShare = `${baseUrl}/id/${pet.id_card_token ?? ''}`;
     try {
       await sharePost({
         title: `Carteirinha do ${pet.name}`,
@@ -328,7 +330,13 @@ export default function PublicPetIdScreen() {
 
           {/* Carteirinha completa */}
           <View style={{ alignItems: 'center' }}>
-            <PetIdCard pet={pet} tutorProfile={tutor} qrUrl={publicUrl} width={340} />
+            <PetIdCard
+              pet={pet}
+              tutorProfile={tutor}
+              qrUrl={publicUrl}
+              endorsement={endorsement}
+              width={340}
+            />
           </View>
 
           {/* Aviso */}

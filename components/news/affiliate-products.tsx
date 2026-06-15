@@ -21,13 +21,29 @@ const STORE_META: Record<AffiliateStore, { label: string; bg: string; fg: string
   outro: { label: 'Loja', bg: '', fg: '#FFFFFF' }, // bg vem do theme.brand
 };
 
+/**
+ * Normaliza/valida a URL antes de abrir:
+ *  - sem esquema (ex.: "loja.com") → prefixa https:// (typo comum do admin que
+ *    senão abriria uma rota relativa quebrada no web).
+ *  - esquema diferente de http/https (javascript:, data:...) → descarta.
+ */
+function safeHttpUrl(raw: string): string | null {
+  const u = raw.trim();
+  if (!u) return null;
+  if (/^https?:\/\//i.test(u)) return u;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return null; // tem outro esquema → bloqueia
+  return `https://${u}`;
+}
+
 function openUrl(url: string) {
+  const safe = safeHttpUrl(url);
+  if (!safe) return;
   haptic.light();
   try {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      window.open(url, '_blank', 'noopener,noreferrer');
+      window.open(safe, '_blank', 'noopener,noreferrer');
     } else {
-      void Linking.openURL(url);
+      void Linking.openURL(safe);
     }
   } catch {
     // ignora — URL inválida

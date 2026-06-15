@@ -112,7 +112,7 @@ export default function AppLayout() {
         <Stack.Screen name="messages" options={{ headerShown: true, title: 'Mensagens' }} />
         <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />
         <Stack.Screen name="tag/[name]" options={{ headerShown: true }} />
-        <Stack.Screen name="places/index" options={{ headerShown: true, title: 'Pet Map' }} />
+        <Stack.Screen name="places/index" options={{ headerShown: true, title: 'Lugares' }} />
         <Stack.Screen name="places/new" options={{ presentation: 'modal', headerShown: true }} />
         <Stack.Screen name="places/[id]" options={{ headerShown: true }} />
         <Stack.Screen name="agenda" options={{ headerShown: true, title: 'Minha agenda' }} />

@@ -2,11 +2,17 @@ import { Image } from 'expo-image';
 import { Text, View } from 'react-native';
 
 import { speciesLabel } from '@/lib/constants';
+import { formatEndorsementBadge } from '@/lib/endorsements';
 import { FONTS } from '@/lib/fonts';
 import { petAgeText } from '@/lib/pet-age';
 import type { PublicPetCard } from '@/lib/types';
 
-import { PetAvatar } from './pet-avatar';
+/** Selo de endosso exibido no card (subconjunto seguro — só nome + CRMV). */
+export interface CardEndorsement {
+  vet_name: string | null;
+  crmv_number: string | null;
+  crmv_state: string | null;
+}
 
 interface Props {
   /** Aceita Pet completo (uso logado) ou o subconjunto público da carteirinha. */
@@ -14,6 +20,8 @@ interface Props {
   tutorProfile?: { display_name?: string | null; avatar_url?: string | null } | null;
   /** Texto do QR (URL pública). Quando undefined, mostra placeholder. */
   qrUrl?: string;
+  /** Selo do vet (CRMV) — aparece na carteirinha privada, pública e no PDF. */
+  endorsement?: CardEndorsement | null;
   /** Largura total do card (default: 340). */
   width?: number;
 }
@@ -50,7 +58,7 @@ function speciesEmoji(species: string): string {
  *
  * Reusable: aparece na tela de ID card, na página pública, e como base do PDF.
  */
-export function PetIdCard({ pet, tutorProfile, qrUrl, width = 340 }: Props) {
+export function PetIdCard({ pet, tutorProfile, qrUrl, endorsement, width = 340 }: Props) {
   const ageText = petAgeText(pet.birthdate);
   // Número de série formatado a partir do token (primeiros 8 chars em caps)
   const serial = (pet.id_card_token ?? pet.id)
@@ -484,6 +492,53 @@ export function PetIdCard({ pet, tutorProfile, qrUrl, width = 340 }: Props) {
           </View>
         ) : null}
       </View>
+
+      {/* ============================================================
+          SELO DE ENDOSSO — vet com CRMV (quando assinado)
+          ============================================================ */}
+      {endorsement?.vet_name ? (
+        <View
+          style={{
+            backgroundColor: '#DCFCE7',
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            borderTopWidth: 1,
+            borderColor: '#86EFAC',
+          }}
+        >
+          <View
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 11,
+              backgroundColor: '#16A34A',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 12, color: '#fff' }}>✓</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontFamily: FONTS.bodyBold,
+                fontSize: 7,
+                color: '#166534',
+                letterSpacing: 0.6,
+                textTransform: 'uppercase',
+              }}
+            >
+              Endossado por veterinário
+            </Text>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#14532D' }}>
+              {formatEndorsementBadge(endorsement)}
+            </Text>
+          </View>
+        </View>
+      ) : null}
 
       {/* ============================================================
           FOOTER — serial + watermark

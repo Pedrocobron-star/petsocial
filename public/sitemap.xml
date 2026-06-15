@@ -11,37 +11,37 @@
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://pet.social/</loc>
+    <loc>https://petsocial.app/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://pet.social/welcome</loc>
+    <loc>https://petsocial.app/welcome</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://pet.social/pro</loc>
+    <loc>https://petsocial.app/pro</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pet.social/legal/about</loc>
+    <loc>https://petsocial.app/legal/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://pet.social/legal/terms</loc>
+    <loc>https://petsocial.app/legal/terms</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://pet.social/legal/privacy</loc>
+    <loc>https://petsocial.app/legal/privacy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://pet.social/legal/faq</loc>
+    <loc>https://petsocial.app/legal/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

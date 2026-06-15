@@ -233,7 +233,7 @@ function PlacesInner() {
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <Stack.Screen
         options={{
-          title: 'Pet Map',
+          title: 'Lugares',
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Link href={'/(app)/agenda' as never} asChild>

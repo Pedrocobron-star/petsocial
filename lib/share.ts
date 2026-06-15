@@ -73,6 +73,20 @@ export function petIdCardUrl(token: string): string {
   return `petsocial://id/${token}`;
 }
 
+/**
+ * Matéria do jornal → leitor PÚBLICO /ler/{slug} (lê SEM login = aquisição).
+ * Aponta DIRETO pro /ler pra não depender do redeploy da edge function
+ * share-meta. Quando o `news` branch da share-meta estiver no ar, dá pra trocar
+ * por `${shareBaseUrl()}/share/news/${slug}` pra ganhar o preview rico (OG) no
+ * WhatsApp/Twitter — o código da função já está pronto.
+ */
+export function newsUrl(slug: string): string {
+  if (Platform.OS === 'web') {
+    return `${shareBaseUrl()}/ler/${slug}`;
+  }
+  return `petsocial://ler/${slug}`;
+}
+
 /** Link pro hub dos jogos (Cassino Pet) — usado ao compartilhar resultado. */
 export function gamesUrl(): string {
   if (Platform.OS === 'web') {

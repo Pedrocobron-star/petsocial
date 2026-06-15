@@ -24,6 +24,11 @@ update public.pets
   set id_card_token = replace(gen_random_uuid()::text, '-', '')
   where id_card_token is null;
 
+-- Invariante DURA: todo pet TEM token (a carteirinha pública só resolve por
+-- token; sem isso um pet sem token ficaria inacessível pra sempre). NOT NULL +
+-- DEFAULT garantem isso no schema, não só por convenção.
+alter table public.pets alter column id_card_token set not null;
+
 -- Index para lookup público pelo token
 create index if not exists pets_id_card_token_idx
   on public.pets(id_card_token) where id_card_token is not null;

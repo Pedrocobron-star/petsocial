@@ -13,6 +13,7 @@ import { FONTS } from '@/lib/fonts';
 import {
   fetchArticles,
   fetchCategories,
+  fetchMostReadArticles,
   qkNews,
   type NewsArticle,
   type NewsCategory,
@@ -38,6 +39,8 @@ export default function NewsPortalScreen() {
     queryKey: ['news-sponsored-slot'],
     queryFn: () => fetchActiveSponsoredPosts(1),
   });
+  // "Mais lidas" sobre o acervo INTEIRO (não só as 30 mais recentes).
+  const mostReadQuery = useQuery({ queryKey: qkNews.mostRead(), queryFn: () => fetchMostReadArticles(5) });
 
   const articles = articlesQuery.data ?? [];
   const categories = categoriesQuery.data ?? [];
@@ -46,14 +49,18 @@ export default function NewsPortalScreen() {
   const lead: NewsArticle | null = featuredQuery.data?.[0] ?? articles[0] ?? null;
   const rest = lead ? articles.filter((a) => a.id !== lead.id) : articles;
   const secondary = rest.slice(0, 2);
-  const mostRead = [...articles].sort((a, b) => b.view_count - a.view_count).slice(0, 5);
+  const mostRead = mostReadQuery.data ?? [];
 
   // Editorias: categorias que têm matéria (fora a manchete), com até 3 cada.
   const editorias = categories
     .map((c) => ({ category: c, items: rest.filter((a) => a.category_id === c.id).slice(0, 3) }))
     .filter((e) => e.items.length > 0);
 
-  const loading = articlesQuery.isLoading || featuredQuery.isLoading;
+  // Matérias órfãs (sem categoria) — pra não sumirem de toda navegação por editoria.
+  const semCategoria = rest.filter((a) => a.category_id === null).slice(0, 3);
+
+  // Inclui categorias no gate pra evitar flash da faixa de pills/editorias.
+  const loading = articlesQuery.isLoading || featuredQuery.isLoading || categoriesQuery.isLoading;
 
   const today = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
   const todayCap = today.charAt(0).toUpperCase() + today.slice(1);
@@ -168,6 +175,24 @@ export default function NewsPortalScreen() {
                 {editorias.map(({ category, items }) => (
                   <EditoriaSection key={category.id} category={category} items={items} />
                 ))}
+
+                {/* ===== GERAL (matérias sem categoria) ===== */}
+                {semCategoria.length > 0 ? (
+                  <View style={{ marginTop: 26 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={{ fontSize: 16 }}>📰</Text>
+                      <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: theme.text, letterSpacing: -0.3 }}>
+                        Geral
+                      </Text>
+                      <View style={{ flex: 1, height: 2, backgroundColor: theme.brand, opacity: 0.6 }} />
+                    </View>
+                    <View style={{ gap: 12, marginTop: 12 }}>
+                      {semCategoria.map((a) => (
+                        <ArticleListCard key={a.id} article={a} />
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
 
                 {/* ===== MAIS LIDAS ===== */}
                 {mostRead.length >= 3 ? (

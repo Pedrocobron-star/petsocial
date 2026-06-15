@@ -97,6 +97,7 @@ export default function RootLayout() {
                           <Stack.Screen name="(app)" />
                           <Stack.Screen name="id/[token]" />
                           <Stack.Screen name="endorse/[token]" />
+                          <Stack.Screen name="ler/[slug]" />
                         </Stack>
                         <StatusBar style="auto" />
                       </RatingPromptProvider>

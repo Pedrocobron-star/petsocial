@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
@@ -139,7 +139,12 @@ function OfferCard({ offer }: { offer: Offer }) {
   const onGo = async () => {
     trackOfferClick(offer.id);
     try {
-      await Linking.openURL(offer.cta_url);
+      // No web/PWA abre em nova aba (não ejeta o usuário do app) + noopener.
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.open(offer.cta_url, '_blank', 'noopener,noreferrer');
+      } else {
+        await Linking.openURL(offer.cta_url);
+      }
     } catch {
       toast.error('Não foi possível abrir o link');
     }
