@@ -15,6 +15,7 @@ import { submitGameScore, type GameDifficulty } from '@/lib/games';
 import { haptic } from '@/lib/haptics';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
+import { useToast } from '@/providers/toast-provider';
 
 const BG = '#140E22';
 const DIFF_KEY = 'petsocial:game-diff:caminho';
@@ -109,6 +110,7 @@ type Phase = 'idle' | 'playing' | 'over';
 export default function CaminhoGameScreen() {
   const { activePet } = useActivePet();
   const { session } = useSession();
+  const toast = useToast();
   const qc = useQueryClient();
   const userId = session?.user.id;
   const dogEmoji = activePet?.species === 'cat' ? '🐈' : '🐕';
@@ -195,7 +197,7 @@ export default function CaminhoGameScreen() {
             qc.invalidateQueries({ queryKey: ['game-my-rank', 'caminho'] });
             qc.invalidateQueries({ queryKey: ['game-streak'] });
           })
-          .catch(() => {});
+          .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
       }
     }
   };

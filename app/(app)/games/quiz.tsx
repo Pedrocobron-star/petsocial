@@ -16,6 +16,7 @@ import { submitGameScore, type GameDifficulty } from '@/lib/games';
 import { pickQuizQuestions, type QuizQuestion } from '@/lib/pet-quiz';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
+import { useToast } from '@/providers/toast-provider';
 
 const BG = '#140E22';
 const DIFF_KEY = 'petsocial:game-diff:quiz';
@@ -32,6 +33,7 @@ type Phase = 'idle' | 'playing' | 'over';
 export default function PetQuizScreen() {
   const { activePet } = useActivePet();
   const { session } = useSession();
+  const toast = useToast();
   const qc = useQueryClient();
   const userId = session?.user.id;
 
@@ -98,7 +100,7 @@ export default function PetQuizScreen() {
             qc.invalidateQueries({ queryKey: ['game-my-rank', 'quiz'] });
             qc.invalidateQueries({ queryKey: ['game-streak'] });
           })
-          .catch(() => {});
+          .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
       }
     } else {
       setIndex((i) => i + 1);

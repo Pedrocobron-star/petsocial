@@ -17,8 +17,12 @@ declare
   v_max int;
   v_recent int;
 begin
-  -- teto fisico por jogo (generoso: bloqueia 999999, nao barra jogo legitimo)
-  v_max := case new.game when 'treats' then 600 when 'quiz' then 300 when 'caminho' then 300 else 1000 end;
+  -- Teto fisico por jogo. So existe pra bloquear tampering grosseiro (999999);
+  -- NAO e anti-cheat de verdade (jogo casual client-side). Tem que ficar ACIMA
+  -- do maximo legitimo: caminho 5 fases x150=750; treats combo 30s pode passar
+  -- de 1000; quiz max ~216. Os tetos antigos (600/300/300) REJEITAVAM run bom e
+  -- o erro era engolido no client -> score sumia sem aviso.
+  v_max := case new.game when 'treats' then 5000 when 'quiz' then 800 when 'caminho' then 1500 else 10000 end;
   if new.score < 0 or new.score > v_max then
     raise exception 'pontuacao invalida' using errcode = '22023';
   end if;

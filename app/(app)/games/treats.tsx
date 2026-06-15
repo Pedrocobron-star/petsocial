@@ -15,6 +15,7 @@ import { DIFF_META, submitGameScore, type GameDifficulty } from '@/lib/games';
 import { haptic } from '@/lib/haptics';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
+import { useToast } from '@/providers/toast-provider';
 
 const BG = '#140E22';
 const ROUND_SECONDS = 30;
@@ -84,6 +85,7 @@ function spawnInterval(elapsedMs: number, difficulty: GameDifficulty): number {
 export default function TreatsGameScreen() {
   const { activePet } = useActivePet();
   const { session } = useSession();
+  const toast = useToast();
   const qc = useQueryClient();
   const userId = session?.user.id;
   const treat = (activePet && TREAT_BY_SPECIES[activePet.species]) || '🍪';
@@ -211,7 +213,7 @@ export default function TreatsGameScreen() {
               qc.invalidateQueries({ queryKey: ['game-my-rank', 'treats'] });
               qc.invalidateQueries({ queryKey: ['game-streak'] });
             })
-            .catch(() => {});
+            .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
         }
       }
     }, TICK_MS);
