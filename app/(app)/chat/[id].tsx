@@ -1,9 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useIsFocused } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, isSameDay, isToday, isYesterday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import {
   ActivityIndicator,
   Alert,
@@ -44,7 +47,10 @@ export default function ChatScreen() {
   const qc = useQueryClient();
   const router = useRouter();
   const listRef = useRef<FlatList<Message>>(null);
+  const atBottomRef = useRef(true); // usuário perto do fim? (pra não arrancá-lo do histórico)
   const [draft, setDraft] = useState('');
+  const isFocused = useIsFocused();
+  const headerHeight = useHeaderHeight();
 
   const userId = session?.user.id;
 
@@ -153,7 +159,9 @@ export default function ChatScreen() {
 
   // Marca como lido sempre que abre ou que mensagens novas chegam
   useEffect(() => {
-    if (!id || !userId) return;
+    // Só marca lido com a TELA FOCADA — senão, empilhar outra tela (ex.: perfil
+    // do pet) e chegar msg via realtime zerava o não-lido sem o usuário ver.
+    if (!id || !userId || !isFocused) return;
     markConversationRead(id, userId)
       .then(() => {
         qc.invalidateQueries({ queryKey: qk.unreadMessages(userId) });
@@ -161,12 +169,16 @@ export default function ChatScreen() {
         qc.invalidateQueries({ queryKey: qk.conversations(userId) });
       })
       .catch(() => {});
-  }, [id, userId, messagesQuery.data?.length, qc]);
+  }, [id, userId, isFocused, messagesQuery.data?.length, qc]);
 
-  // Auto-scroll quando lista cresce
+  // Auto-scroll quando lista cresce — mas só se o usuário já estava perto do fim
+  // OU a última mensagem é minha; senão não arranca quem está lendo o histórico.
   useEffect(() => {
+    const msgs = messagesQuery.data;
+    const lastMine = !!msgs && msgs.length > 0 && msgs[msgs.length - 1].sender_id === userId;
+    if (!atBottomRef.current && !lastMine) return;
     setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 30);
-  }, [messagesQuery.data?.length]);
+  }, [messagesQuery.data, userId]);
 
   const messages = messagesQuery.data ?? [];
   const other = otherUserQuery.data;
@@ -255,18 +267,41 @@ export default function ChatScreen() {
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={80}
+        keyboardVerticalOffset={headerHeight}
         style={{ flex: 1 }}
       >
         {messagesQuery.isLoading ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator color={theme.brand} />
           </View>
+        ) : messagesQuery.isError ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 }}>
+            <Text style={{ fontSize: 40 }}>⚠️</Text>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text, textAlign: 'center' }}>
+              Não deu pra carregar as mensagens
+            </Text>
+            <Pressable
+              onPress={() => messagesQuery.refetch()}
+              accessibilityRole="button"
+              accessibilityLabel="Tentar de novo"
+              style={{ backgroundColor: theme.brand, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 9 }}
+            >
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.accent.onAccent }}>
+                Tentar de novo
+              </Text>
+            </Pressable>
+          </View>
         ) : (
           <FlatList
             ref={listRef as never}
             data={items}
             keyExtractor={(it) => it.key}
+            onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+              const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+              atBottomRef.current =
+                contentSize.height - (contentOffset.y + layoutMeasurement.height) < 120;
+            }}
+            scrollEventThrottle={100}
             renderItem={({ item }) => {
               if (item.kind === 'day') return <DaySeparator date={item.date} />;
               return (
@@ -336,6 +371,8 @@ export default function ChatScreen() {
           <Pressable
             onPress={handleSend}
             disabled={!draft.trim() || sendMutation.isPending}
+            accessibilityRole="button"
+            accessibilityLabel="Enviar mensagem"
             style={{
               width: 40,
               height: 40,
@@ -345,7 +382,11 @@ export default function ChatScreen() {
               justifyContent: 'center',
             }}
           >
-            <Ionicons name="arrow-up" size={20} color={draft.trim() ? '#fff' : theme.textDim} />
+            <Ionicons
+              name="arrow-up"
+              size={20}
+              color={draft.trim() ? theme.accent.onAccent : theme.textDim}
+            />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -401,7 +442,7 @@ function DaySeparator({ date }: { date: Date }) {
 /** Detecta URLs e quebra em pedaços renderizáveis. */
 const URL_RE = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
 
-function renderMessageContent(content: string, isMe: boolean, linkColor: string) {
+function renderMessageContent(content: string, isMe: boolean, linkColor: string, meColor: string) {
   const parts = content.split(URL_RE);
   return parts.map((part, i) => {
     if (URL_RE.test(part)) {
@@ -414,7 +455,7 @@ function renderMessageContent(content: string, isMe: boolean, linkColor: string)
           onPress={() => Linking.openURL(url).catch(() => {})}
           style={{
             fontFamily: FONTS.bodyBold,
-            color: isMe ? '#fff' : linkColor,
+            color: isMe ? meColor : linkColor,
             textDecorationLine: 'underline',
           }}
         >
@@ -466,11 +507,11 @@ function MessageBubble({
             style={{
               fontFamily: FONTS.body,
               fontSize: 15,
-              color: isMe ? '#fff' : theme.text,
+              color: isMe ? theme.accent.onAccent : theme.text,
               lineHeight: 20,
             }}
           >
-            {renderMessageContent(message.content, isMe, theme.brand)}
+            {renderMessageContent(message.content, isMe, theme.brand, theme.accent.onAccent)}
           </Text>
         </View>
         {showTime ? (

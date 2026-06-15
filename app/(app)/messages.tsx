@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from 'react-native';
 
 import { AreaHero } from '@/components/area-hero';
 import { EmptyState } from '@/components/empty-state';
@@ -74,6 +74,13 @@ function MessagesInner() {
         )}
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 4 }}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={listQuery.isRefetching}
+            onRefresh={() => listQuery.refetch()}
+            tintColor={theme.brand}
+          />
+        }
         ListHeaderComponent={
           <>
             <AreaHero area="messages" />
@@ -113,7 +120,12 @@ function MessagesInner() {
                   }}
                 />
                 {query.length > 0 ? (
-                  <Pressable onPress={() => setQuery('')} hitSlop={10}>
+                  <Pressable
+                    onPress={() => setQuery('')}
+                    hitSlop={10}
+                    accessibilityRole="button"
+                    accessibilityLabel="Limpar busca"
+                  >
                     <Ionicons name="close-circle" size={16} color={theme.textDim} />
                   </Pressable>
                 ) : null}
@@ -122,7 +134,30 @@ function MessagesInner() {
           </>
         }
         ListEmptyComponent={
-          listQuery.isLoading ? null : showEmptySearch ? (
+          listQuery.isLoading ? null : listQuery.isError ? (
+            <EmptyState
+              emoji="⚠️"
+              title="Não deu pra carregar"
+              description="Houve um problema ao buscar suas conversas. Verifica a conexão e tenta de novo."
+              action={
+                <Pressable
+                  onPress={() => listQuery.refetch()}
+                  accessibilityRole="button"
+                  accessibilityLabel="Tentar de novo"
+                  style={{
+                    backgroundColor: theme.brand,
+                    borderRadius: 999,
+                    paddingHorizontal: 18,
+                    paddingVertical: 9,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.accent.onAccent }}>
+                    Tentar de novo
+                  </Text>
+                </Pressable>
+              }
+            />
+          ) : showEmptySearch ? (
             <EmptyState
               emoji="🔍"
               mozart="detetive"

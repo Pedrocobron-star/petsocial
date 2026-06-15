@@ -1820,14 +1820,17 @@ export async function fetchConversations(userId: string): Promise<ConversationSu
 }
 
 export async function fetchMessages(conversationId: string): Promise<Message[]> {
+  // Busca as 50 mensagens MAIS RECENTES (desc) e reordena pra ASC na exibição.
+  // Com `ascending: true` + limit, o Postgres devolvia as 50 mais ANTIGAS e
+  // escondia as recentes em conversas longas (o chat "congelava" no começo).
   const { data, error } = await supabase
     .from('messages')
     .select('*')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true })
-    .limit(200);
+    .order('created_at', { ascending: false })
+    .limit(50);
   if (error) throw error;
-  return (data ?? []) as Message[];
+  return ((data ?? []) as Message[]).reverse();
 }
 
 export async function fetchConversationOtherUser(conversationId: string, myUserId: string): Promise<Profile | null> {
