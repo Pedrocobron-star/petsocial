@@ -59,8 +59,8 @@ export function TournamentCard() {
   // Sem torneio ativo → mostra o pódio do último (em vez de sumir de vez).
   if (!t) return <LastTournamentPodium />;
 
-  const meta = GAME_META[t.game];
-  const diff = DIFF_META[(t.min_difficulty as GameDifficulty) ?? 2];
+  const meta = GAME_META[t.game] ?? { emoji: '🎮', label: t.title, scoreLabel: 'pts' };
+  const diff = DIFF_META[t.min_difficulty as GameDifficulty] ?? DIFF_META[2];
   const remaining = formatCountdown(new Date(t.ends_at).getTime() - nowMs);
   const top = lbQuery.data ?? [];
   const myRank = myRankQuery.data;
@@ -231,7 +231,7 @@ function LastTournamentPodium() {
   const ageMs = t.finalized_at ? Date.now() - new Date(t.finalized_at).getTime() : Infinity;
   if (ageMs > PODIUM_MAX_AGE_MS || dismissedId === t.id) return null;
 
-  const meta = GAME_META[t.game];
+  const meta = GAME_META[t.game] ?? { emoji: '🏁', label: t.title, scoreLabel: 'pts' };
   const dismiss = () => {
     setDismissedId(t.id);
     AsyncStorage.setItem(PODIUM_DISMISS_KEY, t.id).catch(() => {});

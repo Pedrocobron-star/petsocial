@@ -42,7 +42,12 @@ export async function fetchActiveTournament(): Promise<Tournament | null> {
   const { data, error } = await supabase.rpc('active_tournament');
   if (error || !data) return null;
   const row = Array.isArray(data) ? data[0] : data;
-  return (row as Tournament) ?? null;
+  // O RPC `active_tournament` (returns public.tournaments) devolve uma LINHA DE
+  // NULLS (composite vazio: {id:null, game:null, ...}) quando NAO ha torneio
+  // ativo, em vez de NULL. Sem este guard, `row` vira um objeto truthy com
+  // game=null e o TournamentCard quebra em GAME_META[null].emoji.
+  if (!row || (row as Tournament).id == null || (row as Tournament).game == null) return null;
+  return row as Tournament;
 }
 
 /** O torneio finalizado mais recente — pra mostrar o pódio depois que acaba. */
