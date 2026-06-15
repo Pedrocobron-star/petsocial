@@ -29,6 +29,7 @@ import {
   fetchUserIsPro,
   fetchVaccinations,
   getOrCreateDM,
+  hasBlockBetween,
   isUserBlocked,
   qk,
   toggleFollow,
@@ -125,7 +126,12 @@ export default function PetProfileScreen() {
     onSuccess: (convId) => {
       router.push({ pathname: '/chat/[id]' as never, params: { id: convId } as never });
     },
-    onError: () => {
+    onError: (err: unknown) => {
+      const e = err as { message?: string; code?: string } | null;
+      if (e && (e.code === 'P0001' || /bloqueio/i.test(e.message ?? ''))) {
+        toast.info('Não é possível abrir a conversa', 'Há um bloqueio entre vocês.');
+        return;
+      }
       toast.error('Não foi possível abrir a conversa');
     },
   });
@@ -134,6 +140,14 @@ export default function PetProfileScreen() {
   const blockedQuery = useQuery({
     queryKey: pet && myUserId ? qk.isBlocked(myUserId, pet.owner_id) : ['is-blocked', 'none'],
     queryFn: () => isUserBlocked(myUserId!, pet!.owner_id),
+    enabled: !!pet && !!myUserId && pet.owner_id !== myUserId,
+  });
+  // Bloqueio nos DOIS sentidos (eu bloqueei OU ele me bloqueou) — gate do botão
+  // "Enviar mensagem". O blockedQuery acima só cobre "eu bloqueei" e serve pro
+  // toggle Bloquear/Desbloquear; o gate precisa do bidirecional.
+  const blockBetweenQuery = useQuery({
+    queryKey: pet && myUserId ? ['block-between', myUserId, pet.owner_id] : ['block-between', 'none'],
+    queryFn: () => hasBlockBetween(myUserId!, pet!.owner_id),
     enabled: !!pet && !!myUserId && pet.owner_id !== myUserId,
   });
   const blockMutation = useMutation({
@@ -220,8 +234,11 @@ export default function PetProfileScreen() {
           isFollowing={!!followingQuery.data}
           onFollow={() => followMutation.mutate()}
           onMessage={() => {
-            if (blockedQuery.data) {
-              toast.info('Tutor bloqueado', 'Desbloqueie pra enviar mensagem.');
+            if (blockBetweenQuery.data) {
+              toast.info(
+                'Não é possível enviar',
+                blockedQuery.data ? 'Desbloqueie pra enviar mensagem.' : 'Há um bloqueio entre vocês.',
+              );
               return;
             }
             openDmMutation.mutate();

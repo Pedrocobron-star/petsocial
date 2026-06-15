@@ -2337,6 +2337,18 @@ export async function isUserBlocked(blockerId: string, blockedId: string): Promi
   return data !== null;
 }
 
+/**
+ * Existe bloqueio entre A e B em QUALQUER direção? (eu bloqueei ele OU ele me
+ * bloqueou). Usa o RPC has_block_between (SECURITY DEFINER) — o `isUserBlocked`
+ * só cobre o sentido "eu bloqueei", insuficiente pro gate de enviar mensagem.
+ */
+export async function hasBlockBetween(a: string, b: string): Promise<boolean> {
+  if (!a || !b || a === b) return false;
+  const { data, error } = await supabase.rpc('has_block_between', { a, b });
+  if (error) throw error;
+  return data === true;
+}
+
 // -------- Moderation: Reports --------
 
 export async function createReport(input: {

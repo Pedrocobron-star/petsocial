@@ -6,6 +6,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Linking,
@@ -16,15 +17,19 @@ import {
   View,
 } from 'react-native';
 
+import { ReportModal } from '@/components/report-modal';
 import { UserInitialAvatar } from '@/components/user-initial-avatar';
 import { FONTS } from '@/lib/fonts';
 import {
+  blockUser,
   fetchConversationOtherUser,
   fetchMessages,
   fetchUserFirstPet,
+  isUserBlocked,
   markConversationRead,
   qk,
   sendMessage,
+  unblockUser,
 } from '@/lib/queries';
 import type { Message } from '@/lib/types';
 import { useSession } from '@/providers/session-provider';
@@ -82,8 +87,15 @@ export default function ChatScreen() {
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
       return { prev };
     },
-    onError: (_err, content, ctx) => {
+    onError: (err: unknown, content, ctx) => {
       if (ctx?.prev) qc.setQueryData(qk.messages(id!), ctx.prev);
+      const e = err as { message?: string; code?: string } | null;
+      // Bloqueio entre os usuários (trigger enforce_dm_block, P0001): não adianta
+      // tentar de novo nem restaurar o rascunho — avisa claro.
+      if (e && (e.code === 'P0001' || /bloqueio/i.test(e.message ?? ''))) {
+        toast.info('Não foi possível enviar', 'Há um bloqueio entre vocês.');
+        return;
+      }
       // restaura o texto (se o campo ainda estiver vazio) pra não perder a mensagem
       setDraft((d) => (d.trim() ? d : content));
       toast.error('Mensagem não enviada', 'Toque pra tentar de novo.');
@@ -93,6 +105,51 @@ export default function ChatScreen() {
       qc.invalidateQueries({ queryKey: qk.conversations(userId!) });
     },
   });
+
+  // Bloquear / Denunciar o outro tutor — direto da conversa (segurança/moderação).
+  const [reportOpen, setReportOpen] = useState(false);
+  const blockedQuery = useQuery({
+    queryKey: otherUserId && userId ? qk.isBlocked(userId, otherUserId) : ['is-blocked', 'none'],
+    queryFn: () => isUserBlocked(userId!, otherUserId!),
+    enabled: !!otherUserId && !!userId,
+  });
+  const blockMutation = useMutation({
+    mutationFn: () =>
+      blockedQuery.data ? unblockUser(userId!, otherUserId!) : blockUser(userId!, otherUserId!),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.isBlocked(userId!, otherUserId!) });
+      toast.success(
+        blockedQuery.data ? 'Tutor desbloqueado' : 'Tutor bloqueado',
+        blockedQuery.data ? '' : 'Vocês não trocam mais mensagens.',
+      );
+    },
+  });
+
+  const onMore = () => {
+    if (!otherUserId) return;
+    const isBlocked = blockedQuery.data;
+    Alert.alert('Mais ações', undefined, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Denunciar tutor', onPress: () => setReportOpen(true) },
+      {
+        text: isBlocked ? 'Desbloquear tutor' : 'Bloquear tutor',
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert(
+            isBlocked ? 'Desbloquear?' : 'Bloquear este tutor?',
+            isBlocked ? 'Vocês voltam a trocar mensagens.' : 'Vocês param de trocar mensagens.',
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: isBlocked ? 'Desbloquear' : 'Bloquear',
+                style: 'destructive',
+                onPress: () => blockMutation.mutate(),
+              },
+            ],
+          ),
+      },
+    ]);
+  };
 
   // Marca como lido sempre que abre ou que mensagens novas chegam
   useEffect(() => {
@@ -183,6 +240,17 @@ export default function ChatScreen() {
               </Text>
             </Pressable>
           ),
+          headerRight: () =>
+            otherUserId ? (
+              <Pressable
+                onPress={onMore}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Mais ações"
+              >
+                <Ionicons name="ellipsis-horizontal" size={22} color={theme.text} />
+              </Pressable>
+            ) : null,
         }}
       />
       <KeyboardAvoidingView
@@ -281,6 +349,14 @@ export default function ChatScreen() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+      {otherUserId ? (
+        <ReportModal
+          visible={reportOpen}
+          onClose={() => setReportOpen(false)}
+          targetKind="user"
+          targetId={otherUserId}
+        />
+      ) : null}
     </View>
   );
 }
