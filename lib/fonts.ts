@@ -8,4 +8,8 @@ export const FONTS = {
   bodySemibold: 'Inter_600SemiBold',
   bodyBold: 'Inter_700Bold',
   bodyExtrabold: 'Inter_800ExtraBold',
+  // Serifada editorial (Playfair Display) — Jornal Pet: masthead + títulos.
+  serif: 'PlayfairDisplay_700Bold',
+  serifSemibold: 'PlayfairDisplay_600SemiBold',
+  serifExtrabold: 'PlayfairDisplay_800ExtraBold',
 } as const;

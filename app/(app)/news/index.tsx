@@ -93,10 +93,10 @@ export default function NewsPortalScreen() {
 
             <Text
               style={{
-                fontFamily: FONTS.display,
-                fontSize: 38,
+                fontFamily: FONTS.serifExtrabold,
+                fontSize: 46,
                 color: theme.text,
-                letterSpacing: -1,
+                letterSpacing: -0.5,
                 textAlign: 'center',
                 marginTop: 10,
               }}
@@ -181,7 +181,7 @@ export default function NewsPortalScreen() {
                   <View style={{ marginTop: 26 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Text style={{ fontSize: 16 }}>📰</Text>
-                      <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: theme.text, letterSpacing: -0.3 }}>
+                      <Text style={{ fontFamily: FONTS.serif, fontSize: 18, color: theme.text, letterSpacing: -0.3 }}>
                         Geral
                       </Text>
                       <View style={{ flex: 1, height: 2, backgroundColor: theme.brand, opacity: 0.6 }} />
@@ -226,7 +226,7 @@ function RuledHeader({ label, color }: { label: string; color: string }) {
   const { theme } = useTheme();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-      <Text style={{ fontFamily: FONTS.display, fontSize: 19, color: theme.text, letterSpacing: -0.3 }}>
+      <Text style={{ fontFamily: FONTS.serif, fontSize: 19, color: theme.text, letterSpacing: -0.3 }}>
         {label}
       </Text>
       <View style={{ flex: 1, height: 2, backgroundColor: color, opacity: 0.85 }} />
@@ -259,72 +259,94 @@ function HeroCard({ article }: { article: NewsArticle }) {
     ? format(new Date(article.published_at), "d 'de' MMM, yyyy", { locale: ptBR })
     : null;
 
+  const hasCover = !!article.cover_url;
   return (
     <Link href={{ pathname: '/(app)/news/[slug]', params: { slug: article.slug } }} asChild>
       <Pressable
         accessibilityRole="link"
         accessibilityLabel={article.title}
         style={({ pressed }) => ({
-          backgroundColor: theme.surface,
           borderRadius: 18,
-          borderWidth: 1,
-          borderColor: theme.borderLight,
           overflow: 'hidden',
-          opacity: pressed ? 0.95 : 1,
+          backgroundColor: cat?.color ?? theme.brand,
+          opacity: pressed ? 0.96 : 1,
         })}
       >
-        {article.cover_url ? (
-          <Image
-            source={{ uri: article.cover_url }}
-            style={{ width: '100%', aspectRatio: 16 / 9, backgroundColor: theme.brandSurface }}
-            contentFit="cover"
-            transition={200}
-          />
-        ) : (
-          <View
-            style={{
-              width: '100%',
-              aspectRatio: 16 / 9,
-              backgroundColor: cat?.color ? `${cat.color}22` : theme.brandSurface,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 64 }}>{cat?.emoji ?? '📰'}</Text>
-          </View>
-        )}
+        {/* Capa de revista: imagem grande + título serifado branco sobreposto */}
+        <View style={{ width: '100%', aspectRatio: 4 / 3, position: 'relative' }}>
+          {hasCover ? (
+            <Image
+              source={{ uri: article.cover_url! }}
+              style={{ width: '100%', height: '100%' }}
+              contentFit="cover"
+              transition={200}
+              cachePolicy="memory-disk"
+            />
+          ) : (
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 96, opacity: 0.5 }}>{cat?.emoji ?? '📰'}</Text>
+            </View>
+          )}
 
-        <View style={{ padding: 16, gap: 8 }}>
-          {cat ? <CatChip cat={cat} /> : null}
-          <Text
-            style={{
-              fontFamily: FONTS.display,
-              fontSize: 26,
-              color: theme.text,
-              lineHeight: 31,
-              letterSpacing: -0.5,
-            }}
-          >
-            {article.title}
-          </Text>
-          {article.dek ? (
-            <Text
-              style={{ fontFamily: FONTS.body, fontSize: 14.5, color: theme.textMuted, lineHeight: 21 }}
-              numberOfLines={3}
-            >
-              {article.dek}
-            </Text>
-          ) : null}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-            <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: theme.textDim }}>
-              {article.author_name}
-            </Text>
-            {dateLabel ? (
-              <>
-                <Text style={{ color: theme.textDim, fontSize: 12 }}>·</Text>
-                <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>{dateLabel}</Text>
-              </>
+          {/* Faixas escuras (fake-gradient) pra legibilidade do texto sobreposto */}
+          <View
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '70%', backgroundColor: 'rgba(10,8,6,0.32)' }}
+            pointerEvents="none"
+          />
+          <View
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '42%', backgroundColor: 'rgba(10,8,6,0.44)' }}
+            pointerEvents="none"
+          />
+
+          {/* Conteúdo sobreposto */}
+          <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, gap: 7 }}>
+            {cat ? (
+              <View style={{ flexDirection: 'row' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 5,
+                    backgroundColor: cat.color,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 999,
+                  }}
+                >
+                  <Text style={{ fontSize: 11 }}>{cat.emoji}</Text>
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10.5, color: '#fff', letterSpacing: 0.4 }}>
+                    {cat.name.toUpperCase()}
+                  </Text>
+                </View>
+              </View>
             ) : null}
+            <Text
+              style={{ fontFamily: FONTS.serifExtrabold, fontSize: 28, color: '#fff', lineHeight: 33, letterSpacing: -0.3 }}
+              numberOfLines={4}
+            >
+              {article.title}
+            </Text>
+            {article.dek ? (
+              <Text
+                style={{ fontFamily: FONTS.body, fontSize: 14, color: 'rgba(255,255,255,0.92)', lineHeight: 20 }}
+                numberOfLines={2}
+              >
+                {article.dek}
+              </Text>
+            ) : null}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+              <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
+                {article.author_name}
+              </Text>
+              {dateLabel ? (
+                <>
+                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>·</Text>
+                  <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
+                    {dateLabel}
+                  </Text>
+                </>
+              ) : null}
+            </View>
           </View>
         </View>
       </Pressable>
@@ -379,7 +401,7 @@ function SecondaryCard({ article }: { article: NewsArticle }) {
             </Text>
           ) : null}
           <Text
-            style={{ fontFamily: FONTS.displayMedium, fontSize: 15, color: theme.text, lineHeight: 19 }}
+            style={{ fontFamily: FONTS.serifSemibold, fontSize: 16, color: theme.text, lineHeight: 20 }}
             numberOfLines={3}
           >
             {article.title}
@@ -390,34 +412,13 @@ function SecondaryCard({ article }: { article: NewsArticle }) {
   );
 }
 
-function CatChip({ cat }: { cat: NewsCategory }) {
-  return (
-    <View style={{ flexDirection: 'row' }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 5,
-          backgroundColor: `${cat.color}1A`,
-          paddingHorizontal: 10,
-          paddingVertical: 4,
-          borderRadius: 999,
-        }}
-      >
-        <Text style={{ fontSize: 12 }}>{cat.emoji}</Text>
-        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11.5, color: cat.color }}>{cat.name}</Text>
-      </View>
-    </View>
-  );
-}
-
 function EditoriaSection({ category, items }: { category: NewsCategory; items: NewsArticle[] }) {
   const { theme } = useTheme();
   return (
     <View style={{ marginTop: 26 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Text style={{ fontSize: 16 }}>{category.emoji}</Text>
-        <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: theme.text, letterSpacing: -0.3 }}>
+        <Text style={{ fontFamily: FONTS.serif, fontSize: 18, color: theme.text, letterSpacing: -0.3 }}>
           {category.name}
         </Text>
         <View style={{ flex: 1, height: 2, backgroundColor: category.color, opacity: 0.7 }} />
@@ -452,7 +453,7 @@ function MostReadRow({ article, rank }: { article: NewsArticle; rank: number }) 
           opacity: pressed ? 0.7 : 1,
         })}
       >
-        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: theme.brand, width: 30, textAlign: 'center' }}>
+        <Text style={{ fontFamily: FONTS.serif, fontSize: 28, color: theme.brand, width: 32, textAlign: 'center' }}>
           {rank}
         </Text>
         <View style={{ flex: 1 }}>

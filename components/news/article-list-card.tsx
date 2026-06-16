@@ -83,10 +83,10 @@ export function ArticleListCard({ article }: { article: NewsArticle }) {
 
           <Text
             style={{
-              fontFamily: FONTS.displaySemibold,
-              fontSize: 15,
+              fontFamily: FONTS.serifSemibold,
+              fontSize: 16,
               color: theme.text,
-              lineHeight: 20,
+              lineHeight: 21,
             }}
             numberOfLines={2}
           >

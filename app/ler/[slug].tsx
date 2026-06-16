@@ -258,11 +258,11 @@ export default function PublicArticleReader() {
 
               <Text
                 style={{
-                  fontFamily: FONTS.display,
-                  fontSize: 27,
+                  fontFamily: FONTS.serifExtrabold,
+                  fontSize: 28,
                   color: theme.text,
-                  lineHeight: 33,
-                  letterSpacing: -0.5,
+                  lineHeight: 35,
+                  letterSpacing: -0.3,
                 }}
               >
                 {article.title}
