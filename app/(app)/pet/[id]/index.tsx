@@ -82,7 +82,21 @@ export default function PetProfileScreen() {
   });
   // Achata as páginas. O índice de mídia (pra galeria) é calculado sobre esta
   // lista achatada — a galeria usa a lista cheia na mesma ordem, então bate.
-  const posts = postsQuery.data?.pages.flatMap((p) => p.items) ?? [];
+  // Memoizado: sem isso `flatMap` recria um array novo a cada render (derrota
+  // qualquer memo abaixo). O `mediaOffsets` é um prefix-sum EXCLUSIVO dos
+  // media.length (offset[k] = soma de media.length dos posts ANTERIORES a k),
+  // derivado do MESMO `posts` — substitui o loop O(n) por tile do renderItem
+  // por um lookup O(1), produzindo exatamente o mesmo valor `start` da galeria.
+  const { posts, mediaOffsets } = useMemo(() => {
+    const flat = postsQuery.data?.pages.flatMap((p) => p.items) ?? [];
+    const offsets = new Array<number>(flat.length);
+    let acc = 0;
+    for (let i = 0; i < flat.length; i++) {
+      offsets[i] = acc;
+      acc += flat[i].media.length;
+    }
+    return { posts: flat, mediaOffsets: offsets };
+  }, [postsQuery.data]);
   // Dados médicos: só busca se for o DONO. Visitante (perfil público) nem
   // chega a baixar a carteira de vacinas/antiparasitário do pet alheio.
   const vaccinationsQuery = useQuery({
@@ -241,6 +255,14 @@ export default function PetProfileScreen() {
     [statsQuery.data],
   );
 
+  // Aliases estáveis pras deps do `header` useMemo: `.mutate` mantém identidade
+  // entre renders (ao contrário do objeto da mutation), e `.isPending` é o único
+  // escalar que realmente afeta o render do header.
+  const followMutate = followMutation.mutate;
+  const openDmMutate = openDmMutation.mutate;
+  const followPending = followMutation.isPending;
+  const messagePending = openDmMutation.isPending;
+
   const header = useMemo(() => {
     if (!pet) return null;
     return (
@@ -260,7 +282,9 @@ export default function PetProfileScreen() {
               toast.info('Escolha um pet', 'Crie ou selecione um pet pra seguir.');
               return;
             }
-            followMutation.mutate();
+            // `.mutate` tem identidade estável (não entra nas deps do memo, ao
+            // contrário do objeto followMutation que muda a cada render).
+            followMutate();
           }}
           onMessage={() => {
             if (blockBetweenQuery.data) {
@@ -270,10 +294,10 @@ export default function PetProfileScreen() {
               );
               return;
             }
-            openDmMutation.mutate();
+            openDmMutate();
           }}
-          followLoading={followMutation.isPending}
-          messageLoading={openDmMutation.isPending}
+          followLoading={followPending}
+          messageLoading={messagePending}
         />
 
         {/* Banners contextuais (aniversário / memorial) */}
@@ -378,8 +402,18 @@ export default function PetProfileScreen() {
     isOwn,
     ownerIsProQuery.data,
     followingQuery.data,
-    followMutation,
-    openDmMutation,
+    // Antes: followMutation/openDmMutation (objetos com identidade nova a cada
+    // render → memo nunca cacheava). Agora só os escalares .isPending; o .mutate
+    // (followMutate/openDmMutate) é estável e não precisa de dep.
+    followPending,
+    messagePending,
+    // activePet + os flags de bloqueio são lidos dentro dos handlers onFollow/
+    // onMessage — incluí-los mantém o guard (Onda 2) e o gate de bloqueio
+    // sempre com o valor atual (antes ficavam omitidos = potencialmente stale).
+    activePet,
+    toast,
+    blockBetweenQuery.data,
+    blockedQuery.data,
     vaccinationsQuery.data,
     parasiteSummaryQuery.data,
     id,
@@ -497,8 +531,8 @@ export default function PetProfileScreen() {
         ListHeaderComponent={header}
         renderItem={({ item, index: postIndex }) => {
           const cover = item.media[0];
-          let mediaIndex = 0;
-          for (let i = 0; i < postIndex; i++) mediaIndex += posts[i].media.length;
+          // O(1): prefix-sum pre-computado em vez do loop O(postIndex) por tile.
+          const mediaIndex = mediaOffsets[postIndex];
           const hasMultiple = item.media.length > 1;
           return (
             <Pressable
@@ -528,6 +562,10 @@ export default function PetProfileScreen() {
                     source={{ uri: cover.url }}
                     style={{ width: '100%', height: '100%' }}
                     contentFit="cover"
+                    // Evita flash de imagem reciclada ao rolar o grid (FlatList
+                    // reusa views). cachePolicy igual ao padrao de pet-3d-emoji.
+                    recyclingKey={item.id}
+                    cachePolicy="memory-disk"
                   />
                   {hasMultiple ? (
                     <View
