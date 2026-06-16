@@ -103,6 +103,27 @@ export default function PublicArticleReader() {
           description={article.dek ?? undefined}
           image={article.cover_url ?? undefined}
           type="article"
+          canonicalUrl={`https://maestropet.com/ler/${article.slug}`}
+          jsonLd={{
+            '@context': 'https://schema.org',
+            '@type': 'NewsArticle',
+            headline: article.title,
+            description: article.dek ?? undefined,
+            image: article.cover_url ?? undefined,
+            datePublished: article.published_at ?? undefined,
+            dateModified: article.updated_at ?? article.published_at ?? undefined,
+            author: { '@type': 'Organization', name: article.author_name },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Maestro Pet',
+              logo: { '@type': 'ImageObject', url: 'https://maestropet.com/icon-512.png' },
+            },
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': `https://maestropet.com/ler/${article.slug}`,
+            },
+            url: `https://maestropet.com/ler/${article.slug}`,
+          }}
         />
       ) : null}
 

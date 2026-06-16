@@ -28,7 +28,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const APP_URL = Deno.env.get('PUBLIC_APP_URL') ?? 'https://pet.social';
+const APP_URL = Deno.env.get('PUBLIC_APP_URL') ?? 'https://maestropet.com';
 const DEFAULT_IMAGE = `${APP_URL}/assets/assets/images/icon-512.png`;
 const BRAND_ORANGE = '#F97316';
 const BRAND_BG = '#FFFBF5';
@@ -64,6 +64,14 @@ serve(async (req) => {
     const segments = url.pathname.split('/').filter(Boolean);
     // Procura "share" como entry point — robusto a vários path prefixes
     const shareIdx = segments.indexOf('share');
+
+    // sitemap.xml — descoberta de URLs pro Google (rewrite /sitemap.xml ->
+    // .../share-meta/sitemap). Gateado em shareIdx<0 pra NÃO colidir com uma
+    // matéria de slug 'sitemap' (/share/news/sitemap tem segmento 'share').
+    const last = segments[segments.length - 1] ?? '';
+    if (shareIdx < 0 && (last === 'sitemap' || last === 'sitemap.xml')) {
+      return await sitemapResponse();
+    }
     const after = shareIdx >= 0 ? segments.slice(shareIdx + 1) : segments;
     const [kind, id] = after;
 
@@ -117,6 +125,9 @@ interface PageMeta {
   image: string;
   ogType: 'article' | 'profile' | 'website';
   jsonLd?: object;
+  /** HTML do conteudo visivel (so pra crawler): corpo da materia renderizado.
+   *  Sem isso o crawler so ve <meta> + a tela "Abrindo..." (zero texto indexavel). */
+  articleHtml?: string;
 }
 
 async function fetchPetMeta(petId: string): Promise<PageMeta | null> {
@@ -222,21 +233,31 @@ async function fetchIdCardMeta(token: string): Promise<PageMeta | null> {
 async function fetchNewsMeta(slug: string): Promise<PageMeta | null> {
   const { data, error } = await supabase
     .from('news_articles')
-    .select('slug, title, dek, cover_url, published_at, author_name, status')
+    .select(
+      'slug, title, dek, cover_url, cover_caption, body, published_at, updated_at, author_name, status',
+    )
     .eq('slug', slug)
     .eq('status', 'published') // service role ignora RLS — só compartilha publicadas
     .maybeSingle();
   if (error || !data) return null;
 
-  const description = data.dek
-    ? truncate(data.dek, 160)
-    : `Leia no Jornal Pet do Maestro Pet.`;
+  const description = data.dek ? truncate(data.dek, 160) : `Leia no Jornal Pet do Maestro Pet.`;
 
   return {
     title: `${data.title} · Maestro Pet`,
     description,
     image: data.cover_url ?? DEFAULT_IMAGE,
     ogType: 'article',
+    articleHtml: renderArticleHtml({
+      title: data.title,
+      dek: data.dek,
+      coverUrl: data.cover_url,
+      coverCaption: data.cover_caption,
+      body: data.body ?? '',
+      authorName: data.author_name ?? 'Redação Maestro Pet',
+      publishedAt: data.published_at,
+      slug,
+    }),
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'NewsArticle',
@@ -244,11 +265,70 @@ async function fetchNewsMeta(slug: string): Promise<PageMeta | null> {
       description,
       image: data.cover_url ?? undefined,
       datePublished: data.published_at ?? undefined,
+      dateModified: data.updated_at ?? data.published_at ?? undefined,
       author: { '@type': 'Organization', name: data.author_name ?? 'Maestro Pet' },
-      publisher: { '@type': 'Organization', name: 'Maestro Pet' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Maestro Pet',
+        logo: { '@type': 'ImageObject', url: DEFAULT_IMAGE },
+      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': `${APP_URL}/ler/${slug}` },
       url: `${APP_URL}/ler/${slug}`,
     },
   };
+}
+
+/**
+ * Renderiza o corpo da matéria como HTML semântico (só pro crawler ler). Espelha
+ * o parser do client (components/news/article-body.tsx): bloco que é só uma
+ * imagem markdown ![legenda](url) vira <figure>; o resto vira <p>. Tudo escapado.
+ */
+function renderArticleHtml(a: {
+  title: string;
+  dek: string | null;
+  coverUrl: string | null;
+  coverCaption: string | null;
+  body: string;
+  authorName: string;
+  publishedAt: string | null;
+  slug: string;
+}): string {
+  const IMG_RE = /^!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)$/;
+  const blocks = (a.body || '')
+    .replace(/\r\n/g, '\n')
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 0)
+    .map((b) => {
+      const m = b.match(IMG_RE);
+      if (m) {
+        const cap = (m[1] ?? '').trim();
+        return `<figure><img src="${escape(m[2])}" alt="${escape(cap)}" loading="lazy" />${
+          cap ? `<figcaption>${escape(cap)}</figcaption>` : ''
+        }</figure>`;
+      }
+      return `<p>${escape(b)}</p>`;
+    })
+    .join('\n');
+
+  const cover = a.coverUrl
+    ? `<figure><img src="${escape(a.coverUrl)}" alt="${escape(a.title)}" />${
+        a.coverCaption ? `<figcaption>${escape(a.coverCaption)}</figcaption>` : ''
+      }</figure>`
+    : '';
+  const dek = a.dek ? `<p class="dek">${escape(a.dek)}</p>` : '';
+  const byline = `<p class="byline">Por ${escape(a.authorName)}${
+    a.publishedAt ? ` · <time datetime="${escape(a.publishedAt)}">${escape(a.publishedAt.slice(0, 10))}</time>` : ''
+  }</p>`;
+
+  return `<article>
+    <h1>${escape(a.title)}</h1>
+    ${dek}
+    ${byline}
+    ${cover}
+    ${blocks}
+    <p class="cta"><a href="/ler/${escape(a.slug)}">Leia no Maestro Pet — crie sua conta grátis 🐾</a></p>
+  </article>`;
 }
 
 // ============================================================================
@@ -257,7 +337,7 @@ async function fetchNewsMeta(slug: string): Promise<PageMeta | null> {
 
 function buildHtml(meta: PageMeta, canonicalUrl: string, spaPath: string, isBot: boolean): string {
   const jsonLdScript = meta.jsonLd
-    ? `<script type="application/ld+json">${JSON.stringify(meta.jsonLd)}</script>`
+    ? `<script type="application/ld+json">${JSON.stringify(meta.jsonLd).replace(/</g, '\\u003c')}</script>`
     : '';
 
   // Pra humanos: meta-refresh + JS replace pra evitar voltar com Back button
@@ -306,17 +386,30 @@ function buildHtml(meta: PageMeta, canonicalUrl: string, spaPath: string, isBot:
     .text { font-size:14px; color:#525252; max-width:280px; text-align:center; line-height:1.5; }
     @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
     a { color:${BRAND_ORANGE}; text-decoration:none; font-weight:600; }
+    .article { max-width:680px; margin:0 auto; padding:24px 18px 64px; color:#1A1410; line-height:1.6; }
+    .article h1 { font-size:30px; line-height:1.2; margin:0 0 12px; }
+    .article .dek { font-size:18px; color:#525252; margin:0 0 12px; }
+    .article .byline { font-size:13px; color:#737373; margin:0 0 18px; }
+    .article p { font-size:17px; margin:0 0 16px; }
+    .article figure { margin:0 0 16px; }
+    .article img { width:100%; height:auto; border-radius:12px; }
+    .article figcaption { font-size:13px; color:#737373; font-style:italic; text-align:center; margin-top:6px; }
+    .article .cta a { display:inline-block; margin-top:8px; }
   </style>
 </head>
 <body>
-  <div class="container">
+  ${
+    isBot && meta.articleHtml
+      ? `<main class="article">${meta.articleHtml}</main>`
+      : `<div class="container">
     <div class="pulse">🐾</div>
     <p class="text">
       Abrindo Maestro Pet...
       <br />
       <noscript>JavaScript desativado? <a href="${escape(spaPath)}">Continuar</a></noscript>
     </p>
-  </div>
+  </div>`
+  }
 </body>
 </html>`;
 }
@@ -350,6 +443,52 @@ function notFoundHtml(reason: string): string {
   </div>
 </body>
 </html>`;
+}
+
+// ============================================================================
+// Sitemap
+// ============================================================================
+
+/**
+ * sitemap.xml — só URLs PÚBLICAS (indexáveis sem login): a home + cada matéria
+ * publicada em /ler/<slug>. NÃO inclui o portal /news nem /news/category|tag
+ * (essas rotas estão atrás do gate de auth → Google só veria o redirect).
+ */
+async function sitemapResponse(): Promise<Response> {
+  const urls: { loc: string; lastmod?: string }[] = [{ loc: `${APP_URL}/` }];
+  try {
+    const { data } = await supabase
+      .from('news_articles')
+      .select('slug, updated_at, published_at')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(5000);
+    for (const a of data ?? []) {
+      const lm = (a.updated_at ?? a.published_at ?? '').slice(0, 10);
+      urls.push({ loc: `${APP_URL}/ler/${a.slug}`, lastmod: lm || undefined });
+    }
+  } catch (e) {
+    console.error('[share-meta] sitemap error', e);
+  }
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls
+  .map(
+    (u) =>
+      `  <url><loc>${escape(u.loc)}</loc>${u.lastmod ? `<lastmod>${escape(u.lastmod)}</lastmod>` : ''}</url>`,
+  )
+  .join('\n')}
+</urlset>`;
+
+  return new Response(xml, {
+    status: 200,
+    headers: {
+      'content-type': 'application/xml; charset=utf-8',
+      'cache-control': 'public, max-age=3600, s-maxage=3600',
+      'access-control-allow-origin': '*',
+    },
+  });
 }
 
 // ============================================================================

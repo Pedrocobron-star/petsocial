@@ -75,10 +75,10 @@ export function petIdCardUrl(token: string): string {
 
 /**
  * Matéria do jornal → leitor PÚBLICO /ler/{slug} (lê SEM login = aquisição).
- * Aponta DIRETO pro /ler pra não depender do redeploy da edge function
- * share-meta. Quando o `news` branch da share-meta estiver no ar, dá pra trocar
- * por `${shareBaseUrl()}/share/news/${slug}` pra ganhar o preview rico (OG) no
- * WhatsApp/Twitter — o código da função já está pronto.
+ * A /ler tem OG + JSON-LD Article + canonical (indexável pelo Googlebot, que roda
+ * JS). Pra preview RICO em crawlers sem-JS (WhatsApp/FB/Twitter) basta trocar por
+ * `${shareBaseUrl()}/share/news/${slug}` — a edge share-meta já serve HTML SSR do
+ * corpo (Onda C). NÃO trocar até a edge ser redeployada (senão /share/news → 404).
  */
 export function newsUrl(slug: string): string {
   if (Platform.OS === 'web') {

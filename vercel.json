@@ -7,6 +7,10 @@
       "source": "/share/:kind/:id",
       "destination": "https://aefrcwysifgniogumxwk.supabase.co/functions/v1/share-meta/share/:kind/:id"
     },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://aefrcwysifgniogumxwk.supabase.co/functions/v1/share-meta/sitemap"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
