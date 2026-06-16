@@ -29,6 +29,18 @@
 --     >>> AQUI O FURO FECHA. <<<
 --
 -- Idempotente, ASCII-only.
+--
+-- >>> STATUS: Migration A + Migration B APLICADAS em 2026-06-16 (verificado ao
+--     vivo: dono le pet_private, visitante bloqueado [42501], carteirinha
+--     publica via RPC ok, 0 colunas sensiveis restantes em pets). <<<
+--
+-- AVISO ao re-rodar: a SECAO 4 (triggers de espelhamento) era TRANSITORIA e ja
+-- foi dropada pela Migration B. NAO re-execute a secao 4 contra o schema atual:
+-- a funcao/triggers referenciam colunas (NEW.microchip_number etc.) que NAO
+-- existem mais em pets => daria erro. As secoes 1-3, 5 e 6 seguem idempotentes.
+-- PENDENTE: redeploy da edge function share-meta (`supabase functions deploy
+-- share-meta --no-verify-jwt`) pra OG de link de carteirinha resolver o token
+-- via pet_private (ate la, preview de link compartilhado cai no generico).
 -- ============================================================================
 
 -- ============================================================================
