@@ -455,7 +455,17 @@ function notFoundHtml(reason: string): string {
  * (essas rotas estão atrás do gate de auth → Google só veria o redirect).
  */
 async function sitemapResponse(): Promise<Response> {
-  const urls: { loc: string; lastmod?: string }[] = [{ loc: `${APP_URL}/` }];
+  // Rotas estaticas marketing/legais (espelha o public/sitemap.xml antigo, que
+  // sera removido quando esta edge estiver no ar).
+  const urls: { loc: string; lastmod?: string }[] = [
+    { loc: `${APP_URL}/` },
+    { loc: `${APP_URL}/welcome` },
+    { loc: `${APP_URL}/pro` },
+    { loc: `${APP_URL}/legal/about` },
+    { loc: `${APP_URL}/legal/terms` },
+    { loc: `${APP_URL}/legal/privacy` },
+    { loc: `${APP_URL}/legal/faq` },
+  ];
   try {
     const { data } = await supabase
       .from('news_articles')
