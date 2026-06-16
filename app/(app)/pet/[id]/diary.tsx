@@ -65,9 +65,11 @@ export default function PetDiaryScreen() {
     enabled: !!id,
   });
   const postsQuery = useQuery({
-    queryKey: qk.petPosts(id, activePet!.id),
-    queryFn: () => fetchPostsByPet(id, activePet!.id),
-    enabled: !!id && !!activePet,
+    // Null-safe: activePet pode ser null em cold-load / conta sem pet (a queryKey
+    // é montada no render, antes do `enabled`). Mesmo fix de gallery.tsx/index.tsx.
+    queryKey: qk.petPosts(id, activePet?.id ?? 'anon'),
+    queryFn: () => fetchPostsByPet(id, activePet?.id ?? null),
+    enabled: !!id,
   });
   const vacQuery = useQuery({
     queryKey: qk.vaccinations(id),

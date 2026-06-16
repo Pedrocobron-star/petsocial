@@ -71,10 +71,14 @@ export default function PetProfileScreen() {
     // queryKey null-safe: o `activePet` pode estar null por um instante (logo
     // após login, antes dos pets carregarem) ou pra conta sem pet.
     queryKey: qk.petPostsPaged(id, activePet?.id ?? 'anon'),
-    queryFn: ({ pageParam }) => fetchPetPostsPage(id, activePet!.id, pageParam),
+    // O grid mostra posts do pet do PERFIL (id) — NÃO depende do viewer ter um
+    // activePet. Conta sem pet / cold-load também vê os posts (viewer null ->
+    // liked_by_me=false). Antes `&& !!activePet` deixava a query desabilitada e
+    // o ListEmpty caía em "Sem posts ainda" FALSO.
+    queryFn: ({ pageParam }) => fetchPetPostsPage(id, activePet?.id ?? null, pageParam),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    enabled: !!id && !!activePet,
+    enabled: !!id,
   });
   // Achata as páginas. O índice de mídia (pra galeria) é calculado sobre esta
   // lista achatada — a galeria usa a lista cheia na mesma ordem, então bate.
@@ -232,7 +236,16 @@ export default function PetProfileScreen() {
           isOwn={isOwn}
           ownerIsPro={!!ownerIsProQuery.data}
           isFollowing={!!followingQuery.data}
-          onFollow={() => followMutation.mutate()}
+          onFollow={() => {
+            // Viewer logado SEM pet ativo (conta sem pet / janela transitória
+            // pós-login): toggleFollow(activePet!.id) lançaria e o react-query
+            // engoliria → botão morto. Guarda + feedback claro.
+            if (!activePet) {
+              toast.info('Escolha um pet', 'Crie ou selecione um pet pra seguir.');
+              return;
+            }
+            followMutation.mutate();
+          }}
           onMessage={() => {
             if (blockBetweenQuery.data) {
               toast.info(
@@ -356,6 +369,33 @@ export default function PetProfileScreen() {
     id,
     theme,
   ]);
+
+  // fetchPet usa maybeSingle() -> retorna null SEM throw quando o pet nao
+  // existe / foi deletado / RLS bloqueia. Separar "carregando" (skeleton) de
+  // "sucesso-com-null" (nao encontrado) pra nao prender no PetProfileSkeleton
+  // eterno num deep-link quebrado. Mesmo tratamento de id-card.tsx / edit.tsx.
+  if (!petQuery.isLoading && !pet) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.bg }}>
+        <Stack.Screen options={{ title: 'Pet' }} />
+        <EmptyState
+          emoji="🐾"
+          title="Pet não encontrado"
+          description="Esse pet não existe mais ou você não tem acesso a ele."
+          action={
+            <Pressable
+              hitSlop={10}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace('/(app)/(tabs)'))}
+            >
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.brand }}>
+                Voltar
+              </Text>
+            </Pressable>
+          }
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

@@ -501,7 +501,10 @@ export async function clearRsvp(meetupId: string, petId: string) {
 
 // -------- Pet detail / Posts by pet --------
 
-export async function fetchPostsByPet(petId: string, viewerPetId: string): Promise<PostWithDetails[]> {
+export async function fetchPostsByPet(
+  petId: string,
+  viewerPetId: string | null,
+): Promise<PostWithDetails[]> {
   const { data, error } = await supabase
     .from('posts')
     .select('id, pet_id, caption, created_at, updated_at, reposted_from, pet:pets!posts_pet_id_fkey(*), media:post_media(*)')
@@ -515,7 +518,10 @@ export async function fetchPostsByPet(petId: string, viewerPetId: string): Promi
   const ids = rows.map((r) => r.id);
   const [statsRes, likesRes] = await Promise.all([
     supabase.from('post_stats').select('*').in('post_id', ids),
-    supabase.from('likes').select('post_id').eq('pet_id', viewerPetId).in('post_id', ids),
+    // viewer sem pet (conta nova / cold-load): pula o likes -> liked_by_me=false
+    viewerPetId
+      ? supabase.from('likes').select('post_id').eq('pet_id', viewerPetId).in('post_id', ids)
+      : Promise.resolve({ data: [] as { post_id: string }[], error: null }),
   ]);
   if (statsRes.error) throw statsRes.error;
   if (likesRes.error) throw likesRes.error;
@@ -549,7 +555,7 @@ export interface PetPostsPage {
  */
 export async function fetchPetPostsPage(
   petId: string,
-  viewerPetId: string,
+  viewerPetId: string | null,
   cursor?: string | null,
 ): Promise<PetPostsPage> {
   const PAGE = 18; // múltiplo de 3 (grid de 3 colunas)
@@ -571,7 +577,10 @@ export async function fetchPetPostsPage(
   const ids = rows.map((r) => r.id);
   const [statsRes, likesRes] = await Promise.all([
     supabase.from('post_stats').select('*').in('post_id', ids),
-    supabase.from('likes').select('post_id').eq('pet_id', viewerPetId).in('post_id', ids),
+    // viewer sem pet (conta nova / cold-load): pula o likes -> liked_by_me=false
+    viewerPetId
+      ? supabase.from('likes').select('post_id').eq('pet_id', viewerPetId).in('post_id', ids)
+      : Promise.resolve({ data: [] as { post_id: string }[], error: null }),
   ]);
   if (statsRes.error) throw statsRes.error;
   if (likesRes.error) throw likesRes.error;

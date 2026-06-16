@@ -31,6 +31,17 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
 
   const parasiteAlert =
     !!parasiteSummary && (parasiteSummary.overdue > 0 || parasiteSummary.due_soon > 0);
+  // Texto do selo do card Saúde. Vencidos (vacinas + antiparasitário) = "pendente";
+  // só "vencendo em breve" (due_soon) = "a vencer". Antes somava só os vencidos
+  // -> exibia "0 pendente" quando só havia due_soon.
+  const overduePending = overdue + (parasiteSummary?.overdue ?? 0);
+  const dueSoonCount = parasiteSummary?.due_soon ?? 0;
+  const healthBadgeLabel =
+    overduePending > 0
+      ? `${overduePending} pendente`
+      : dueSoonCount > 0
+        ? `${dueSoonCount} a vencer`
+        : null;
 
   return (
     <Animated.View entering={FadeInUp.duration(360).delay(100)}>
@@ -180,7 +191,7 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
                         }}
                       >
                         <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10, color: '#fff' }}>
-                          {overdue + (parasiteSummary?.overdue ?? 0)} pendente
+                          {healthBadgeLabel}
                         </Text>
                       </View>
                     ) : null}

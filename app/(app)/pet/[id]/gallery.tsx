@@ -39,9 +39,12 @@ export default function PetGalleryScreen() {
     enabled: !!id,
   });
   const postsQuery = useQuery({
-    queryKey: qk.petPosts(id, activePet!.id),
-    queryFn: () => fetchPostsByPet(id, activePet!.id),
-    enabled: !!id && !!activePet,
+    // queryKey é montada no render (antes do `enabled`): activePet pode ser null
+    // em cold-load / conta sem pet -> activePet!.id crashava. Null-safe + a
+    // galeria mostra posts do pet do PERFIL (viewer null -> liked_by_me=false).
+    queryKey: qk.petPosts(id, activePet?.id ?? 'anon'),
+    queryFn: () => fetchPostsByPet(id, activePet?.id ?? null),
+    enabled: !!id,
   });
 
   const items: GalleryItem[] = useMemo(() => {

@@ -27,6 +27,24 @@ export function PetPrivateNotice({ petName }: { petName?: string }) {
 }
 
 /**
+ * Aviso de "pet não encontrado" pras telas médicas/privadas quando o pet não
+ * existe mais / foi deletado / o RLS bloqueia (fetchPet resolve null). Evita o
+ * loader/skeleton eterno num deep-link pra pet que sumiu.
+ */
+export function PetNotFoundNotice() {
+  const { theme } = useTheme();
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.bg, justifyContent: 'center' }}>
+      <EmptyState
+        emoji="🐾"
+        title="Pet não encontrado"
+        description="Esse pet não existe mais ou você não tem acesso a ele."
+      />
+    </View>
+  );
+}
+
+/**
  * Guard pras telas médicas/privadas do pet. Retorna o elemento de "privado" se
  * o usuário NÃO pode ver (não é dono nem co-tutor); senão retorna null (a tela
  * segue normal). Compartilha o cache de `qk.pet(petId)`, então não refaz fetch.
@@ -55,7 +73,10 @@ export function usePetHealthGate(petId: string | undefined) {
   });
 
   // Pet ainda carregando → deixa a tela mostrar o próprio loader.
-  if (!pet) return null;
+  if (petQuery.isLoading) return null;
+  // Pet inexistente / deletado / sem acesso por RLS (fetchPet resolve null) →
+  // "não encontrado", em vez de prender a tela num loader/skeleton eterno.
+  if (!pet) return <PetNotFoundNotice />;
   if (isOwner) return null;
   // Sem sessão → não é dono nem co-tutor → privado.
   if (!me) return <PetPrivateNotice petName={pet.name} />;
