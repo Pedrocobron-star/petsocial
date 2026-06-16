@@ -36,7 +36,7 @@ export function TutorProfileHero({ profile, email, isPro, stats }: Props) {
       <View
         style={{
           height: 84,
-          backgroundColor: '#FFEDD5',
+          backgroundColor: theme.brandLight,
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -100,11 +100,13 @@ export function TutorProfileHero({ profile, email, isPro, stats }: Props) {
         <View style={{ alignItems: 'center', marginTop: 10, gap: 4 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Text
+              numberOfLines={1}
               style={{
                 fontFamily: FONTS.display,
                 fontSize: 26,
                 color: theme.text,
                 letterSpacing: -0.5,
+                flexShrink: 1,
               }}
             >
               {profile?.display_name ?? 'Tutor(a)'}
@@ -112,7 +114,10 @@ export function TutorProfileHero({ profile, email, isPro, stats }: Props) {
             {isPro ? <PremiumBadge size={18} /> : null}
           </View>
           {email ? (
-            <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
+            <Text
+              numberOfLines={1}
+              style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}
+            >
               {email}
             </Text>
           ) : null}
@@ -197,7 +202,7 @@ function StatPill({
       style={{
         flex: 1,
         alignItems: 'center',
-        backgroundColor: highlight ? '#FFEDD5' : theme.borderLight,
+        backgroundColor: highlight ? theme.brandLight : theme.borderLight,
         paddingVertical: 10,
         borderRadius: 14,
       }}
@@ -207,7 +212,7 @@ function StatPill({
         style={{
           fontFamily: FONTS.display,
           fontSize: 18,
-          color: highlight ? '#9A3412' : theme.text,
+          color: highlight ? theme.brandDark : theme.text,
           letterSpacing: -0.5,
         }}
       >
@@ -217,7 +222,7 @@ function StatPill({
         style={{
           fontFamily: FONTS.bodyMedium,
           fontSize: 10,
-          color: highlight ? '#9A3412' : theme.textDim,
+          color: highlight ? theme.brandDark : theme.textDim,
           textTransform: 'uppercase',
           letterSpacing: 0.6,
           marginTop: -2,

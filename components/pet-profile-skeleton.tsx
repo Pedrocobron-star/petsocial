@@ -15,7 +15,9 @@ export function PetProfileSkeleton() {
   return (
     <View style={{ backgroundColor: theme.bg, flex: 1 }}>
       {/* Banner placeholder */}
-      <View style={{ height: 96, backgroundColor: '#FFEDD5', opacity: 0.6 }} />
+      {/* Mesma cor do banner real do PetProfileHero (theme.brandLight) — sem
+          color-shift skeleton->hero, e adapta no dark (era #FFEDD5 hardcoded). */}
+      <View style={{ height: 96, backgroundColor: theme.brandLight, opacity: 0.6 }} />
 
       <CenteredColumn maxWidth={540} withMargin={false} style={{ paddingHorizontal: 16 }}>
         {/* Avatar circle */}

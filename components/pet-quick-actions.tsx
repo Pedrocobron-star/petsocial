@@ -56,6 +56,8 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
             asChild
           >
             <PressScale
+              accessibilityRole="button"
+              accessibilityLabel="Carteirinha digital oficial · ID, QR e compartilhamento"
               style={{
                 backgroundColor: '#FFFBF5',
                 borderRadius: 18,
@@ -155,6 +157,12 @@ export function PetQuickActions({ petId, isOwn, vaccinations, parasiteSummary }:
               asChild
             >
               <PressScale
+                accessibilityRole="button"
+                accessibilityLabel={
+                  healthBadgeLabel
+                    ? `Saúde, ${healthBadgeLabel}. Vacinas, vermífugo, remédios, vet e peso`
+                    : 'Saúde. Vacinas, vermífugo, remédios, vet e peso'
+                }
                 style={{
                   backgroundColor: '#1A1410',
                   borderRadius: 18,
@@ -275,6 +283,8 @@ function QuickCard({
   return (
     <Link href={href as never} asChild>
       <PressScale
+        accessibilityRole="button"
+        accessibilityLabel={`${label}. ${sub}`}
         style={{
           flex: 1,
           backgroundColor: tint,

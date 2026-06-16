@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HeaderHomeIcon } from '@/components/header-home-logo';
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { FONTS } from '@/lib/fonts';
 import { fetchProfile, fetchUserPostDates, qk } from '@/lib/queries';
+import { PRICING } from '@/lib/types';
 import { fetchMyTutorPoints, qkMyTutorPoints } from '@/lib/tutor-points';
 import { calculateStreak } from '@/lib/streak';
 import { useActivePet } from '@/providers/active-pet-provider';
@@ -62,7 +63,24 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={
+              profileQuery.isRefetching ||
+              streakQuery.isRefetching ||
+              tutorPtsQuery.isRefetching
+            }
+            onRefresh={() => {
+              profileQuery.refetch();
+              streakQuery.refetch();
+              tutorPtsQuery.refetch();
+            }}
+            tintColor={theme.brand}
+          />
+        }
+      >
         {/* Botão home (Mozart) no topo, igual às outras telas */}
         <View style={{ paddingHorizontal: 8, paddingTop: 2, paddingBottom: 2 }}>
           <HeaderHomeIcon />
@@ -160,7 +178,8 @@ export default function ProfileScreen() {
                       marginTop: 2,
                     }}
                   >
-                    Pets ilimitados, posts à vontade e mais — R$ 8,32/mês
+                    Pets ilimitados, posts à vontade e mais — R${' '}
+                    {PRICING.monthlyBRL.toFixed(2).replace('.', ',')}/mês
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#F59E0B" />
@@ -171,26 +190,26 @@ export default function ProfileScreen() {
               <Pressable
                 style={{
                   marginTop: 14,
-                  backgroundColor: '#FFFBEB',
+                  backgroundColor: theme.brandSurface,
                   borderRadius: 18,
                   padding: 14,
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 12,
                   borderWidth: 1,
-                  borderColor: '#FDE68A',
+                  borderColor: theme.brandLight,
                 }}
               >
                 <PremiumBadge size={28} />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: '#92400E' }}>
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.brandDark }}>
                     Pet Pro Ativo
                   </Text>
-                  <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#78350F' }}>
+                  <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.brandDark }}>
                     Toque pra gerenciar sua assinatura
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#92400E" />
+                <Ionicons name="chevron-forward" size={18} color={theme.brandDark} />
               </Pressable>
             </Link>
           )}

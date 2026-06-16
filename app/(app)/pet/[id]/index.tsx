@@ -3,7 +3,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { Image } from 'expo-image';
 import { Link, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Dimensions, FlatList, Pressable, Text, View } from 'react-native';
+import { Alert, Dimensions, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import { BirthdayBanner } from '@/components/birthday-banner';
 import { EmptyState } from '@/components/empty-state';
@@ -208,6 +208,22 @@ export default function PetProfileScreen() {
       url: petUrl(pet.id),
     });
     if (result === 'copied') Alert.alert('Link copiado', 'Pode colar onde quiser.');
+  };
+
+  // Pull-to-refresh: revalida perfil + stats + grid de posts. Não toca em
+  // privacidade nem nos guards — só re-busca o que já está habilitado.
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        petQuery.refetch(),
+        statsQuery.refetch(),
+        postsQuery.refetch(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   // Grid de posts — 3 colunas dentro do MAX_FEED_WIDTH
@@ -422,11 +438,21 @@ export default function PetProfileScreen() {
         options={{
           headerRight: () => (
             <View style={{ flexDirection: 'row', gap: 12, paddingRight: 8 }}>
-              <Pressable hitSlop={10} onPress={onShare}>
+              <Pressable
+                hitSlop={10}
+                onPress={onShare}
+                accessibilityRole="button"
+                accessibilityLabel="Compartilhar perfil"
+              >
                 <Ionicons name="share-outline" size={22} color={theme.text} />
               </Pressable>
               {!isOwn ? (
-                <Pressable hitSlop={10} onPress={onMore}>
+                <Pressable
+                  hitSlop={10}
+                  onPress={onMore}
+                  accessibilityRole="button"
+                  accessibilityLabel="Mais ações"
+                >
                   <Ionicons name="ellipsis-horizontal" size={22} color={theme.text} />
                 </Pressable>
               ) : null}
@@ -451,6 +477,14 @@ export default function PetProfileScreen() {
         data={posts}
         keyExtractor={(item) => item.id}
         numColumns={3}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.brand}
+            colors={[theme.brand]}
+          />
+        }
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
         columnWrapperStyle={{
           width: gridWidth,

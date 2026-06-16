@@ -24,6 +24,8 @@ interface Props extends Omit<PressableProps, 'children' | 'style'> {
   style?: ViewStyle;
 }
 
+// `secondary` é resolvido em runtime a partir do tema (ver `variantStyle` abaixo);
+// o placeholder aqui só existe para satisfazer o Record.
 const variantStyles: Record<Variant, { bg: string; text: string }> = {
   primary: { bg: '#F97316', text: '#FFFFFF' },
   secondary: { bg: '#E5E5E5', text: '#171717' },
@@ -55,7 +57,9 @@ export function Button({
   const variantStyle =
     variant === 'primary'
       ? { bg: theme.accent.color, text: theme.accent.onAccent }
-      : variantStyles[variant];
+      : variant === 'secondary'
+        ? { bg: theme.border, text: theme.text }
+        : variantStyles[variant];
   const sizeStyle = sizeStyles[size];
 
   const animStyle = useAnimatedStyle(() => ({
@@ -64,6 +68,9 @@ export function Button({
 
   return (
     <AnimatedPressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: !!isDisabled, busy: !!loading }}
       disabled={isDisabled}
       onPressIn={(e) => {
         scale.value = withTiming(0.96, {
@@ -105,7 +112,7 @@ export function Button({
               ? theme.accent.onAccent
               : variant === 'danger'
                 ? '#fff'
-                : '#111'
+                : variantStyle.text
           }
         />
       ) : (

@@ -92,7 +92,7 @@ export function PetProfileHero({
         <View
           style={{
             height: 96,
-            backgroundColor: '#FFEDD5',
+            backgroundColor: theme.brandLight,
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -156,7 +156,8 @@ export function PetProfileHero({
           <View style={{ alignItems: 'center', marginTop: 12, gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text
-                style={{ fontFamily: FONTS.display, fontSize: 30, color: theme.text, letterSpacing: -0.5 }}
+                numberOfLines={1}
+                style={{ fontFamily: FONTS.display, fontSize: 30, color: theme.text, letterSpacing: -0.5, flexShrink: 1 }}
               >
                 {pet.name}
               </Text>
@@ -197,11 +198,13 @@ export function PetProfileHero({
           <View style={{ alignItems: 'center', marginTop: 12, gap: 6 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
               <Text
+                numberOfLines={1}
                 style={{
                   fontFamily: FONTS.display,
                   fontSize: 30,
                   color: theme.text,
                   letterSpacing: -0.5,
+                  flexShrink: 1,
                 }}
               >
                 {pet.name}
@@ -391,23 +394,6 @@ export function PetProfileHero({
                 fullWidth
               />
             </View>
-            <PressScale
-              onPress={() =>
-                router.push({
-                  pathname: '/pet/[id]/time-capsule' as never,
-                  params: { id: pet.id } as never,
-                })
-              }
-              style={{
-                width: 48,
-                borderRadius: 12,
-                backgroundColor: '#1A1410',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name="film-outline" size={20} color="#F59E0B" />
-            </PressScale>
           </View>
         )}
       </CenteredColumn>

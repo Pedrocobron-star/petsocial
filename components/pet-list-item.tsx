@@ -20,6 +20,8 @@ export function PetListItem({ pet, subtitle }: Props) {
   return (
     <Link href={{ pathname: '/pet/[id]', params: { id: pet.id } }} asChild>
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Ver perfil de ${pet.name}`}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -31,7 +33,10 @@ export function PetListItem({ pet, subtitle }: Props) {
       >
         <PetAvatar pet={pet} size={48} />
         <View className="flex-1">
-          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}>
+          <Text
+            numberOfLines={1}
+            style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}
+          >
             {pet.name}
           </Text>
           <Text
