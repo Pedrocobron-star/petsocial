@@ -42,6 +42,7 @@ export interface NewsArticle {
   title: string;
   dek: string | null;
   cover_url: string | null;
+  cover_caption: string | null;
   body: string;
   author_name: string;
   status: NewsStatus;
@@ -64,6 +65,7 @@ export interface NewsArticleInput {
   title: string;
   dek: string | null;
   cover_url: string | null;
+  cover_caption: string | null;
   body: string;
   author_name?: string;
   status: NewsStatus;
@@ -274,6 +276,7 @@ function toRow(input: NewsArticleInput) {
     title: input.title,
     dek: input.dek,
     cover_url: input.cover_url,
+    cover_caption: input.cover_caption,
     body: input.body,
     author_name: input.author_name?.trim() || 'Redação Maestro Pet',
     status: input.status,

@@ -85,7 +85,9 @@ export function NewsForm({
   const [categoryId, setCategoryId] = useState<string | null>(initial?.category_id ?? null);
   const [dek, setDek] = useState(initial?.dek ?? '');
   const [coverUrl, setCoverUrl] = useState(initial?.cover_url ?? '');
+  const [coverCaption, setCoverCaption] = useState(initial?.cover_caption ?? '');
   const [body, setBody] = useState(initial?.body ?? '');
+  const [uploadingBodyImg, setUploadingBodyImg] = useState(false);
   const [authorName, setAuthorName] = useState(initial?.author_name ?? DEFAULT_AUTHOR);
   const [isFeatured, setIsFeatured] = useState(initial?.is_featured ?? false);
   const [status, setStatus] = useState<NewsStatus>(initial?.status ?? 'draft');
@@ -150,6 +152,30 @@ export function NewsForm({
     }
   };
 
+  // Insere uma imagem NO MEIO do corpo: faz upload e anexa a sintaxe
+  // `![legenda](url)` (parseada no leitor). O admin troca "legenda" pelo texto.
+  const insertBodyImage = async () => {
+    if (!userId) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.9,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    const uri = result.assets[0].uri;
+    try {
+      setUploadingBodyImg(true);
+      const ext = guessExtension(uri, 'jpg');
+      const url = await uploadToBucket('sponsored', userId, uri, ext);
+      const snippet = `![legenda](${url})`;
+      setBody((prev) => (prev.trim().length > 0 ? `${prev.trimEnd()}\n\n${snippet}\n\n` : `${snippet}\n\n`));
+      toast.success('Imagem inserida no texto', 'Troque "legenda" pela descrição da foto');
+    } catch (e) {
+      toast.error('Erro no upload', e instanceof Error ? e.message : 'Tente de novo');
+    } finally {
+      setUploadingBodyImg(false);
+    }
+  };
+
   const addProduct = () => {
     setProducts((prev) => [...prev, { label: '', url: '', store: 'shopee', price: '' }]);
   };
@@ -206,6 +232,7 @@ export function NewsForm({
           title: cleanTitle,
           dek: dek.trim() || null,
           cover_url: coverUrl || null,
+          cover_caption: coverCaption.trim() || null,
           body: body,
           author_name: authorName.trim() || DEFAULT_AUTHOR,
           status,
@@ -388,6 +415,15 @@ export function NewsForm({
         )}
       </View>
 
+      {/* Legenda da capa */}
+      <Field
+        label="Legenda da capa (opcional)"
+        value={coverCaption}
+        onChange={setCoverCaption}
+        placeholder="Ex.: Gato laranja deitado no sofá · Foto: Unsplash"
+        multiline
+      />
+
       {/* Corpo */}
       <View style={{ gap: 6 }}>
         <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.text }}>Texto</Text>
@@ -411,6 +447,30 @@ export function NewsForm({
             minHeight: 240,
           }}
         />
+        <Pressable
+          onPress={insertBodyImage}
+          disabled={uploadingBodyImg}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            backgroundColor: theme.brandSurface,
+            borderWidth: 1,
+            borderColor: theme.brandLight,
+            borderRadius: 10,
+            paddingVertical: 10,
+            marginTop: 2,
+          }}
+        >
+          <Ionicons name={uploadingBodyImg ? 'cloud-upload' : 'image'} size={16} color={theme.brand} />
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: theme.brand }}>
+            {uploadingBodyImg ? 'Enviando…' : 'Inserir imagem no texto'}
+          </Text>
+        </Pressable>
+        <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim }}>
+          A imagem entra como ![legenda](url). Troque “legenda” pela descrição da foto.
+        </Text>
       </View>
 
       <Field

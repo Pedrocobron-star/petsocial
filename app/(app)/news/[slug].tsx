@@ -4,11 +4,12 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Image } from 'expo-image';
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { AffiliateProducts } from '@/components/news/affiliate-products';
+import { ArticleBody, ImageCaption } from '@/components/news/article-body';
 import { ArticleTags } from '@/components/news/article-tags';
 import { SponsoredPostCard } from '@/components/sponsored-post-card';
 import { CenteredColumn } from '@/components/ui/centered-column';
@@ -87,8 +88,6 @@ export default function NewsArticleScreen() {
     return () => resetMetaTags('Notícias');
   }, [article]);
 
-  const paragraphs = useMemo(() => splitBody(article?.body ?? ''), [article?.body]);
-
   const dateLabel = article?.published_at
     ? format(new Date(article.published_at), "d 'de' MMM, yyyy", { locale: ptBR })
     : null;
@@ -145,6 +144,13 @@ export default function NewsArticleScreen() {
                 <Text style={{ fontSize: 64 }}>{article.category?.emoji ?? '📰'}</Text>
               </View>
             )}
+
+            {/* Legenda da capa */}
+            {article.cover_caption ? (
+              <View style={{ paddingHorizontal: 16, paddingTop: 6 }}>
+                <ImageCaption caption={article.cover_caption} />
+              </View>
+            ) : null}
 
             <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
               {/* Categoria */}
@@ -224,22 +230,8 @@ export default function NewsArticleScreen() {
                 ) : null}
               </View>
 
-              {/* Corpo */}
-              <View style={{ marginTop: 18, gap: 16 }}>
-                {paragraphs.map((p, i) => (
-                  <Text
-                    key={i}
-                    style={{
-                      fontFamily: FONTS.body,
-                      fontSize: 16.5,
-                      color: theme.text,
-                      lineHeight: 27,
-                    }}
-                  >
-                    {p}
-                  </Text>
-                ))}
-              </View>
+              {/* Corpo (parágrafos + imagens com legenda via ![legenda](url)) */}
+              <ArticleBody body={article.body} />
 
               {/* Tags (clicáveis → filtro por tag) */}
               <ArticleTags tags={article.tags} linkable />
@@ -380,16 +372,4 @@ function RelatedRow({ article }: { article: NewsArticle }) {
       </Pressable>
     </Link>
   );
-}
-
-/**
- * Divide o corpo em parágrafos: split em linhas vazias (uma ou mais quebras
- * duplas). Mantém quebras de linha simples DENTRO do parágrafo.
- */
-function splitBody(body: string): string[] {
-  return body
-    .replace(/\r\n/g, '\n')
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
 }

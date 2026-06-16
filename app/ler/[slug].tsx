@@ -4,12 +4,13 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Image } from 'expo-image';
 import { Link, Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MetaTags } from '@/components/meta-tags';
 import { AffiliateProducts } from '@/components/news/affiliate-products';
+import { ArticleBody, ImageCaption } from '@/components/news/article-body';
 import { ArticleTags } from '@/components/news/article-tags';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
@@ -74,7 +75,6 @@ export default function PublicArticleReader() {
     }
   }, [article]);
 
-  const paragraphs = useMemo(() => splitBody(article?.body ?? ''), [article?.body]);
   const dateLabel = article?.published_at
     ? format(new Date(article.published_at), "d 'de' MMM, yyyy", { locale: ptBR })
     : null;
@@ -206,6 +206,13 @@ export default function PublicArticleReader() {
               </View>
             )}
 
+            {/* Legenda da capa */}
+            {article.cover_caption ? (
+              <View style={{ paddingHorizontal: 16, paddingTop: 6 }}>
+                <ImageCaption caption={article.cover_caption} />
+              </View>
+            ) : null}
+
             <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
               {article.category ? (
                 <View style={{ flexDirection: 'row', marginBottom: 12 }}>
@@ -278,16 +285,8 @@ export default function PublicArticleReader() {
                 ) : null}
               </View>
 
-              <View style={{ marginTop: 18, gap: 16 }}>
-                {paragraphs.map((p, i) => (
-                  <Text
-                    key={i}
-                    style={{ fontFamily: FONTS.body, fontSize: 16.5, color: theme.text, lineHeight: 27 }}
-                  >
-                    {p}
-                  </Text>
-                ))}
-              </View>
+              {/* Corpo (parágrafos + imagens com legenda via ![legenda](url)) */}
+              <ArticleBody body={article.body} />
 
               {/* Tags (sem link na versão pública) */}
               <ArticleTags tags={article.tags} />
@@ -453,12 +452,4 @@ function RelatedRow({ article }: { article: NewsArticle }) {
       </Pressable>
     </Link>
   );
-}
-
-function splitBody(body: string): string[] {
-  return body
-    .replace(/\r\n/g, '\n')
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
 }
