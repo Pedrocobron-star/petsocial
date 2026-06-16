@@ -1,10 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, Stack } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { ArticleListCard } from '@/components/news/article-list-card';
@@ -16,6 +18,7 @@ import {
   fetchCategories,
   fetchMostReadArticles,
   qkNews,
+  searchArticles,
   type NewsArticle,
   type NewsCategory,
 } from '@/lib/news';
@@ -42,6 +45,37 @@ export default function NewsPortalScreen() {
   });
   // "Mais lidas" sobre o acervo INTEIRO (não só as 30 mais recentes).
   const mostReadQuery = useQuery({ queryKey: qkNews.mostRead(), queryFn: () => fetchMostReadArticles(5) });
+
+  // ===== BUSCA (debounce 300ms; >=2 chars dispara) =====
+  const [searchInput, setSearchInput] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setSearchTerm(searchInput.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+  const searching = searchTerm.length >= 2;
+  const searchQ = useQuery({
+    queryKey: qkNews.search(searchTerm),
+    queryFn: () => searchArticles(searchTerm),
+    enabled: searching,
+  });
+  const searchResults = searchQ.data ?? [];
+
+  // ===== PULL-TO-REFRESH =====
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        articlesQuery.refetch(),
+        featuredQuery.refetch(),
+        categoriesQuery.refetch(),
+        mostReadQuery.refetch(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const articles = articlesQuery.data ?? [];
   const categories = categoriesQuery.data ?? [];
@@ -70,7 +104,13 @@ export default function NewsPortalScreen() {
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <Stack.Screen options={{ title: '📰 Jornal Pet', headerShown: true }} />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 56 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 56 }}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} colors={[theme.brand]} />
+        }
+      >
         <CenteredColumn maxWidth={640}>
           {/* ===== NAMEPLATE ===== */}
           <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
@@ -120,6 +160,74 @@ export default function NewsPortalScreen() {
             <View style={{ height: 1, backgroundColor: theme.text, opacity: 0.6, marginTop: 2 }} />
           </View>
 
+          {/* ===== BUSCA ===== */}
+          <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                backgroundColor: theme.surface,
+                borderWidth: 1,
+                borderColor: theme.borderLight,
+                borderRadius: 12,
+                paddingHorizontal: 12,
+                height: 44,
+              }}
+            >
+              <Ionicons name="search" size={18} color={theme.textDim} />
+              <TextInput
+                value={searchInput}
+                onChangeText={setSearchInput}
+                placeholder="Buscar matéria…"
+                placeholderTextColor={theme.textDim}
+                style={{ flex: 1, fontFamily: FONTS.body, fontSize: 14, color: theme.text }}
+                returnKeyType="search"
+                autoCapitalize="none"
+              />
+              {searchInput.length > 0 ? (
+                <Pressable
+                  hitSlop={8}
+                  onPress={() => setSearchInput('')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Limpar busca"
+                >
+                  <Ionicons name="close-circle" size={18} color={theme.textDim} />
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
+
+          {searching ? (
+            <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+              {searchQ.isLoading ? (
+                <ActivityIndicator color={theme.brand} style={{ marginTop: 24 }} />
+              ) : searchResults.length === 0 ? (
+                <EmptyState
+                  emoji="🔎"
+                  title="Nada encontrado"
+                  description={`Nenhuma matéria pra "${searchTerm}". Tente outras palavras.`}
+                />
+              ) : (
+                <View style={{ gap: 12 }}>
+                  <Text
+                    style={{
+                      fontFamily: FONTS.bodyBold,
+                      fontSize: 11,
+                      letterSpacing: 0.8,
+                      textTransform: 'uppercase',
+                      color: theme.textDim,
+                    }}
+                  >
+                    {searchResults.length} resultado{searchResults.length === 1 ? '' : 's'} pra "{searchTerm}"
+                  </Text>
+                  {searchResults.map((a) => (
+                    <ArticleListCard key={a.id} article={a} />
+                  ))}
+                </View>
+              )}
+            </View>
+          ) : (
           <View style={{ paddingHorizontal: 16 }}>
             {loading ? (
               <ActivityIndicator color={theme.brand} style={{ marginTop: 40 }} />
@@ -140,11 +248,11 @@ export default function NewsPortalScreen() {
                   </View>
                 ) : null}
 
-                {/* ===== CHAMADAS SECUNDÁRIAS ===== */}
+                {/* ===== CHAMADAS SECUNDÁRIAS (compactas — sem cortar título) ===== */}
                 {secondary.length > 0 ? (
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 18 }}>
+                  <View style={{ gap: 12, marginTop: 18 }}>
                     {secondary.map((a) => (
-                      <SecondaryCard key={a.id} article={a} />
+                      <ArticleListCard key={a.id} article={a} />
                     ))}
                   </View>
                 ) : null}
@@ -209,6 +317,7 @@ export default function NewsPortalScreen() {
               </>
             )}
           </View>
+          )}
         </CenteredColumn>
       </ScrollView>
     </View>
@@ -348,64 +457,6 @@ function HeroCard({ article }: { article: NewsArticle }) {
               ) : null}
             </View>
           </View>
-        </View>
-      </Pressable>
-    </Link>
-  );
-}
-
-function SecondaryCard({ article }: { article: NewsArticle }) {
-  const { theme } = useTheme();
-  const cat = article.category;
-  return (
-    <Link href={{ pathname: '/(app)/news/[slug]', params: { slug: article.slug } }} asChild>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel={article.title}
-        style={({ pressed }) => ({
-          flexGrow: 1,
-          flexBasis: 150,
-          minWidth: 150,
-          backgroundColor: theme.surface,
-          borderRadius: 14,
-          borderWidth: 1,
-          borderColor: theme.borderLight,
-          overflow: 'hidden',
-          opacity: pressed ? 0.95 : 1,
-        })}
-      >
-        {article.cover_url ? (
-          <Image
-            source={{ uri: article.cover_url }}
-            style={{ width: '100%', aspectRatio: 16 / 9, backgroundColor: theme.brandSurface }}
-            contentFit="cover"
-            transition={200}
-          />
-        ) : (
-          <View
-            style={{
-              width: '100%',
-              aspectRatio: 16 / 9,
-              backgroundColor: cat?.color ? `${cat.color}1A` : theme.brandSurface,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 34 }}>{cat?.emoji ?? '📰'}</Text>
-          </View>
-        )}
-        <View style={{ padding: 11, gap: 5 }}>
-          {cat ? (
-            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10, color: cat.color, letterSpacing: 0.3 }}>
-              {cat.emoji} {cat.name.toUpperCase()}
-            </Text>
-          ) : null}
-          <Text
-            style={{ fontFamily: FONTS.serifSemibold, fontSize: 16, color: theme.text, lineHeight: 20 }}
-            numberOfLines={3}
-          >
-            {article.title}
-          </Text>
         </View>
       </Pressable>
     </Link>

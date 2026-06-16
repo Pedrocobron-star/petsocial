@@ -121,6 +121,26 @@ export async function fetchArticles(opts?: {
   return (data as NewsArticle[] | null) ?? [];
 }
 
+/**
+ * Busca matérias publicadas por título/linha-fina (ilike). Sanitiza o termo
+ * (tira vírgula/parênteses/curingas) pra não quebrar o filtro `.or()` do
+ * PostgREST nem injetar wildcards.
+ */
+export async function searchArticles(query: string, limit = 30): Promise<NewsArticle[]> {
+  const clean = query.trim().replace(/[,()%_*]/g, ' ').trim();
+  if (clean.length < 2) return [];
+  const pattern = `%${clean}%`;
+  const { data, error } = await supabase
+    .from('news_articles')
+    .select(ARTICLE_SELECT)
+    .eq('status', 'published')
+    .or(`title.ilike.${pattern},dek.ilike.${pattern}`)
+    .order('published_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data as NewsArticle[] | null) ?? [];
+}
+
 export async function fetchArticleBySlug(slug: string): Promise<NewsArticle | null> {
   const { data, error } = await supabase
     .from('news_articles')
@@ -336,6 +356,7 @@ export const qkNews = {
   articles: (categoryId?: string, featured?: boolean) => ['news-articles', categoryId ?? null, !!featured] as const,
   article: (slug: string) => ['news-article', slug] as const,
   mostRead: () => ['news-most-read'] as const,
+  search: (q: string) => ['news-search', q] as const,
   related: (id: string) => ['news-related', id] as const,
   tags: () => ['news-tags'] as const,
   tag: (slug: string) => ['news-tag', slug] as const,
