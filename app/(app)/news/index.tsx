@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, Stack } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -288,13 +289,12 @@ function HeroCard({ article }: { article: NewsArticle }) {
             </View>
           )}
 
-          {/* Faixas escuras (fake-gradient) pra legibilidade do texto sobreposto */}
-          <View
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '70%', backgroundColor: 'rgba(10,8,6,0.32)' }}
-            pointerEvents="none"
-          />
-          <View
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '42%', backgroundColor: 'rgba(10,8,6,0.44)' }}
+          {/* Gradiente SUAVE (transparente em cima → escuro embaixo) pra
+              legibilidade do título sobreposto, sem linha/barra dura. */}
+          <LinearGradient
+            colors={['rgba(8,6,4,0)', 'rgba(8,6,4,0.5)', 'rgba(8,6,4,0.9)']}
+            locations={[0, 0.55, 1]}
+            style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
             pointerEvents="none"
           />
 
