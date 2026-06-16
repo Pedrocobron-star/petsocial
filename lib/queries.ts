@@ -19,6 +19,8 @@ import type {
   NotificationWithDetails,
   PersonalityType,
   Pet,
+  PetPrivate,
+  PetPrivatePatch,
   PetMilestone,
   Place,
   PlaceKind,
@@ -160,6 +162,36 @@ export async function fetchPet(petId: string): Promise<Pet | null> {
   const { data, error } = await supabase.from('pets').select('*').eq('id', petId).maybeSingle();
   if (error) throw error;
   return data;
+}
+
+/**
+ * Dados sensíveis da carteirinha (PII médica) do pet — tabela-filha
+ * `pet_private` com RLS DONO-ONLY. Visitante recebe null (RLS bloqueia), não
+ * vaza microchip/alergias/contato de emergência. Ver supabase/pet-private-pii.sql.
+ */
+export async function fetchPetPrivate(petId: string): Promise<PetPrivate | null> {
+  const { data, error } = await supabase
+    .from('pet_private')
+    .select('*')
+    .eq('pet_id', petId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as PetPrivate | null) ?? null;
+}
+
+/**
+ * Salva os campos sensíveis da carteirinha em `pet_private` (upsert por pet_id).
+ * RLS garante que só o dono escreve. O token NUNCA vem no patch — fica com o
+ * DEFAULT da tabela no insert e intocado no update.
+ */
+export async function upsertPetPrivate(petId: string, patch: PetPrivatePatch): Promise<void> {
+  const { error } = await supabase
+    .from('pet_private')
+    .upsert(
+      { pet_id: petId, ...patch, updated_at: new Date().toISOString() },
+      { onConflict: 'pet_id' },
+    );
+  if (error) throw error;
 }
 
 /**

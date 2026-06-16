@@ -238,6 +238,46 @@ export interface Pet {
   updated_at: string;
 }
 
+/**
+ * Campos sensíveis da carteirinha (PII médica) — vivem na tabela-filha
+ * `pet_private` com RLS dono-only, NÃO em `pets`. Qualquer logado lia tudo de
+ * pets antes; agora visitante não acessa. Carteirinha pública usa o RPC definer
+ * `public_pet_card`. Ver supabase/pet-private-pii.sql.
+ */
+export interface PetPrivate {
+  pet_id: string;
+  microchip_number: string | null;
+  rga_number: string | null;
+  blood_type: string | null;
+  allergies: string | null;
+  known_conditions: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  preferred_vet_name: string | null;
+  preferred_vet_phone: string | null;
+  sinpatinhas_id: string | null;
+  id_card_token: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Subconjunto editável do pet_private (sem pet_id/token/timestamps). */
+export type PetPrivatePatch = Partial<
+  Pick<
+    PetPrivate,
+    | 'microchip_number'
+    | 'rga_number'
+    | 'blood_type'
+    | 'allergies'
+    | 'known_conditions'
+    | 'emergency_contact_name'
+    | 'emergency_contact_phone'
+    | 'preferred_vet_name'
+    | 'preferred_vet_phone'
+    | 'sinpatinhas_id'
+  >
+>;
+
 // ============================================================================
 // HUMAN AVATAR — avatar simplificado do tutor (pessoa, não pet)
 // ============================================================================

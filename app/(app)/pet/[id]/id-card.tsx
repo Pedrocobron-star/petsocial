@@ -17,13 +17,14 @@ import {
   exportPetIdPdf,
   exportPetIdStoryPdf,
 } from '@/lib/pet-id-pdf';
-import { fetchPet, fetchProfile, qk } from '@/lib/queries';
+import { fetchPet, fetchPetPrivate, fetchProfile, qk } from '@/lib/queries';
 import {
   copyToClipboard,
   sharePost,
   shareToInstagramStory,
   shareToWhatsApp,
 } from '@/lib/share';
+import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
@@ -34,11 +35,20 @@ export default function PetIdCardScreen() {
   const { theme } = useTheme();
   const toast = useToast();
   const router = useRouter();
+  const { session } = useSession();
+  const userId = session?.user.id;
 
   const petQuery = useQuery({
     queryKey: qk.pet(id),
     queryFn: () => fetchPet(id),
     enabled: !!id,
+  });
+
+  // PII da carteirinha vive em pet_private (RLS dono-only). Visitante recebe null.
+  const petPrivateQuery = useQuery({
+    queryKey: ['pet-private', id],
+    queryFn: () => fetchPetPrivate(id),
+    enabled: !!petQuery.data,
   });
 
   const tutorQuery = useQuery({
@@ -115,13 +125,68 @@ export default function PetIdCardScreen() {
     );
   }
 
+  // Gate de dono: a carteirinha é a ferramenta do tutor pra gerir/compartilhar.
+  // Visitante usa a página pública /id/[token]. Sem gate, /pet/<outro>/id-card
+  // exporia a PII médica (era o furo).
+  if (pet.owner_id !== userId) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: theme.bg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 24,
+          gap: 12,
+        }}
+      >
+        <Stack.Screen options={{ title: 'Carteirinha' }} />
+        <Text style={{ fontSize: 56 }}>🔒</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: theme.text, textAlign: 'center' }}>
+          Carteirinha privada
+        </Text>
+        <Text
+          style={{
+            fontFamily: FONTS.body,
+            fontSize: 13,
+            color: theme.textDim,
+            textAlign: 'center',
+            lineHeight: 19,
+          }}
+        >
+          Só o tutor do pet pode abrir a carteirinha aqui.
+        </Text>
+        <PressScale onPress={() => router.back()} style={{ marginTop: 8, paddingVertical: 10, paddingHorizontal: 18 }}>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.brand }}>Voltar</Text>
+        </PressScale>
+      </View>
+    );
+  }
+
+  // Card mescla a base de `pets` com a PII de `pet_private` (RLS dono-only).
+  const priv = petPrivateQuery.data ?? null;
+  const cardPet = {
+    ...pet,
+    microchip_number: priv?.microchip_number ?? null,
+    rga_number: priv?.rga_number ?? null,
+    blood_type: priv?.blood_type ?? null,
+    allergies: priv?.allergies ?? null,
+    known_conditions: priv?.known_conditions ?? null,
+    emergency_contact_name: priv?.emergency_contact_name ?? null,
+    emergency_contact_phone: priv?.emergency_contact_phone ?? null,
+    preferred_vet_name: priv?.preferred_vet_name ?? null,
+    preferred_vet_phone: priv?.preferred_vet_phone ?? null,
+    sinpatinhas_id: priv?.sinpatinhas_id ?? null,
+    id_card_token: priv?.id_card_token ?? pet.id_card_token ?? null,
+  };
+
   // URL pública pra QR + share
   const baseUrl =
     Platform.OS === 'web'
       ? globalThis.location?.origin ?? 'https://maestropet.com'
       : 'https://maestropet.com';
   // SEMPRE o token (nunca o pet.id) — link por id furava a revogação.
-  const publicUrl = pet.id_card_token ? `${baseUrl}/id/${pet.id_card_token}` : '';
+  const publicUrl = cardPet.id_card_token ? `${baseUrl}/id/${cardPet.id_card_token}` : '';
 
   // ============ ACTIONS ============
   const handleDownloadPdf = async () => {
@@ -129,9 +194,9 @@ export default function PetIdCardScreen() {
     track('pet_id_share', { channel: 'pdf', format });
     try {
       if (format === 'card') {
-        await exportPetIdPdf(pet, tutor, publicUrl);
+        await exportPetIdPdf(cardPet, tutor, publicUrl);
       } else {
-        await exportPetIdStoryPdf(pet, tutor, publicUrl);
+        await exportPetIdStoryPdf(cardPet, tutor, publicUrl);
       }
       toast.success('PDF gerado!', 'Imprima e cole na coleira do pet 🐾');
       setShareOpen(false);
@@ -165,7 +230,7 @@ export default function PetIdCardScreen() {
         setShareOpen(false);
       } else {
         // Fallback: gera PDF da story e abre share sheet pra usuário salvar
-        await exportPetIdStoryPdf(pet, tutor, publicUrl);
+        await exportPetIdStoryPdf(cardPet, tutor, publicUrl);
         toast.success('Story salva!', 'Abra o Instagram e poste como Story 📸');
         setShareOpen(false);
       }
@@ -301,14 +366,14 @@ export default function PetIdCardScreen() {
           >
             {format === 'card' ? (
               <PetIdCard
-                pet={pet}
+                pet={cardPet}
                 tutorProfile={tutor}
                 qrUrl={publicUrl}
                 endorsement={endorsement}
                 width={340}
               />
             ) : (
-              <PetIdStoryCard pet={pet} tutorProfile={tutor} qrUrl={publicUrl} width={280} />
+              <PetIdStoryCard pet={cardPet} tutorProfile={tutor} qrUrl={publicUrl} width={280} />
             )}
           </Animated.View>
 
@@ -409,7 +474,7 @@ export default function PetIdCardScreen() {
           </PressScale>
 
           {/* Missing fields warning */}
-          {missingFields(pet).length > 0 ? (
+          {missingFields(cardPet).length > 0 ? (
             <PressScale
               onPress={() => router.push({ pathname: '/pet/[id]/edit', params: { id: pet.id } })}
               style={{
@@ -438,7 +503,7 @@ export default function PetIdCardScreen() {
                     marginTop: 1,
                   }}
                 >
-                  Faltam: {missingFields(pet).join(' · ')}
+                  Faltam: {missingFields(cardPet).join(' · ')}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color="#92400E" />

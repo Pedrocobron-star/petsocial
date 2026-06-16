@@ -192,10 +192,18 @@ async function fetchPostMeta(postId: string): Promise<PageMeta | null> {
 async function fetchIdCardMeta(token: string): Promise<PageMeta | null> {
   // NÃO buscar telefones aqui — o HTML/OG não os usa, e fetchá-los só cria risco
   // de vazamento de PII de terceiro num futuro edit da description (least-privilege).
+  // O token vive em pet_private (saiu de pets pra fechar o vazamento de PII).
+  // Service role ignora RLS — resolve token -> pet_id, depois a base em pets.
+  const { data: priv } = await supabase
+    .from('pet_private')
+    .select('pet_id')
+    .eq('id_card_token', token)
+    .maybeSingle();
+  if (!priv) return null;
   const { data, error } = await supabase
     .from('pets')
     .select('id, name, species, breed, avatar_url')
-    .eq('id_card_token', token)
+    .eq('id', priv.pet_id)
     .maybeSingle();
   if (error || !data) return null;
 

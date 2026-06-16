@@ -5,7 +5,14 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import { PetForm } from '@/components/pet-form';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
-import { deletePet, fetchPet, qk, updatePet } from '@/lib/queries';
+import {
+  deletePet,
+  fetchPet,
+  fetchPetPrivate,
+  qk,
+  updatePet,
+  upsertPetPrivate,
+} from '@/lib/queries';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -25,6 +32,13 @@ export default function EditPetScreen() {
     enabled: !!id,
   });
 
+  // Campos sensíveis da carteirinha vivem em pet_private (RLS dono-only).
+  const petPrivateQuery = useQuery({
+    queryKey: ['pet-private', id],
+    queryFn: () => fetchPetPrivate(id),
+    enabled: !!id,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: () => deletePet(id),
     onSuccess: async () => {
@@ -40,6 +54,7 @@ export default function EditPetScreen() {
 
   if (!userId || !petQuery.data) return null;
   const pet = petQuery.data;
+  const priv = petPrivateQuery.data ?? null;
   if (pet.owner_id !== userId) {
     return (
       <Screen>
@@ -76,19 +91,20 @@ export default function EditPetScreen() {
           birthdate: pet.birthdate ?? '',
           bio: pet.bio ?? '',
           avatar_url: pet.avatar_url ?? '',
-          microchip_number: pet.microchip_number ?? '',
-          rga_number: pet.rga_number ?? '',
-          blood_type: pet.blood_type ?? '',
-          allergies: pet.allergies ?? '',
-          known_conditions: pet.known_conditions ?? '',
-          emergency_contact_name: pet.emergency_contact_name ?? '',
-          emergency_contact_phone: pet.emergency_contact_phone ?? '',
-          preferred_vet_name: pet.preferred_vet_name ?? '',
-          preferred_vet_phone: pet.preferred_vet_phone ?? '',
-          sinpatinhas_id: pet.sinpatinhas_id ?? '',
+          microchip_number: priv?.microchip_number ?? '',
+          rga_number: priv?.rga_number ?? '',
+          blood_type: priv?.blood_type ?? '',
+          allergies: priv?.allergies ?? '',
+          known_conditions: priv?.known_conditions ?? '',
+          emergency_contact_name: priv?.emergency_contact_name ?? '',
+          emergency_contact_phone: priv?.emergency_contact_phone ?? '',
+          preferred_vet_name: priv?.preferred_vet_name ?? '',
+          preferred_vet_phone: priv?.preferred_vet_phone ?? '',
+          sinpatinhas_id: priv?.sinpatinhas_id ?? '',
         }}
         onSubmit={async (data) => {
           try {
+            // Base do pet -> tabela `pets`
             await updatePet(pet.id, {
               name: data.name,
               species: data.species,
@@ -96,6 +112,9 @@ export default function EditPetScreen() {
               birthdate: data.birthdate || null,
               bio: data.bio || null,
               avatar_url: data.avatar_url || null,
+            });
+            // PII médica/carteirinha -> tabela-filha `pet_private` (RLS dono-only)
+            await upsertPetPrivate(pet.id, {
               microchip_number: data.microchip_number || null,
               rga_number: data.rga_number || null,
               blood_type: data.blood_type || null,
@@ -108,6 +127,7 @@ export default function EditPetScreen() {
               sinpatinhas_id: data.sinpatinhas_id || null,
             });
             await qc.invalidateQueries({ queryKey: qk.pet(pet.id) });
+            await qc.invalidateQueries({ queryKey: ['pet-private', pet.id] });
             await qc.invalidateQueries({ queryKey: qk.myPets(userId) });
             await qc.invalidateQueries({ queryKey: ['pet-by-token'] });
             toast.success(`${data.name} atualizado!`);

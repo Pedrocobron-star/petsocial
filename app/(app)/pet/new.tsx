@@ -9,7 +9,7 @@ import { PremiumBadge } from '@/components/premium-badge';
 import { Screen } from '@/components/ui/screen';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import { FONTS } from '@/lib/fonts';
-import { qk } from '@/lib/queries';
+import { qk, upsertPetPrivate } from '@/lib/queries';
 import { claimReferral, clearPendingRef, readPendingRef } from '@/lib/referral';
 import { supabase } from '@/lib/supabase';
 import { FREE_TIER_LIMITS } from '@/lib/types';
@@ -125,26 +125,36 @@ export default function NewPetScreen() {
               if (pendingRef) {
                 await claimReferral(pendingRef).catch(() => false);
               }
-              const { error } = await supabase.from('pets').insert({
-                owner_id: userId,
-                name: data.name,
-                species: data.species,
-                breed: data.breed || null,
-                birthdate: data.birthdate || null,
-                bio: data.bio || null,
-                avatar_url: data.avatar_url || null,
-                microchip_number: data.microchip_number || null,
-                rga_number: data.rga_number || null,
-                blood_type: data.blood_type || null,
-                allergies: data.allergies || null,
-                known_conditions: data.known_conditions || null,
-                emergency_contact_name: data.emergency_contact_name || null,
-                emergency_contact_phone: data.emergency_contact_phone || null,
-                preferred_vet_name: data.preferred_vet_name || null,
-                preferred_vet_phone: data.preferred_vet_phone || null,
-                sinpatinhas_id: data.sinpatinhas_id || null,
-              });
+              // Base do pet -> tabela `pets`
+              const { data: created, error } = await supabase
+                .from('pets')
+                .insert({
+                  owner_id: userId,
+                  name: data.name,
+                  species: data.species,
+                  breed: data.breed || null,
+                  birthdate: data.birthdate || null,
+                  bio: data.bio || null,
+                  avatar_url: data.avatar_url || null,
+                })
+                .select('id')
+                .single();
               if (error) throw error;
+              // PII médica/carteirinha -> tabela-filha `pet_private` (RLS dono-only)
+              if (created?.id) {
+                await upsertPetPrivate(created.id, {
+                  microchip_number: data.microchip_number || null,
+                  rga_number: data.rga_number || null,
+                  blood_type: data.blood_type || null,
+                  allergies: data.allergies || null,
+                  known_conditions: data.known_conditions || null,
+                  emergency_contact_name: data.emergency_contact_name || null,
+                  emergency_contact_phone: data.emergency_contact_phone || null,
+                  preferred_vet_name: data.preferred_vet_name || null,
+                  preferred_vet_phone: data.preferred_vet_phone || null,
+                  sinpatinhas_id: data.sinpatinhas_id || null,
+                });
+              }
               clearPendingRef();
               await qc.invalidateQueries({ queryKey: qk.myPets(userId) });
               toast.success(`${data.name} entrou na família! 🎉`, 'Bora customizar o avatar?');
