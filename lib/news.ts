@@ -25,6 +25,14 @@ export interface NewsCategory {
   sort_order: number;
 }
 
+/** Tag fixa por tema/animal (N:N com matérias via news_article_tags). */
+export interface NewsTag {
+  id: string;
+  slug: string;
+  name: string;
+  sort_order: number;
+}
+
 export type NewsStatus = 'draft' | 'published' | 'scheduled';
 
 export interface NewsArticle {
@@ -46,6 +54,8 @@ export interface NewsArticle {
   created_at: string;
   updated_at: string;
   category?: NewsCategory | null;
+  /** Tags fixas vinculadas (populado no detalhe via fetchArticleBySlug). */
+  tags?: NewsTag[];
 }
 
 export interface NewsArticleInput {
@@ -116,7 +126,59 @@ export async function fetchArticleBySlug(slug: string): Promise<NewsArticle | nu
     .eq('slug', slug)
     .maybeSingle();
   if (error) throw error;
-  return (data as NewsArticle | null) ?? null;
+  if (!data) return null;
+  const article = data as NewsArticle;
+  article.tags = await fetchArticleTags(article.id);
+  return article;
+}
+
+// ---------- tags ----------
+
+export async function fetchTags(): Promise<NewsTag[]> {
+  const { data, error } = await supabase
+    .from('news_tags')
+    .select('*')
+    .order('sort_order', { ascending: true });
+  if (error) throw error;
+  return (data as NewsTag[] | null) ?? [];
+}
+
+export async function fetchTagBySlug(slug: string): Promise<NewsTag | null> {
+  const { data, error } = await supabase
+    .from('news_tags')
+    .select('*')
+    .eq('slug', slug)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as NewsTag | null) ?? null;
+}
+
+/** Tags de UMA matéria (ordenadas), via a junção. */
+async function fetchArticleTags(articleId: string): Promise<NewsTag[]> {
+  const { data, error } = await supabase
+    .from('news_article_tags')
+    .select('tag:news_tags(*)')
+    .eq('article_id', articleId);
+  if (error) throw error;
+  // o supabase-js tipa o embed como array; em runtime é objeto (FK to-one).
+  const rows = (data ?? []) as unknown as { tag: NewsTag | NewsTag[] | null }[];
+  const tags = rows
+    .map((r) => (Array.isArray(r.tag) ? r.tag[0] : r.tag))
+    .filter((t): t is NewsTag => !!t);
+  return tags.sort((a, b) => a.sort_order - b.sort_order);
+}
+
+/** Matérias publicadas com uma tag (inner join na junção). */
+export async function fetchArticlesByTag(tagId: string, limit = 30): Promise<NewsArticle[]> {
+  const { data, error } = await supabase
+    .from('news_articles')
+    .select(`${ARTICLE_SELECT}, news_article_tags!inner(tag_id)`)
+    .eq('status', 'published')
+    .eq('news_article_tags.tag_id', tagId)
+    .order('published_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data as NewsArticle[] | null) ?? [];
 }
 
 export async function incrementArticleView(id: string): Promise<void> {
@@ -247,12 +309,35 @@ export async function adminDeleteArticle(id: string): Promise<void> {
   void logAdminAction('delete', 'news_article', id, { title: existing?.title ?? null });
 }
 
+/** IDs das tags de uma matéria (pra pré-selecionar no form de edição). */
+export async function fetchArticleTagIds(articleId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('news_article_tags')
+    .select('tag_id')
+    .eq('article_id', articleId);
+  if (error) throw error;
+  return ((data ?? []) as { tag_id: string }[]).map((r) => r.tag_id);
+}
+
+/** Seta as tags da matéria atomicamente (RPC admin, delete+insert no servidor). */
+export async function setArticleTags(articleId: string, tagIds: string[]): Promise<void> {
+  const { error } = await supabase.rpc('admin_set_article_tags', {
+    p_article_id: articleId,
+    p_tag_ids: tagIds,
+  });
+  if (error) throw error;
+}
+
 export const qkNews = {
   categories: () => ['news-categories'] as const,
   articles: (categoryId?: string, featured?: boolean) => ['news-articles', categoryId ?? null, !!featured] as const,
   article: (slug: string) => ['news-article', slug] as const,
   mostRead: () => ['news-most-read'] as const,
   related: (id: string) => ['news-related', id] as const,
+  tags: () => ['news-tags'] as const,
+  tag: (slug: string) => ['news-tag', slug] as const,
+  articlesByTag: (tagId: string) => ['news-articles-by-tag', tagId] as const,
   adminList: () => ['news-admin-list'] as const,
   adminArticle: (id: string) => ['news-admin-article', id] as const,
+  adminArticleTagIds: (id: string) => ['news-admin-article-tagids', id] as const,
 };

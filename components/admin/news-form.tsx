@@ -2,13 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import {
+  fetchArticleTagIds,
   fetchCategories,
+  fetchTags,
   qkNews,
   slugify,
   type AffiliateProduct,
@@ -54,7 +56,7 @@ export function NewsForm({
 }: {
   initial?: NewsArticle;
   submitLabel: string;
-  onSubmit: (input: NewsArticleInput) => Promise<void>;
+  onSubmit: (input: NewsArticleInput, tagIds: string[]) => Promise<void>;
   submitting?: boolean;
   onDelete?: () => void;
 }) {
@@ -68,6 +70,15 @@ export function NewsForm({
     queryFn: fetchCategories,
   });
   const categories = categoriesQuery.data ?? [];
+
+  const tagsQuery = useQuery({ queryKey: qkNews.tags(), queryFn: fetchTags });
+  const allTags = tagsQuery.data ?? [];
+  // Tags já vinculadas (modo edição) — pré-selecionadas via fetchArticleTagIds.
+  const tagIdsQuery = useQuery({
+    queryKey: initial ? qkNews.adminArticleTagIds(initial.id) : ['news-admin-article-tagids', 'new'],
+    queryFn: () => fetchArticleTagIds(initial!.id),
+    enabled: !!initial,
+  });
 
   const [title, setTitle] = useState(initial?.title ?? '');
   const [slug, setSlug] = useState(initial?.slug ?? '');
@@ -88,6 +99,19 @@ export function NewsForm({
     return toTimeStr(base);
   });
   const [products, setProducts] = useState<AffiliateProduct[]>(initial?.affiliate_products ?? []);
+
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const tagsSeeded = useRef(false);
+  // Semeia as tags selecionadas a partir do servidor UMA vez (sem atropelar
+  // edições do admin se a query reresolver).
+  useEffect(() => {
+    if (initial && !tagsSeeded.current && tagIdsQuery.data) {
+      setSelectedTagIds(tagIdsQuery.data);
+      tagsSeeded.current = true;
+    }
+  }, [initial, tagIdsQuery.data]);
+  const toggleTag = (id: string) =>
+    setSelectedTagIds((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
 
   const [uploadingCover, setUploadingCover] = useState(false);
   // Trava o auto-slug assim que o usuário edita o slug à mão (ou se já existe um).
@@ -175,20 +199,23 @@ export function NewsForm({
     }
 
     try {
-      await onSubmit({
-        slug: cleanSlug,
-        category_id: categoryId,
-        title: cleanTitle,
-        dek: dek.trim() || null,
-        cover_url: coverUrl || null,
-        body: body,
-        author_name: authorName.trim() || DEFAULT_AUTHOR,
-        status,
-        is_featured: isFeatured,
-        affiliate_products: cleanProducts,
-        scheduled_at: scheduledAtIso,
-        notify_on_publish: notifyOnPublish,
-      });
+      await onSubmit(
+        {
+          slug: cleanSlug,
+          category_id: categoryId,
+          title: cleanTitle,
+          dek: dek.trim() || null,
+          cover_url: coverUrl || null,
+          body: body,
+          author_name: authorName.trim() || DEFAULT_AUTHOR,
+          status,
+          is_featured: isFeatured,
+          affiliate_products: cleanProducts,
+          scheduled_at: scheduledAtIso,
+          notify_on_publish: notifyOnPublish,
+        },
+        selectedTagIds,
+      );
     } catch (e) {
       toast.error('Erro ao salvar', e instanceof Error ? e.message : 'Tente novamente');
     }
@@ -247,6 +274,50 @@ export function NewsForm({
         {categoriesQuery.isLoading ? (
           <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim }}>
             Carregando categorias…
+          </Text>
+        ) : null}
+      </View>
+
+      {/* Tags (tema/animal — múltiplas) */}
+      <View style={{ gap: 6 }}>
+        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.text }}>
+          Tags <Text style={{ fontFamily: FONTS.body, color: theme.textDim }}>(tema/animal — pode marcar várias)</Text>
+        </Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {allTags.map((tag) => {
+            const selected = selectedTagIds.includes(tag.id);
+            return (
+              <Pressable
+                key={tag.id}
+                onPress={() => toggleTag(tag.id)}
+                accessibilityRole="button"
+                accessibilityLabel={tag.name}
+                accessibilityState={{ selected }}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  borderRadius: 999,
+                  borderWidth: 1.5,
+                  borderColor: selected ? theme.brand : theme.borderLight,
+                  backgroundColor: selected ? theme.brand : theme.surface,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: FONTS.bodyBold,
+                    fontSize: 12,
+                    color: selected ? '#FFFFFF' : theme.text,
+                  }}
+                >
+                  {tag.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        {tagsQuery.isLoading ? (
+          <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: theme.textDim }}>
+            Carregando tags…
           </Text>
         ) : null}
       </View>

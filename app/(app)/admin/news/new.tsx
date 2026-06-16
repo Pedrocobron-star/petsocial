@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { NewsForm } from '@/components/admin/news-form';
-import { adminCreateArticle, qkNews, type NewsArticleInput } from '@/lib/news';
+import { adminCreateArticle, qkNews, setArticleTags, type NewsArticleInput } from '@/lib/news';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -22,10 +22,11 @@ export default function NewNewsArticleScreen() {
   if (!session) return <Redirect href="/welcome" />;
   if (session.user.email !== ADMIN_EMAIL) return <Redirect href="/(app)/(tabs)" />;
 
-  const handleSubmit = async (input: NewsArticleInput) => {
+  const handleSubmit = async (input: NewsArticleInput, tagIds: string[]) => {
     setSaving(true);
     try {
-      await adminCreateArticle(input);
+      const art = await adminCreateArticle(input);
+      await setArticleTags(art.id, tagIds);
       await qc.invalidateQueries({ queryKey: qkNews.adminList() });
       toast.success('Matéria criada');
       router.replace('/(app)/admin/news');

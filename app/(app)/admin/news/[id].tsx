@@ -10,6 +10,7 @@ import {
   adminUpdateArticle,
   fetchArticleByIdAdmin,
   qkNews,
+  setArticleTags,
   type NewsArticleInput,
 } from '@/lib/news';
 import { useSession } from '@/providers/session-provider';
@@ -41,13 +42,15 @@ export default function EditNewsArticleScreen() {
 
   const article = articleQuery.data;
 
-  const handleSubmit = async (input: NewsArticleInput) => {
+  const handleSubmit = async (input: NewsArticleInput, tagIds: string[]) => {
     setSaving(true);
     try {
       await adminUpdateArticle(id, input);
+      await setArticleTags(id, tagIds);
       await Promise.all([
         qc.invalidateQueries({ queryKey: qkNews.adminList() }),
         qc.invalidateQueries({ queryKey: qkNews.adminArticle(id) }),
+        qc.invalidateQueries({ queryKey: qkNews.adminArticleTagIds(id) }),
         qc.invalidateQueries({ queryKey: qkNews.article(input.slug) }),
         qc.invalidateQueries({ queryKey: ['news-articles'] }),
       ]);

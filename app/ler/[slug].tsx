@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MetaTags } from '@/components/meta-tags';
 import { AffiliateProducts } from '@/components/news/affiliate-products';
+import { ArticleTags } from '@/components/news/article-tags';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
 import { FONTS } from '@/lib/fonts';
@@ -287,6 +288,9 @@ export default function PublicArticleReader() {
                   </Text>
                 ))}
               </View>
+
+              {/* Tags (sem link na versão pública) */}
+              <ArticleTags tags={article.tags} />
 
               <AffiliateProducts products={article.affiliate_products} articleSlug={article.slug} />
 

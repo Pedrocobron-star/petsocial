@@ -9,6 +9,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 
 import { EmptyState } from '@/components/empty-state';
 import { AffiliateProducts } from '@/components/news/affiliate-products';
+import { ArticleTags } from '@/components/news/article-tags';
 import { SponsoredPostCard } from '@/components/sponsored-post-card';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { FONTS } from '@/lib/fonts';
@@ -239,6 +240,9 @@ export default function NewsArticleScreen() {
                   </Text>
                 ))}
               </View>
+
+              {/* Tags (clicáveis → filtro por tag) */}
+              <ArticleTags tags={article.tags} linkable />
 
               {/* Produtos afiliados */}
               <AffiliateProducts products={article.affiliate_products} articleSlug={article.slug} />
