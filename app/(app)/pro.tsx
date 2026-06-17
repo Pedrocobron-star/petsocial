@@ -9,8 +9,9 @@ import { MOZART } from '@/lib/mozart';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { track } from '@/lib/analytics';
-import { createCheckoutSession } from '@/lib/queries';
+import { caktoCheckoutUrl } from '@/lib/cakto';
 import { PRICING, type SubscriptionPlan } from '@/lib/types';
+import { useSession } from '@/providers/session-provider';
 import { useSubscription } from '@/providers/subscription-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -43,8 +44,8 @@ const FREE_FEATURES = [
 
 const FAQ = [
   {
-    q: 'Posso cancelar a qualquer momento?',
-    a: 'Sim. Você continua Pro até o fim do período pago — sem multa, sem perguntas.',
+    q: 'Tem fidelidade ou cobrança automática?',
+    a: 'Não. O Pet Pro é por período (mês ou ano): você paga uma vez e usa. Quando acaba, volta ao grátis — só renova se quiser, sem surpresa no cartão.',
   },
   {
     q: 'Tem garantia de reembolso?',
@@ -52,7 +53,7 @@ const FAQ = [
   },
   {
     q: 'Como funciona o pagamento?',
-    a: 'Cartão de crédito (Mercado Pago) com renovação automática. Pix em breve.',
+    a: 'Pix ou cartão, com checkout seguro da Cakto. Pagamento por período (mês ou ano), sem débito automático — você renova quando quiser.',
   },
   {
     q: 'O que acontece com meus dados se eu cancelar?',
@@ -65,6 +66,7 @@ export default function ProScreen() {
   const router = useRouter();
   const toast = useToast();
   const { isPro, subscription } = useSubscription();
+  const { session } = useSession();
   const [plan, setPlan] = useState<SubscriptionPlan>('yearly');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -73,16 +75,20 @@ export default function ProScreen() {
     track('pro_screen_view', { is_pro: isPro });
   }, [isPro]);
 
+  // Checkout via Cakto (Pix + cartão). Abre o link hospedado com o email no
+  // prefill — o webhook cakto-webhook casa o pagamento com a conta e ativa o Pro.
   const checkoutMut = useMutation({
-    mutationFn: () => {
-      track('checkout_started', { plan });
-      return createCheckoutSession(plan);
+    mutationFn: async () => {
+      track('checkout_started', { plan, gateway: 'cakto' });
+      const url = caktoCheckoutUrl(plan, session?.user?.email ?? null);
+      if (!url) throw new Error('Checkout indisponível no momento. Tente de novo em instantes.');
+      return url;
     },
     onSuccess: async (url) => {
       try {
         await Linking.openURL(url);
       } catch {
-        toast.error('Não foi possível abrir checkout');
+        toast.error('Não foi possível abrir o checkout');
       }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao iniciar pagamento'),
