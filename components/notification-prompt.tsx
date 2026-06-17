@@ -5,7 +5,13 @@ import { Modal, Platform, Pressable, Text, View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { MOZART } from '@/lib/mozart';
-import { isPushSubscribed, isPushSupported, pushPermission, subscribeToPush } from '@/lib/web-push';
+import {
+  isPushSubscribed,
+  isPushSupported,
+  pushPermission,
+  refreshPushSubscription,
+  subscribeToPush,
+} from '@/lib/web-push';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -28,6 +34,15 @@ export function NotificationPrompt() {
   const userId = session?.user.id;
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  // Re-sincroniza a inscrição no launch quando a permissão já foi concedida —
+  // conserta o device que reinstalou/atualizou o PWA e ficou com endpoint morto
+  // (o prompt abaixo só roda em permission==='default', então nunca repararia).
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !userId) return;
+    if (pushPermission() !== 'granted') return;
+    void refreshPushSubscription(userId);
+  }, [userId]);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || !userId) return;

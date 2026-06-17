@@ -75,20 +75,50 @@ export async function subscribeToPush(
     const json = sub.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return 'error';
 
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : null;
     const { error } = await supabase.from('push_subscriptions').upsert(
       {
         user_id: userId,
         endpoint: json.endpoint,
         p256dh: json.keys.p256dh,
         auth: json.keys.auth,
-        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        user_agent: ua,
       },
       { onConflict: 'user_id,endpoint' },
     );
     if (error) return 'error';
+
+    // Limpa inscrições MORTAS do mesmo device (mesmo user_agent, endpoint antigo):
+    // ao reinstalar/atualizar o PWA o endpoint muda e o velho fica órfão (o FCM
+    // aceita o push mas o device nunca recebe). Mantém só a inscrição viva.
+    if (ua) {
+      await supabase
+        .from('push_subscriptions')
+        .delete()
+        .eq('user_id', userId)
+        .eq('user_agent', ua)
+        .neq('endpoint', json.endpoint)
+        .then(undefined, () => {});
+    }
     return 'subscribed';
   } catch {
     return 'error';
+  }
+}
+
+/**
+ * Re-sincroniza a inscrição no LAUNCH quando a permissão já é 'granted'.
+ * Conserta o caso em que o device reinstalou/atualizou o PWA: o endpoint mudou,
+ * mas como o prompt só aparece em permission==='default', a inscrição salva no
+ * banco ficava morta e o push parava de chegar. Silencioso (no-op se não granted).
+ */
+export async function refreshPushSubscription(userId: string): Promise<void> {
+  if (!isPushSupported()) return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    await subscribeToPush(userId);
+  } catch {
+    // ignora — best-effort
   }
 }
 
