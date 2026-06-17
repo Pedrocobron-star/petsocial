@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION ao mudar assets — força refresh do cache.
  */
 
-const CACHE_VERSION = 'pet-social-v162';
+const CACHE_VERSION = 'pet-social-v163';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -114,6 +114,10 @@ self.addEventListener('push', (event) => {
     data: { url: data.url || '/' },
     tag: data.tag,
     renotify: !!data.tag,
+    // vibrate sinaliza notificação "ruidosa" → o Android mostra como HEADS-UP
+    // (balão que pula na tela) + vibra, em vez de cair silenciosa na gaveta.
+    vibrate: [200, 100, 200],
+    timestamp: Date.now(),
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
