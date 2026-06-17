@@ -114,6 +114,9 @@ serve(async (req) => {
         await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
           payload,
+          // urgency:high → entrega imediata mesmo com o device em Doze/economia
+          // de bateria (sem isso o Android adia/descarta push de urgência normal).
+          { urgency: 'high', TTL: 86400 },
         );
         sent++;
       } catch (e) {
