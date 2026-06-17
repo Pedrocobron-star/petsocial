@@ -7,6 +7,7 @@ import { Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 import { EmptyState } from '@/components/empty-state';
+import { PaywallCard } from '@/components/paywall-card';
 import { Button } from '@/components/ui/button';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ import {
 import { copyToClipboard, sharePost } from '@/lib/share';
 import type { CaretakerRole, PetCaretakerWithProfile } from '@/lib/types';
 import { useSession } from '@/providers/session-provider';
+import { useIsPro } from '@/providers/subscription-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
@@ -64,6 +66,7 @@ export default function CaretakersScreen() {
   });
 
   const isOwner = petQuery.data?.owner_id === userId;
+  const isPro = useIsPro();
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const revokeMutation = useMutation({
@@ -185,27 +188,36 @@ export default function CaretakersScreen() {
           </View>
         </CenteredColumn>
 
-        {/* CTA novo */}
+        {/* CTA novo — convidar co-tutor é exclusivo do Pet Pro */}
         {isOwner ? (
           <CenteredColumn maxWidth={540}>
             <View style={{ marginTop: 12 }}>
-              <PressScale
-                onPress={() => setInviteOpen(true)}
-                style={{
-                  backgroundColor: theme.brand,
-                  paddingVertical: 12,
-                  borderRadius: 14,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                }}
-              >
-                <Ionicons name="person-add" size={16} color="#fff" />
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#fff' }}>
-                  Convidar pessoa
-                </Text>
-              </PressScale>
+              {isPro ? (
+                <PressScale
+                  onPress={() => setInviteOpen(true)}
+                  style={{
+                    backgroundColor: theme.brand,
+                    paddingVertical: 12,
+                    borderRadius: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <Ionicons name="person-add" size={16} color="#fff" />
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#fff' }}>
+                    Convidar pessoa
+                  </Text>
+                </PressScale>
+              ) : (
+                <PaywallCard
+                  intent="caretakers"
+                  emoji="👨‍👩‍👧"
+                  title="Compartilhe a saúde do pet"
+                  description="Convide co-tutores (família, cuidador, vet) pra acompanhar a saúde do seu pet. Exclusivo do Pet Pro."
+                />
+              )}
             </View>
           </CenteredColumn>
         ) : null}

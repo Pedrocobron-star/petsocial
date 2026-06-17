@@ -16,6 +16,7 @@ import {
 import Animated, { FadeIn, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 import { EmptyState } from '@/components/empty-state';
+import { PaywallCard } from '@/components/paywall-card';
 import { usePetHealthGate } from '@/components/pet-health-gate';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { PressScale } from '@/components/ui/press-scale';
@@ -35,6 +36,7 @@ import {
 import { FONTS } from '@/lib/fonts';
 import { fetchPet, qk } from '@/lib/queries';
 import { useSession } from '@/providers/session-provider';
+import { useIsPro } from '@/providers/subscription-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
@@ -67,6 +69,7 @@ export default function PetExpensesScreen() {
   const qc = useQueryClient();
   const { session } = useSession();
   const userId = session?.user.id;
+  const isPro = useIsPro();
 
   const [period, setPeriod] = useState<ExpensePeriod>('month');
   const [formOpen, setFormOpen] = useState(false);
@@ -136,6 +139,25 @@ export default function PetExpensesScreen() {
   const pet = petQuery.data;
 
   if (healthGate) return healthGate;
+
+  // Controle de gastos é exclusivo do Pet Pro (registrar saúde continua grátis).
+  if (!isPro) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.bg }}>
+        <Stack.Screen options={{ title: pet ? `Gastos · ${pet.name}` : 'Gastos', headerShown: true }} />
+        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 24 }}>
+          <CenteredColumn maxWidth={560}>
+            <PaywallCard
+              intent="health-expenses"
+              emoji="💸"
+              title="Controle de gastos do pet"
+              description="Acompanhe quanto você investe no seu pet — ração, vet, banho e mais — com resumo por categoria e período. Exclusivo do Pet Pro."
+            />
+          </CenteredColumn>
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

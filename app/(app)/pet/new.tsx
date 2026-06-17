@@ -12,7 +12,7 @@ import { FONTS } from '@/lib/fonts';
 import { qk, upsertPetPrivate } from '@/lib/queries';
 import { claimReferral, clearPendingRef, readPendingRef } from '@/lib/referral';
 import { supabase } from '@/lib/supabase';
-import { FREE_TIER_LIMITS } from '@/lib/types';
+import { FREE_TIER_LIMITS, PRO_TIER_LIMITS } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 import { useIsPro } from '@/providers/subscription-provider';
@@ -33,7 +33,8 @@ export default function NewPetScreen() {
   if (!userId) return null;
 
   const petCount = pets.length;
-  const reachedLimit = !isPro && petCount >= FREE_TIER_LIMITS.maxPets;
+  const maxPets = isPro ? PRO_TIER_LIMITS.maxPets : FREE_TIER_LIMITS.maxPets;
+  const reachedLimit = petCount >= maxPets;
   const remainingFree = Math.max(0, FREE_TIER_LIMITS.maxPets - petCount);
 
   return (
@@ -59,54 +60,61 @@ export default function NewPetScreen() {
           </Text>
 
           {/* Indicator de plano */}
-          {!isPro ? (
-            reachedLimit ? (
-              <View
-                style={{
-                  marginTop: 14,
-                  padding: 12,
-                  backgroundColor: '#FEF3C7',
-                  borderRadius: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 10,
-                  borderWidth: 1,
-                  borderColor: '#FBBF24',
-                }}
-              >
-                <Ionicons name="lock-closed" size={18} color="#92400E" />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#78350F' }}>
-                    Limite do plano gratuito
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#78350F', marginTop: 2 }}>
-                    Você já tem {FREE_TIER_LIMITS.maxPets} pets. Vire Pro pra ter ilimitado.
-                  </Text>
-                </View>
-                <PremiumBadge size={14} />
-              </View>
-            ) : (
-              <View
-                style={{
-                  marginTop: 14,
-                  padding: 10,
-                  backgroundColor: theme.borderLight,
-                  borderRadius: 10,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <Ionicons name="information-circle-outline" size={16} color={theme.textDim} />
-                <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
-                  Plano gratuito: pode cadastrar mais{' '}
-                  <Text style={{ fontFamily: FONTS.bodyBold }}>
-                    {remainingFree} {remainingFree === 1 ? 'pet' : 'pets'}
-                  </Text>
-                  .
+          {reachedLimit ? (
+            <View
+              style={{
+                marginTop: 14,
+                padding: 12,
+                backgroundColor: isPro ? theme.borderLight : '#FEF3C7',
+                borderRadius: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                borderWidth: 1,
+                borderColor: isPro ? theme.borderLight : '#FBBF24',
+              }}
+            >
+              <Ionicons name="lock-closed" size={18} color={isPro ? theme.textDim : '#92400E'} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: isPro ? theme.text : '#78350F' }}>
+                  {isPro ? 'Limite do Pet Pro' : 'Limite do plano gratuito'}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: FONTS.body,
+                    fontSize: 11,
+                    color: isPro ? theme.textDim : '#78350F',
+                    marginTop: 2,
+                  }}
+                >
+                  {isPro
+                    ? `Você já tem ${PRO_TIER_LIMITS.maxPets} pets — o máximo do Pet Pro.`
+                    : `Você já tem ${FREE_TIER_LIMITS.maxPets} ${FREE_TIER_LIMITS.maxPets === 1 ? 'pet' : 'pets'}. Vire Pro pra ter até ${PRO_TIER_LIMITS.maxPets} pets.`}
                 </Text>
               </View>
-            )
+              {!isPro ? <PremiumBadge size={14} /> : null}
+            </View>
+          ) : !isPro ? (
+            <View
+              style={{
+                marginTop: 14,
+                padding: 10,
+                backgroundColor: theme.borderLight,
+                borderRadius: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <Ionicons name="information-circle-outline" size={16} color={theme.textDim} />
+              <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
+                Plano gratuito: pode cadastrar mais{' '}
+                <Text style={{ fontFamily: FONTS.bodyBold }}>
+                  {remainingFree} {remainingFree === 1 ? 'pet' : 'pets'}
+                </Text>
+                .
+              </Text>
+            </View>
           ) : null}
         </View>
 
@@ -115,7 +123,11 @@ export default function NewPetScreen() {
           submitLabel="Adicionar pet"
           onSubmit={async (data) => {
             if (reachedLimit) {
-              setShowUpgrade(true);
+              if (isPro) {
+                toast.error('Limite de pets', `O Pet Pro permite até ${PRO_TIER_LIMITS.maxPets} pets.`);
+              } else {
+                setShowUpgrade(true);
+              }
               return;
             }
             try {

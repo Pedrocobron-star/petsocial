@@ -8,6 +8,7 @@ import { Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'r
 import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
 
 import { EmptyState } from '@/components/empty-state';
+import { PaywallCard } from '@/components/paywall-card';
 import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
@@ -20,11 +21,13 @@ import {
 import type { WeightRecord } from '@/lib/types';
 import { useToast } from '@/providers/toast-provider';
 import { useTheme } from '@/providers/theme-provider';
+import { useIsPro } from '@/providers/subscription-provider';
 
 export default function WeightScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
+  const isPro = useIsPro();
   const qc = useQueryClient();
   const toast = useToast();
   const [showForm, setShowForm] = useState(false);
@@ -97,7 +100,19 @@ export default function WeightScreen() {
           </View>
         ) : null}
 
-        {records.length >= 2 ? <WeightChart records={records} /> : null}
+        {records.length >= 2 ? (
+          isPro ? (
+            <WeightChart records={records} />
+          ) : (
+            <PaywallCard
+              compact
+              intent="health-weight-chart"
+              emoji="📈"
+              title="Gráfico de evolução do peso"
+              description="Acompanhe a curva de peso do seu pet ao longo do tempo. Exclusivo do Pet Pro."
+            />
+          )
+        ) : null}
 
         {showForm ? (
           <WeightForm

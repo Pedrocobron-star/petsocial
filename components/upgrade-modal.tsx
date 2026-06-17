@@ -17,19 +17,31 @@ interface Props {
     | 'pdfWatermark'
     | 'analytics'
     | 'avatarCustom'
+    | 'caretakers'
+    | 'healthReports'
     | 'generic';
 }
 
 const REASONS: Record<Props['reason'], { emoji: string; title: string; desc: string }> = {
   maxPets: {
     emoji: '🐾',
-    title: 'Adicione pets ilimitados',
-    desc: 'No plano gratuito você cadastra até 3 pets. Vire Pet Pro pra ter quantos quiser.',
+    title: 'Adicione mais pets',
+    desc: 'No plano gratuito você cadastra 1 pet. Vire Pet Pro pra ter até 6 pets — a família toda num lugar só.',
   },
   maxPostsPerDay: {
     emoji: '📸',
     title: 'Você já postou hoje',
     desc: 'Plano gratuito permite 1 post por dia. Pet Pro = poste à vontade, sem limites.',
+  },
+  caretakers: {
+    emoji: '👨‍👩‍👧',
+    title: 'Compartilhe a saúde do pet',
+    desc: 'Convide co-tutores (família, cuidador, vet) pra acompanhar a saúde do seu pet. Exclusivo do Pet Pro.',
+  },
+  healthReports: {
+    emoji: '📈',
+    title: 'Relatórios e gráficos de saúde',
+    desc: 'Evolução de peso, custos com o pet e o resumo mensal completo. Exclusivo do Pet Pro.',
   },
   pdfWatermark: {
     emoji: '📤',

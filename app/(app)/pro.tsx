@@ -28,14 +28,14 @@ const PRO_FEATURES = [
   { emoji: '📄', title: 'Prontuário-mestre em PDF', desc: 'Exporte tudo do seu pet pro vet num clique, sem marca d\'água.' },
   { emoji: '🪪', title: 'Carteirinha premium', desc: 'Carteirinha de identidade do pet sem marca d\'água, pronta pra imprimir.' },
   { emoji: '📈', title: 'Evolução da saúde o ano todo', desc: 'Score de saúde de todos os meses, não só os últimos 3.' },
-  { emoji: '🐾', title: 'Pets ilimitados', desc: 'Toda a família num lugar só (no free são 3).' },
+  { emoji: '🐾', title: 'Até 6 pets', desc: 'Toda a família num lugar só (no free, 1 pet).' },
   { emoji: '🎨', title: 'Avatar customizável', desc: 'Cores, acessórios e cenários únicos pro seu pet.' },
   { emoji: '🏅', title: 'Selo dourado Pet Pro', desc: 'Sua estrela de Pet Pro em destaque no perfil e no feed.' },
 ];
 
 const FREE_FEATURES = [
-  '3 pets',
-  '10 posts por dia',
+  '1 pet',
+  '1 post por dia',
   'Histórico de saúde dos últimos 3 meses',
   'Carteirinha com marca d\'água',
   'Anúncios discretos',

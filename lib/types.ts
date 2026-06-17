@@ -793,12 +793,17 @@ export interface Subscription {
 }
 
 export const FREE_TIER_LIMITS = {
-  maxPets: 3,
-  maxPostsPerDay: 10,
+  maxPets: 1,
+  maxPostsPerDay: 1,
   diaryHistoryDays: 30,
   pdfHasWatermark: true,
   maxVideoLengthSeconds: 30,
   maxPhotoBackupMb: 100,
+} as const;
+
+/** Tetos do Pet Pro (pago). Pets limitados a 6 (não mais "ilimitado"). */
+export const PRO_TIER_LIMITS = {
+  maxPets: 6,
 } as const;
 
 export const PRICING = {

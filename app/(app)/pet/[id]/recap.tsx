@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
+import { PaywallCard } from '@/components/paywall-card';
 import { PetAvatar } from '@/components/pet-avatar';
 import { usePetHealthGate } from '@/components/pet-health-gate';
 import { CenteredColumn } from '@/components/ui/centered-column';
@@ -23,6 +24,7 @@ import {
 } from '@/lib/monthly-recap';
 import { fetchHealthTimeline, fetchPet, qk } from '@/lib/queries';
 import { petUrl, sharePost } from '@/lib/share';
+import { useIsPro } from '@/providers/subscription-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
@@ -31,6 +33,7 @@ export default function PetRecapScreen() {
   const healthGate = usePetHealthGate(id);
   const { theme } = useTheme();
   const toast = useToast();
+  const isPro = useIsPro();
 
   const now = new Date();
   const [cursor, setCursor] = useState({ year: now.getFullYear(), month: now.getMonth() });
@@ -73,6 +76,25 @@ export default function PetRecapScreen() {
   };
 
   if (healthGate) return healthGate;
+
+  // Relatório mensal é exclusivo do Pet Pro (registrar saúde continua grátis).
+  if (!isPro) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.bg }}>
+        <Stack.Screen options={{ title: 'Resumo do mês' }} />
+        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 24 }}>
+          <CenteredColumn maxWidth={540}>
+            <PaywallCard
+              intent="health-recap"
+              emoji="🗓️"
+              title="Resumo mensal do seu pet"
+              description="Tudo que rolou no mês — vacinas, consultas, peso e custos — num cartão lindo pra compartilhar. Exclusivo do Pet Pro."
+            />
+          </CenteredColumn>
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: '#1A1410' }}>

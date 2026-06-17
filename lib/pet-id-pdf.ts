@@ -55,7 +55,12 @@ function buildQrSrc(qrUrl?: string | null): string | null {
  * HTML formato A6 (passport size) — pra impressão / download PDF.
  * Layout horizontal de carteirinha, foto à esquerda + dados à direita.
  */
-export function buildPetIdHtml(pet: Pet, tutor: Profile | null, qrUrl?: string | null): string {
+export function buildPetIdHtml(
+  pet: Pet,
+  tutor: Profile | null,
+  qrUrl?: string | null,
+  isPro = false,
+): string {
   const today = new Date().toLocaleDateString('pt-BR');
   const serial = buildSerial(pet);
   const ageText = petAgeText(pet.birthdate);
@@ -230,10 +235,25 @@ export function buildPetIdHtml(pet: Pet, tutor: Profile | null, qrUrl?: string |
       margin-bottom: 8px;
       text-align: center;
     }
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-22deg);
+      font-family: 'Fredoka', sans-serif;
+      font-size: 58px;
+      font-weight: 800;
+      color: rgba(124,45,18,0.10);
+      letter-spacing: 4px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 50;
+    }
   </style>
 </head>
 <body>
   <div class="card">
+    ${!isPro ? '<div class="watermark">MAESTRO PET</div>' : ''}
     <div class="stripes"><div></div><div></div><div></div></div>
 
     <div class="header">
@@ -345,7 +365,12 @@ export function buildPetIdHtml(pet: Pet, tutor: Profile | null, qrUrl?: string |
 /**
  * HTML formato 9:16 — pensado pra compartilhar em Stories.
  */
-export function buildPetIdStoryHtml(pet: Pet, tutor: Profile | null, qrUrl?: string | null): string {
+export function buildPetIdStoryHtml(
+  pet: Pet,
+  tutor: Profile | null,
+  qrUrl?: string | null,
+  isPro = false,
+): string {
   const serial = buildSerial(pet);
   const ageText = petAgeText(pet.birthdate);
   const qrSrc = buildQrSrc(qrUrl);
@@ -442,10 +467,24 @@ export function buildPetIdStoryHtml(pet: Pet, tutor: Profile | null, qrUrl?: str
       display:flex; justify-content: space-between;
       font-size: 18px; color: #525252; letter-spacing: 1px;
     }
+    .watermark {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-28deg);
+      font-family: 'Fredoka', sans-serif;
+      font-size: 150px;
+      font-weight: 800;
+      color: rgba(26,20,16,0.07);
+      letter-spacing: 12px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 60;
+    }
   </style>
 </head>
 <body>
   <div class="story">
+    ${!isPro ? '<div class="watermark">MAESTRO PET</div>' : ''}
     <span class="paw p1">🐾</span>
     <span class="paw p2">🐾</span>
     <span class="paw p3">🐾</span>
@@ -530,8 +569,9 @@ export async function exportPetIdPdf(
   pet: Pet,
   tutor: Profile | null,
   qrUrl?: string | null,
+  isPro = false,
 ): Promise<void> {
-  const html = buildPetIdHtml(pet, tutor, qrUrl);
+  const html = buildPetIdHtml(pet, tutor, qrUrl, isPro);
   const { uri } = await Print.printToFileAsync({ html, base64: false });
   if (Platform.OS === 'web') {
     window.open(uri, '_blank');
@@ -555,8 +595,9 @@ export async function exportPetIdStoryPdf(
   pet: Pet,
   tutor: Profile | null,
   qrUrl?: string | null,
+  isPro = false,
 ): Promise<void> {
-  const html = buildPetIdStoryHtml(pet, tutor, qrUrl);
+  const html = buildPetIdStoryHtml(pet, tutor, qrUrl, isPro);
   const { uri } = await Print.printToFileAsync({
     html,
     base64: false,

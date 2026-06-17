@@ -25,6 +25,7 @@ import {
   shareToWhatsApp,
 } from '@/lib/share';
 import { useSession } from '@/providers/session-provider';
+import { useIsPro } from '@/providers/subscription-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
@@ -37,6 +38,7 @@ export default function PetIdCardScreen() {
   const router = useRouter();
   const { session } = useSession();
   const userId = session?.user.id;
+  const isPro = useIsPro();
 
   const petQuery = useQuery({
     queryKey: qk.pet(id),
@@ -194,9 +196,9 @@ export default function PetIdCardScreen() {
     track('pet_id_share', { channel: 'pdf', format });
     try {
       if (format === 'card') {
-        await exportPetIdPdf(cardPet, tutor, publicUrl);
+        await exportPetIdPdf(cardPet, tutor, publicUrl, isPro);
       } else {
-        await exportPetIdStoryPdf(cardPet, tutor, publicUrl);
+        await exportPetIdStoryPdf(cardPet, tutor, publicUrl, isPro);
       }
       toast.success('PDF gerado!', 'Imprima e cole na coleira do pet 🐾');
       setShareOpen(false);
@@ -230,7 +232,7 @@ export default function PetIdCardScreen() {
         setShareOpen(false);
       } else {
         // Fallback: gera PDF da story e abre share sheet pra usuário salvar
-        await exportPetIdStoryPdf(cardPet, tutor, publicUrl);
+        await exportPetIdStoryPdf(cardPet, tutor, publicUrl, isPro);
         toast.success('Story salva!', 'Abra o Instagram e poste como Story 📸');
         setShareOpen(false);
       }
