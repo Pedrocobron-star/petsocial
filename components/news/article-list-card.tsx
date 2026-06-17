@@ -4,8 +4,9 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
+import { NewBadge } from '@/components/news/news-actions';
 import { FONTS } from '@/lib/fonts';
-import type { NewsArticle } from '@/lib/news';
+import { isRecentArticle, type NewsArticle } from '@/lib/news';
 import { useTheme } from '@/providers/theme-provider';
 
 /**
@@ -60,24 +61,27 @@ export function ArticleListCard({ article }: { article: NewsArticle }) {
 
         {/* Conteúdo */}
         <View style={{ flex: 1, justifyContent: 'center', gap: 5 }}>
-          {cat ? (
-            <View style={{ flexDirection: 'row' }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 4,
-                  backgroundColor: `${cat.color}1A`,
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
-                  borderRadius: 999,
-                }}
-              >
-                <Text style={{ fontSize: 11 }}>{cat.emoji}</Text>
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10.5, color: cat.color }}>
-                  {cat.name}
-                </Text>
-              </View>
+          {cat || isRecentArticle(article.published_at) ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              {cat ? (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    backgroundColor: `${cat.color}1A`,
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 999,
+                  }}
+                >
+                  <Text style={{ fontSize: 11 }}>{cat.emoji}</Text>
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10.5, color: cat.color }}>
+                    {cat.name}
+                  </Text>
+                </View>
+              ) : null}
+              <NewBadge publishedAt={article.published_at} />
             </View>
           ) : null}
 

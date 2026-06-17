@@ -10,6 +10,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, TextInp
 
 import { EmptyState } from '@/components/empty-state';
 import { ArticleListCard } from '@/components/news/article-list-card';
+import { NewBadge } from '@/components/news/news-actions';
 import { SponsoredPostCard } from '@/components/sponsored-post-card';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { FONTS } from '@/lib/fonts';
@@ -17,10 +18,12 @@ import {
   fetchArticles,
   fetchCategories,
   fetchMostReadArticles,
+  fetchTags,
   qkNews,
   searchArticles,
   type NewsArticle,
   type NewsCategory,
+  type NewsTag,
 } from '@/lib/news';
 import { fetchActiveSponsoredPosts } from '@/lib/sponsored';
 import { useTheme } from '@/providers/theme-provider';
@@ -45,6 +48,8 @@ export default function NewsPortalScreen() {
   });
   // "Mais lidas" sobre o acervo INTEIRO (não só as 30 mais recentes).
   const mostReadQuery = useQuery({ queryKey: qkNews.mostRead(), queryFn: () => fetchMostReadArticles(5) });
+  // Tags pra faixa "Explore por tema" no topo (item 2).
+  const tagsQuery = useQuery({ queryKey: qkNews.tags(), queryFn: fetchTags });
 
   // ===== BUSCA (debounce 300ms; >=2 chars dispara) =====
   const [searchInput, setSearchInput] = useState('');
@@ -79,6 +84,7 @@ export default function NewsPortalScreen() {
 
   const articles = articlesQuery.data ?? [];
   const categories = categoriesQuery.data ?? [];
+  const tags = tagsQuery.data ?? [];
   const sponsored = sponsoredQuery.data?.[0] ?? null;
 
   const lead: NewsArticle | null = featuredQuery.data?.[0] ?? articles[0] ?? null;
@@ -102,7 +108,24 @@ export default function NewsPortalScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <Stack.Screen options={{ title: '📰 Jornal Pet', headerShown: true }} />
+      <Stack.Screen
+        options={{
+          title: '📰 Jornal Pet',
+          headerShown: true,
+          headerRight: () => (
+            <Link href={'/news/saved' as never} asChild>
+              <Pressable
+                hitSlop={8}
+                accessibilityRole="link"
+                accessibilityLabel="Matérias salvas"
+                style={{ paddingHorizontal: 6 }}
+              >
+                <Ionicons name="bookmark-outline" size={22} color={theme.text} />
+              </Pressable>
+            </Link>
+          ),
+        }}
+      />
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: 56 }}
@@ -228,6 +251,8 @@ export default function NewsPortalScreen() {
               )}
             </View>
           ) : (
+          <>
+          {tags.length > 0 ? <TagStrip tags={tags} /> : null}
           <View style={{ paddingHorizontal: 16 }}>
             {loading ? (
               <ActivityIndicator color={theme.brand} style={{ marginTop: 40 }} />
@@ -317,6 +342,7 @@ export default function NewsPortalScreen() {
               </>
             )}
           </View>
+          </>
           )}
         </CenteredColumn>
       </ScrollView>
@@ -429,6 +455,7 @@ function HeroCard({ article }: { article: NewsArticle }) {
                 </View>
               </View>
             ) : null}
+            <NewBadge publishedAt={article.published_at} />
             <Text
               style={{ fontFamily: FONTS.serifExtrabold, fontSize: 28, color: '#fff', lineHeight: 33, letterSpacing: -0.3 }}
               numberOfLines={4}
@@ -543,6 +570,60 @@ function CategoryPill({ category }: { category: NewsCategory }) {
       >
         <Text style={{ fontSize: 14 }}>{category.emoji}</Text>
         <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: category.color }}>{category.name}</Text>
+      </Pressable>
+    </Link>
+  );
+}
+
+/** Faixa "Explore por tema" — tags navegáveis no topo do portal (item 2). */
+function TagStrip({ tags }: { tags: NewsTag[] }) {
+  const { theme } = useTheme();
+  return (
+    <View style={{ marginTop: 14 }}>
+      <Text
+        style={{
+          fontFamily: FONTS.bodyBold,
+          fontSize: 10.5,
+          letterSpacing: 0.8,
+          textTransform: 'uppercase',
+          color: theme.textDim,
+          paddingHorizontal: 16,
+          marginBottom: 8,
+        }}
+      >
+        Explore por tema
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingVertical: 2 }}
+      >
+        {tags.map((t) => (
+          <TagPill key={t.id} tag={t} />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+function TagPill({ tag }: { tag: NewsTag }) {
+  const { theme } = useTheme();
+  return (
+    <Link href={`/news/tag/${tag.slug}` as never} asChild>
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel={`Tema ${tag.name}`}
+        style={({ pressed }) => ({
+          paddingHorizontal: 13,
+          paddingVertical: 7,
+          borderRadius: 999,
+          backgroundColor: theme.surface,
+          borderWidth: 1,
+          borderColor: theme.borderLight,
+          opacity: pressed ? 0.8 : 1,
+        })}
+      >
+        <Text style={{ fontFamily: FONTS.bodySemibold, fontSize: 12.5, color: theme.text }}>#{tag.name}</Text>
       </Pressable>
     </Link>
   );

@@ -18,6 +18,7 @@ import { FONTS } from '@/lib/fonts';
 import {
   fetchArticleBySlug,
   fetchRelatedArticles,
+  fetchRelatedByTag,
   incrementArticleView,
   qkNews,
   type NewsArticle,
@@ -60,7 +61,20 @@ export default function PublicArticleReader() {
     enabled: !!article,
     staleTime: 5 * 60_000,
   });
-  const related = relatedQuery.data ?? [];
+  // "Veja também" por TAG (mais relevante); cai pra categoria se vazio.
+  const relatedByTagQuery = useQuery({
+    queryKey: article ? qkNews.relatedByTag(article.id) : ['news-related-tag', 'none'],
+    queryFn: () =>
+      fetchRelatedByTag({
+        excludeId: article!.id,
+        tagIds: (article!.tags ?? []).map((t) => t.id),
+        limit: 4,
+      }),
+    enabled: !!article && !!article.tags?.length,
+    staleTime: 5 * 60_000,
+  });
+  const tagRelated = relatedByTagQuery.data ?? [];
+  const related = tagRelated.length > 0 ? tagRelated : relatedQuery.data ?? [];
 
   const scrollRef = useRef<ScrollView>(null);
   useEffect(() => {
@@ -389,7 +403,7 @@ export default function PublicArticleReader() {
                 </PressScale>
               </View>
 
-              {/* Leia também */}
+              {/* Veja também — relacionadas por tag (cai pra categoria) */}
               {related.length > 0 ? (
                 <View style={{ marginTop: 36 }}>
                   <Text
@@ -402,7 +416,7 @@ export default function PublicArticleReader() {
                       marginBottom: 12,
                     }}
                   >
-                    Leia também
+                    Veja também
                   </Text>
                   <View style={{ gap: 10 }}>
                     {related.map((r) => (

@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/empty-state';
 import { AffiliateProducts } from '@/components/news/affiliate-products';
 import { ArticleBody, ImageCaption } from '@/components/news/article-body';
 import { ArticleTags } from '@/components/news/article-tags';
+import { SaveArticleButton } from '@/components/news/news-actions';
 import { SponsoredPostCard } from '@/components/sponsored-post-card';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { FONTS } from '@/lib/fonts';
@@ -18,6 +19,7 @@ import { resetMetaTags, setMetaTags } from '@/lib/meta-tags';
 import {
   fetchArticleBySlug,
   fetchRelatedArticles,
+  fetchRelatedByTag,
   incrementArticleView,
   qkNews,
   type NewsArticle,
@@ -59,7 +61,20 @@ export default function NewsArticleScreen() {
     enabled: !!article,
     staleTime: 5 * 60_000,
   });
-  const related = relatedQuery.data ?? [];
+  // "Veja também" por TAG (mais relevante que por categoria); cai pra categoria se vazio.
+  const relatedByTagQuery = useQuery({
+    queryKey: article ? qkNews.relatedByTag(article.id) : ['news-related-tag', 'none'],
+    queryFn: () =>
+      fetchRelatedByTag({
+        excludeId: article!.id,
+        tagIds: (article!.tags ?? []).map((t) => t.id),
+        limit: 4,
+      }),
+    enabled: !!article && !!article.tags?.length,
+    staleTime: 5 * 60_000,
+  });
+  const tagRelated = relatedByTagQuery.data ?? [];
+  const related = tagRelated.length > 0 ? tagRelated : relatedQuery.data ?? [];
 
   // Ao trocar de matéria (ex.: clicou numa relacionada), volta ao topo.
   const scrollRef = useRef<ScrollView>(null);
@@ -258,30 +273,33 @@ export default function NewsArticleScreen() {
                 </View>
               ) : null}
 
-              {/* Compartilhar */}
-              <Pressable
-                onPress={onShare}
-                accessibilityRole="button"
-                accessibilityLabel="Compartilhar matéria"
-                style={({ pressed }) => ({
-                  marginTop: 28,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  backgroundColor: theme.brand,
-                  paddingVertical: 14,
-                  borderRadius: 14,
-                  opacity: pressed ? 0.9 : 1,
-                })}
-              >
-                <Ionicons name="share-social-outline" size={18} color={theme.accent.onAccent} />
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.accent.onAccent }}>
-                  Compartilhar
-                </Text>
-              </Pressable>
+              {/* Compartilhar + Salvar */}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 28 }}>
+                <Pressable
+                  onPress={onShare}
+                  accessibilityRole="button"
+                  accessibilityLabel="Compartilhar matéria"
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    backgroundColor: theme.brand,
+                    paddingVertical: 14,
+                    borderRadius: 14,
+                    opacity: pressed ? 0.9 : 1,
+                  })}
+                >
+                  <Ionicons name="share-social-outline" size={18} color={theme.accent.onAccent} />
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.accent.onAccent }}>
+                    Compartilhar
+                  </Text>
+                </Pressable>
+                <SaveArticleButton articleId={article.id} />
+              </View>
 
-              {/* Leia também — mantém o leitor no portal */}
+              {/* Veja também — relacionadas por tag (cai pra categoria) */}
               {related.length > 0 ? (
                 <View style={{ marginTop: 36 }}>
                   <Text
@@ -294,7 +312,7 @@ export default function NewsArticleScreen() {
                       marginBottom: 12,
                     }}
                   >
-                    Leia também
+                    Veja também
                   </Text>
                   <View style={{ gap: 10 }}>
                     {related.map((r) => (

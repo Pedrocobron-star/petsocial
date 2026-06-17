@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { ArticleListCard } from '@/components/news/article-list-card';
+import { FollowCategoryButton } from '@/components/news/news-actions';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { FONTS } from '@/lib/fonts';
 import { fetchArticles, fetchCategories, qkNews } from '@/lib/news';
@@ -74,6 +75,9 @@ export default function NewsCategoryScreen() {
                     ? `${articles.length} ${articles.length === 1 ? 'matéria' : 'matérias'} nesta editoria`
                     : 'Matérias desta editoria'}
                 </Text>
+                <View style={{ marginTop: 12 }}>
+                  <FollowCategoryButton categoryId={category.id} color={category.color} />
+                </View>
               </View>
             ) : null}
 
