@@ -88,7 +88,7 @@ export default function NewPetScreen() {
                   }}
                 >
                   {isPro
-                    ? `Você já tem ${PRO_TIER_LIMITS.maxPets} pets — o máximo do Pet Pro.`
+                    ? `Você atingiu o máximo de ${PRO_TIER_LIMITS.maxPets} pets do Pet Pro.`
                     : `Você já tem ${FREE_TIER_LIMITS.maxPets} ${FREE_TIER_LIMITS.maxPets === 1 ? 'pet' : 'pets'}. Vire Pro pra ter até ${PRO_TIER_LIMITS.maxPets} pets.`}
                 </Text>
               </View>

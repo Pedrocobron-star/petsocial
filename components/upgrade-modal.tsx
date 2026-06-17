@@ -61,7 +61,7 @@ const REASONS: Record<Props['reason'], { emoji: string; title: string; desc: str
   generic: {
     emoji: '⭐',
     title: 'Desbloqueie tudo no Pet Pro',
-    desc: 'Pets ilimitados, posts à vontade, badge dourada e muito mais.',
+    desc: 'Até 6 pets, posts à vontade, badge dourada e muito mais.',
   },
 };
 
