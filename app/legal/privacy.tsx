@@ -9,7 +9,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Política de Privacidade">
       <LegalParagraph>
-        Última atualização: 23 de maio de 2026. Aqui está como a gente trata seus dados.
+        Última atualização: 17 de junho de 2026. Aqui está como a gente trata seus dados.
         Resumindo: o mínimo necessário pro app funcionar, nada vai pra anunciantes.
       </LegalParagraph>
 
@@ -51,8 +51,8 @@ export default function PrivacyPage() {
         <LegalListItem>Lista de contatos do seu celular ou redes sociais.</LegalListItem>
         <LegalListItem>Histórico de navegação fora do app.</LegalListItem>
         <LegalListItem>
-          Dados bancários — pagamentos Pro são processados via Stripe/MercadoPago, nunca passam
-          pelos nossos servidores.
+          Dados bancários — pagamentos Pro são processados pela Cakto (Pix ou cartão), nunca passam
+          pelos nossos servidores. Não armazenamos número de cartão.
         </LegalListItem>
         <LegalListItem>
           <strong>Diagnóstico médico</strong>: o app NUNCA diagnostica. Sintomas e severidades
@@ -108,11 +108,9 @@ export default function PrivacyPage() {
           Service / Firebase Cloud Messaging.
         </LegalListItem>
         <LegalListItem>
-          <strong>OpenAI / Anthropic</strong> — assistente IA processa sua mensagem + contexto
-          mínimo do pet pra responder. Não treinam modelos com seus dados (uso enterprise API).
-        </LegalListItem>
-        <LegalListItem>
-          <strong>Stripe / MercadoPago</strong> — processadores de pagamento Pro (PCI-compliant).
+          <strong>Cakto</strong> (Cakto Tecnologia e Pagamentos) — intermediadora de pagamento do
+          Pet Pro (Pix e cartão de crédito, PCI-compliant). Recebe apenas os dados necessários pra
+          processar a compra.
         </LegalListItem>
         <LegalParagraph>
           Conteúdo público (perfis, posts, carteirinha via QR code) é visível a quem usa o app ou
@@ -161,7 +159,7 @@ export default function PrivacyPage() {
         <LegalParagraph>
           O app é pra pessoas com 13 anos ou mais. Se descobrirmos conta de criança menor de 13,
           removemos imediatamente. Tutores legais podem solicitar deleção dos dados de menores
-          escrevendo pra contato@petsocial.app.
+          escrevendo pra maestropetcontato@gmail.com.
         </LegalParagraph>
       </LegalSection>
 
@@ -178,7 +176,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="Contato">
         <LegalParagraph>
-          Dúvidas, pedidos ou reclamações sobre privacidade: contato@petsocial.app
+          Dúvidas, pedidos ou reclamações sobre privacidade: maestropetcontato@gmail.com
         </LegalParagraph>
         <LegalParagraph>
           Encarregado de Dados (DPO): a ser nomeado quando atingirmos critérios LGPD Art. 41.

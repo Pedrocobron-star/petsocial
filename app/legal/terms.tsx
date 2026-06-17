@@ -11,7 +11,7 @@ export default function TermsPage() {
   return (
     <LegalPage title="Termos de Uso">
       <LegalParagraph>
-        Última atualização: 23 de maio de 2026. Ao usar o Maestro Pet, você concorda com estes
+        Última atualização: 17 de junho de 2026. Ao usar o Maestro Pet, você concorda com estes
         termos. Lê com calma — é curto.
       </LegalParagraph>
 
@@ -148,18 +148,38 @@ export default function TermsPage() {
         </LegalListItem>
       </LegalSection>
 
-      <LegalSection title="8. Pet Pro (assinatura)">
+      <LegalSection title="8. Pet Pro (compra avulsa)">
         <LegalListItem>
-          Pagamento mensal ou anual via Stripe ou MercadoPago. Renovação automática até você
-          cancelar em Conta &gt; Cancelar assinatura.
+          O Pet Pro é uma <strong>compra avulsa (pagamento único)</strong>, não uma assinatura
+          recorrente. Você compra o plano mensal (R$ 14,90, libera os recursos por 30 dias) ou o
+          anual (R$ 99,90, libera por 365 dias).
         </LegalListItem>
         <LegalListItem>
-          Cancelamento mantém acesso Pro até o fim do período já pago. Sem reembolso parcial após
-          7 dias do pagamento (LGPD não exige).
+          <strong>Não há renovação automática nem cobrança recorrente.</strong> Quando o período
+          acaba, sua conta volta ao plano grátis e você só paga de novo se quiser — nada é cobrado
+          sem você comprar outra vez.
         </LegalListItem>
         <LegalListItem>
-          Recursos Pro hoje: histórico Score de Saúde completo (free = 3 meses), IA ilimitada, PDF sem
-          marca d&apos;água, avatar Pro (cenários + charms), badge no perfil.
+          Pagamento por <strong>Pix ou cartão de crédito</strong>, processado pela{' '}
+          <strong>Cakto</strong> (Cakto Tecnologia e Pagamentos), nossa intermediadora de pagamento.
+          Os dados do seu pagamento são tratados pela Cakto — o Maestro Pet não armazena número de
+          cartão.
+        </LegalListItem>
+        <LegalListItem>
+          <strong>Direito de arrependimento:</strong> por ser uma compra online, você pode desistir
+          e pedir reembolso integral em até <strong>7 dias corridos</strong> a partir do pagamento
+          (Art. 49 do Código de Defesa do Consumidor). É só mandar email pra
+          maestropetcontato@gmail.com com o email da compra.
+        </LegalListItem>
+        <LegalListItem>
+          Recursos Pro hoje: <strong>até 6 pets</strong>, posts ilimitados, relatórios e gráficos
+          de saúde, co-tutores e o prontuário/carteirinha em PDF sem marca d&apos;água. O que é
+          grátis (1 pet, vacinas, lembretes, carteirinha, Jornal Pet e Tira-dúvidas) continua
+          grátis.
+        </LegalListItem>
+        <LegalListItem>
+          <strong>Fornecedor:</strong> o Maestro Pet é operado por Pedro Amaral. Contato e suporte:
+          maestropetcontato@gmail.com.
         </LegalListItem>
       </LegalSection>
 
@@ -205,7 +225,7 @@ export default function TermsPage() {
 
       <LegalParagraph>
         Tem dúvida? Manda email pra{' '}
-        <Text className="font-semibold text-brand-dark">contato@petsocial.app</Text>.
+        <Text className="font-semibold text-brand-dark">maestropetcontato@gmail.com</Text>.
       </LegalParagraph>
     </LegalPage>
   );

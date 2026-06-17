@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: 'Posso reportar um post inapropriado?',
-    a: 'Por enquanto não tem botão de reportar no app — manda email pra contato@petsocial.app com o link do post. A gente avalia em até 48h.',
+    a: 'Toque nos três pontinhos do post ou do comentário e escolha "Reportar". A equipe avalia e remove o que viola as regras. Casos graves, fale com maestropetcontato@gmail.com.',
   },
   {
     q: 'O Maestro Pet tem versão mobile na App Store ou Play Store?',

@@ -54,7 +54,7 @@ export default function AboutPage() {
       <LegalSection title="Contato">
         <LegalParagraph>
           Tem ideia, bug ou só quer mandar foto do seu pet? Manda um email pra{' '}
-          <Text className="font-semibold text-brand-dark">contato@petsocial.app</Text>.
+          <Text className="font-semibold text-brand-dark">maestropetcontato@gmail.com</Text>.
         </LegalParagraph>
       </LegalSection>
     </LegalPage>

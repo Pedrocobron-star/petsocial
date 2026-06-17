@@ -22,6 +22,7 @@ import { MediaCarousel } from '@/components/media-carousel';
 import { MetaTags } from '@/components/meta-tags';
 import { OfficialBadge } from '@/components/official-badge';
 import { PetAvatar } from '@/components/pet-avatar';
+import { ReportModal } from '@/components/report-modal';
 import { Button } from '@/components/ui/button';
 import { TextArea } from '@/components/ui/text-area';
 import { FONTS } from '@/lib/fonts';
@@ -57,6 +58,8 @@ export default function PostDetailScreen() {
   const [editingCommentText, setEditingCommentText] = useState('');
   const [editCaptionOpen, setEditCaptionOpen] = useState(false);
   const [captionDraft, setCaptionDraft] = useState('');
+  // Comentário sendo denunciado (não-autor) → abre o ReportModal.
+  const [reportCommentId, setReportCommentId] = useState<string | null>(null);
   // Quando user clica "Responder" num comentário, registra o pai pra próximo addComment
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyingToName, setReplyingToName] = useState<string | null>(null);
@@ -608,11 +611,12 @@ export default function PostDetailScreen() {
                     </>
                   )}
                 </View>
-                {isMine && !isEditing ? (
+                {!isEditing ? (
                   <Pressable
                     hitSlop={10}
-                    onPress={() => onCommentMenu(c.id, c.content)}
+                    onPress={() => (isMine ? onCommentMenu(c.id, c.content) : setReportCommentId(c.id))}
                     className="px-1"
+                    accessibilityLabel={isMine ? 'Opções do comentário' : 'Reportar comentário'}
                   >
                     <Ionicons name="ellipsis-horizontal" size={16} color={theme.textDim} />
                   </Pressable>
@@ -729,6 +733,15 @@ export default function PostDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      {reportCommentId ? (
+        <ReportModal
+          visible
+          onClose={() => setReportCommentId(null)}
+          targetKind="comment"
+          targetId={reportCommentId}
+        />
+      ) : null}
     </KeyboardAvoidingView>
   );
 }

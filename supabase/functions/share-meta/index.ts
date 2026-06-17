@@ -29,7 +29,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const APP_URL = Deno.env.get('PUBLIC_APP_URL') ?? 'https://maestropet.com';
-const DEFAULT_IMAGE = `${APP_URL}/assets/assets/images/icon-512.png`;
+const DEFAULT_IMAGE = `${APP_URL}/icon-512.png`;
 const BRAND_ORANGE = '#F97316';
 const BRAND_BG = '#FFFBF5';
 

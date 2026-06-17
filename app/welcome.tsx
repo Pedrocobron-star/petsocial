@@ -784,11 +784,11 @@ function Faq() {
     },
     {
       q: 'Posso usar pra mais de um pet?',
-      a: 'Sim. Cada pet tem perfil, calendário, prontuário e carteirinha próprios. No plano grátis você cadastra até 3 pets. No Pet Pro, ilimitados.',
+      a: 'Sim. Cada pet tem perfil, calendário, prontuário e carteirinha próprios. No plano grátis você cadastra 1 pet. No Pet Pro, até 6.',
     },
     {
       q: 'Quanto custa?',
-      a: 'Saúde, comunidade, carteirinha digital, lembretes de vacina — tudo isso é grátis pra sempre. O Pet Pro (R$ 9,90/mês ou R$ 99/ano) desbloqueia mais pets, histórico infinito do Score de Saúde, AI assistant ilimitado e PDF do prontuário sem marca d\'água.',
+      a: 'O básico é grátis: 1 pet, carteirinha digital, vacinas, lembretes e o Jornal Pet. O Pet Pro (R$ 14,90/mês ou R$ 99,90/ano) desbloqueia até 6 pets, posts ilimitados, relatórios e gráficos de saúde, co-tutores e o prontuário/carteirinha em PDF sem marca d\'água.',
     },
     {
       q: 'Funciona offline?',
@@ -970,7 +970,7 @@ function Footer() {
             © {new Date().getFullYear()} Maestro Pet — Feito com 💛 pra quem ama bichinhos
           </Text>
           <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>
-            contato@petsocial.app
+            maestropetcontato@gmail.com
           </Text>
         </View>
       </View>

@@ -14,7 +14,7 @@ const DEFAULTS = {
   title: 'Maestro Pet — Saúde do pet + comunidade · App grátis',
   description:
     'Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu cachorro, gato, coelho e mais.',
-  image: '/assets/assets/images/icon-512.png',
+  image: '/icon-512.png',
 };
 
 export interface MetaTagsInput {

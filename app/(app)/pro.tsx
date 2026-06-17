@@ -49,7 +49,7 @@ const FAQ = [
   },
   {
     q: 'Tem garantia de reembolso?',
-    a: '7 dias após a compra você pode pedir reembolso integral. Manda email pra contato@petsocial.app que devolvemos rápido.',
+    a: '7 dias após a compra você pode pedir reembolso integral. Manda email pra maestropetcontato@gmail.com que devolvemos rápido.',
   },
   {
     q: 'Como funciona o pagamento?',
@@ -417,7 +417,7 @@ export default function ProScreen() {
                 textAlign: 'center',
               }}
             >
-              💳 Cartão de crédito • 🔒 Pagamento processado pelo Mercado Pago
+              💳 Pix ou cartão • 🔒 Pagamento seguro via Cakto
             </Text>
           </View>
         ) : (
@@ -566,7 +566,7 @@ export default function ProScreen() {
                 textAlign: 'center',
               }}
             >
-              Dúvidas? contato@petsocial.app
+              Dúvidas? maestropetcontato@gmail.com
             </Text>
           </View>
         ) : null}

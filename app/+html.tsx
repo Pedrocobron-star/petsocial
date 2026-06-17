@@ -60,14 +60,14 @@ export default function Root({ children }: PropsWithChildren) {
           property="og:description"
           content="Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu pet."
         />
-        <meta property="og:image" content="/assets/assets/images/icon-512.png" />
+        <meta property="og:image" content="/icon-512.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Maestro Pet — Saúde do pet + comunidade · App grátis" />
         <meta
           name="twitter:description"
           content="Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu pet."
         />
-        <meta name="twitter:image" content="/assets/assets/images/icon-512.png" />
+        <meta name="twitter:image" content="/icon-512.png" />
 
         <meta
           name="description"

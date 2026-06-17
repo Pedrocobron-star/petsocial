@@ -577,7 +577,7 @@ export default function AccountScreen() {
           }}
         >
           Os dados são protegidos conforme a LGPD (Lei 13.709/2018).{'\n'}
-          Dúvidas: contato@petsocial.app
+          Dúvidas: maestropetcontato@gmail.com
         </Text>
       </ScrollView>
 
