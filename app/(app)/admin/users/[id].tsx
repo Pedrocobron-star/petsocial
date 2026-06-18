@@ -85,6 +85,56 @@ export default function AdminUserDetailScreen() {
   const detail = query.data;
   const isPro = detail?.subscription?.status === 'active';
 
+  const bannedQuery = useQuery({
+    queryKey: ['admin-user-banned', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('banned_at')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return (data as { banned_at: string | null }).banned_at;
+    },
+    enabled: isAdmin && !!id,
+  });
+  const isBanned = !!bannedQuery.data;
+
+  const banMutation = useMutation({
+    mutationFn: async (ban: boolean) => {
+      const { error } = await supabase.rpc('admin_ban_user', {
+        p_user_id: id,
+        p_ban: ban,
+        p_reason: null,
+      });
+      if (error) throw error;
+      return ban;
+    },
+    onSuccess: async (ban) => {
+      await qc.invalidateQueries({ queryKey: ['admin-user-banned', id] });
+      toast.success(ban ? 'Usuário banido' : 'Usuário desbanido');
+    },
+    onError: (e) => toast.error('Erro', e instanceof Error ? e.message : 'Tente de novo'),
+  });
+
+  const onToggleBan = () => {
+    const ban = !isBanned;
+    Alert.alert(
+      ban ? 'Banir usuário?' : 'Desbanir usuário?',
+      ban
+        ? 'A conta fica suspensa: não posta, não comenta e não envia mensagens. Dá pra reverter aqui.'
+        : 'A conta volta a usar o app normalmente.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: ban ? 'Banir' : 'Desbanir',
+          style: ban ? 'destructive' : 'default',
+          onPress: () => banMutation.mutate(ban),
+        },
+      ],
+    );
+  };
+
   const grantMutation = useMutation({
     mutationFn: ({ days, label }: { days: number | null; label: string }) =>
       adminGrantPro(id, days).then(() => label),
@@ -344,6 +394,50 @@ export default function AdminUserDetailScreen() {
                   </View>
                 </>
               )}
+            </View>
+
+            {/* Moderação: banir / desbanir */}
+            <SectionTitle title="Moderação" />
+            <View
+              style={{
+                backgroundColor: isBanned ? '#FEE2E2' : theme.surface,
+                borderRadius: 14,
+                padding: 14,
+                gap: 10,
+                borderWidth: 1,
+                borderColor: isBanned ? '#FCA5A5' : theme.borderLight,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: FONTS.body,
+                  fontSize: 12,
+                  color: isBanned ? '#991B1B' : theme.text,
+                }}
+              >
+                {isBanned
+                  ? 'Conta SUSPENSA — não posta, não comenta e não envia mensagens.'
+                  : 'Conta ativa. Banir bloqueia posts, comentários e mensagens deste usuário.'}
+              </Text>
+              <Pressable
+                onPress={onToggleBan}
+                disabled={banMutation.isPending || bannedQuery.isLoading}
+                style={{
+                  padding: 11,
+                  borderRadius: 10,
+                  backgroundColor: isBanned ? '#16A34A' : '#DC2626',
+                  alignItems: 'center',
+                  opacity: banMutation.isPending || bannedQuery.isLoading ? 0.5 : 1,
+                }}
+              >
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FFFFFF' }}>
+                  {banMutation.isPending
+                    ? '...'
+                    : isBanned
+                      ? 'Desbanir usuário'
+                      : 'Banir usuário'}
+                </Text>
+              </Pressable>
             </View>
 
             {/* Pets */}

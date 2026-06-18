@@ -2343,7 +2343,14 @@ export async function createReport(input: {
   reason: ReportReason;
   notes?: string;
 }): Promise<void> {
-  const { error } = await supabase.from('reports').insert(input);
+  // Dedup: existe índice único (reporter, target_kind, target_id). Upsert com
+  // ignoreDuplicates → denunciar de novo o mesmo alvo não dá erro (só não duplica).
+  const { error } = await supabase
+    .from('reports')
+    .upsert(input, {
+      onConflict: 'reporter_user_id,target_kind,target_id',
+      ignoreDuplicates: true,
+    });
   if (error) throw error;
 }
 
