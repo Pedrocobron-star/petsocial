@@ -1,19 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { PetForm } from '@/components/pet-form';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
-import {
-  deletePet,
-  fetchPet,
-  fetchPetPrivate,
-  qk,
-  updatePet,
-  upsertPetPrivate,
-} from '@/lib/queries';
-import { useActivePet } from '@/providers/active-pet-provider';
+import { useDeletePet } from '@/lib/use-delete-pet';
+import { fetchPet, fetchPetPrivate, qk, updatePet, upsertPetPrivate } from '@/lib/queries';
 import { useSession } from '@/providers/session-provider';
 import { useToast } from '@/providers/toast-provider';
 
@@ -23,7 +16,7 @@ export default function EditPetScreen() {
   const qc = useQueryClient();
   const toast = useToast();
   const { session } = useSession();
-  const { setActivePet, pets } = useActivePet();
+  const { confirmAndDelete, isDeleting } = useDeletePet();
   const userId = session?.user.id;
 
   const petQuery = useQuery({
@@ -39,19 +32,6 @@ export default function EditPetScreen() {
     enabled: !!id,
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: () => deletePet(id),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: qk.myPets(userId!) });
-      const remaining = pets.filter((p) => p.id !== id);
-      if (remaining[0]) setActivePet(remaining[0].id);
-      toast.success('Pet excluído', 'Os dados foram removidos definitivamente.');
-      router.replace('/(app)/(tabs)/profile');
-    },
-    onError: (e) =>
-      toast.error('Erro ao excluir', e instanceof Error ? e.message : 'Tente novamente.'),
-  });
-
   if (!userId || !petQuery.data) return null;
   const pet = petQuery.data;
   const priv = petPrivateQuery.data ?? null;
@@ -64,17 +44,6 @@ export default function EditPetScreen() {
       </Screen>
     );
   }
-
-  const confirmDelete = () => {
-    Alert.alert(
-      `Excluir ${pet.name}?`,
-      'Todos os posts, comentários e encontros desse pet também serão removidos. Essa ação não pode ser desfeita.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Excluir', style: 'destructive', onPress: () => deleteMutation.mutate() },
-      ],
-    );
-  };
 
   return (
     <Screen>
@@ -168,8 +137,8 @@ export default function EditPetScreen() {
         <Button
           title="Excluir pet"
           variant="danger"
-          onPress={confirmDelete}
-          loading={deleteMutation.isPending}
+          onPress={() => confirmAndDelete(pet, () => router.replace('/(app)/(tabs)/profile'))}
+          loading={isDeleting}
           fullWidth
         />
       </View>

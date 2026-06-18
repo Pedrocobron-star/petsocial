@@ -7,6 +7,7 @@ import { speciesLabel } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
 import { petAgeText } from '@/lib/pet-age';
 import type { Pet } from '@/lib/types';
+import { useDeletePet } from '@/lib/use-delete-pet';
 import { useTheme } from '@/providers/theme-provider';
 
 import { PetAvatar } from './pet-avatar';
@@ -25,6 +26,7 @@ interface Props {
 export function MyPetsSection({ pets, activePetId, onSelectPet }: Props) {
   const { theme } = useTheme();
   const router = useRouter();
+  const { confirmAndDelete } = useDeletePet();
 
   return (
     <CenteredColumn maxWidth={540}>
@@ -205,6 +207,31 @@ export function MyPetsSection({ pets, activePetId, onSelectPet }: Props) {
                       accessibilityLabel={`Editar ${pet.name}`}
                     >
                       <Ionicons name="pencil" size={14} color={theme.textDim} />
+                    </Pressable>
+
+                    {/* Excluir — confirma antes de apagar (o diálogo protege de
+                        toque acidental). Stop propagation pra não abrir o card. */}
+                    <Pressable
+                      hitSlop={10}
+                      onPress={(e) => {
+                        const ev = e as {
+                          stopPropagation?: () => void;
+                          preventDefault?: () => void;
+                        };
+                        ev.preventDefault?.();
+                        ev.stopPropagation?.();
+                        confirmAndDelete(pet);
+                      }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 8,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      accessibilityLabel={`Excluir ${pet.name}`}
+                    >
+                      <Ionicons name="trash-outline" size={14} color={theme.textDim} />
                     </Pressable>
                   </Pressable>
                 </Link>

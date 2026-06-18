@@ -52,7 +52,7 @@ export default function CreatePostScreen() {
   const { tag } = useLocalSearchParams<{ tag?: string }>();
   const { theme } = useTheme();
   const { session } = useSession();
-  const { pets, activePet, setActivePet } = useActivePet();
+  const { pets, activePet, setActivePet, loading: petsLoading } = useActivePet();
   const toast = useToast();
   const qc = useQueryClient();
   const [media, setMedia] = useState<PickedMedia[]>([]);
@@ -123,7 +123,37 @@ export default function CreatePostScreen() {
     return () => clearTimeout(t);
   }, [caption, petId, draftLoaded]);
 
-  if (!userId || !activePet) return null;
+  if (!userId) return null;
+  // Sem pet ativo = conta sem nenhum pet (ex.: excluiu o último). Em vez de
+  // tela em branco, oferece o caminho pra cadastrar. Enquanto carrega, nada.
+  if (!activePet) {
+    return (
+      <SafeAreaView edges={['top']} className="flex-1" style={{ backgroundColor: theme.bg }}>
+        {petsLoading ? null : (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 }}>
+            <Text style={{ fontSize: 44 }}>🐾</Text>
+            <Text
+              style={{ fontFamily: FONTS.display, fontSize: 20, color: theme.text, textAlign: 'center' }}
+            >
+              Cadastre um pet pra postar
+            </Text>
+            <Text
+              style={{
+                fontFamily: FONTS.body,
+                fontSize: 14,
+                color: theme.textDim,
+                textAlign: 'center',
+                lineHeight: 20,
+              }}
+            >
+              Os posts são feitos em nome de um pet. Adicione o seu primeiro pra começar.
+            </Text>
+            <Button title="Adicionar pet" onPress={() => router.push('/(app)/pet/new')} />
+          </View>
+        )}
+      </SafeAreaView>
+    );
+  }
 
   const pickMedia = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();

@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: 'O que acontece se eu excluir um pet?',
-    a: 'Todos os posts, comentários, seguidores e encontros desse pet específico são removidos. Os outros pets da sua conta continuam intactos.',
+    a: 'Todos os posts, comentários, seguidores, encontros e registros de saúde (vacinas, peso, consultas, documentos) desse pet específico são removidos. Os outros pets da sua conta continuam intactos. Você apaga um pet na lista "Meus pets" (ícone de lixeira no card) ou pelo botão "Excluir pet" na tela de editar o pet.',
   },
   {
     q: 'E se eu excluir minha conta inteira?',
