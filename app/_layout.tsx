@@ -33,6 +33,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { PetAnimationsStyle } from '@/components/avatar/pet-animations-style';
 import { ConfirmHost } from '@/components/confirm-host';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { DocumentTitleManager } from '@/components/document-title-manager';
 import { MobileAppBanner } from '@/components/mobile-app-banner';
 import { I18nProvider } from '@/lib/i18n';
@@ -100,15 +101,17 @@ export default function RootLayout() {
                         <MobileAppBanner />
                         {/* Modal de confirmação estilizado (web) — usado pelo shim de Alert */}
                         <ConfirmHost />
-                        <Stack screenOptions={{ headerShown: false }}>
-                          <Stack.Screen name="index" />
-                          <Stack.Screen name="welcome" />
-                          <Stack.Screen name="(auth)" />
-                          <Stack.Screen name="(app)" />
-                          <Stack.Screen name="id/[token]" />
-                          <Stack.Screen name="endorse/[token]" />
-                          <Stack.Screen name="ler/[slug]" />
-                        </Stack>
+                        <ErrorBoundary>
+                          <Stack screenOptions={{ headerShown: false }}>
+                            <Stack.Screen name="index" />
+                            <Stack.Screen name="welcome" />
+                            <Stack.Screen name="(auth)" />
+                            <Stack.Screen name="(app)" />
+                            <Stack.Screen name="id/[token]" />
+                            <Stack.Screen name="endorse/[token]" />
+                            <Stack.Screen name="ler/[slug]" />
+                          </Stack>
+                        </ErrorBoundary>
                         <StatusBar style="auto" />
                       </RatingPromptProvider>
                     </ToastProvider>

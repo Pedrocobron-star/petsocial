@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { track } from '@/lib/analytics';
 import { caktoCheckoutUrl } from '@/lib/cakto';
-import { PRICING, type SubscriptionPlan } from '@/lib/types';
+import { PRICING } from '@/lib/types';
 import { useSession } from '@/providers/session-provider';
 import { useSubscription } from '@/providers/subscription-provider';
 import { useTheme } from '@/providers/theme-provider';
@@ -67,7 +67,7 @@ export default function ProScreen() {
   const toast = useToast();
   const { isPro, subscription } = useSubscription();
   const { session } = useSession();
-  const [plan, setPlan] = useState<SubscriptionPlan>('yearly');
+  const [plan, setPlan] = useState<'monthly' | 'yearly'>('yearly');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // Analytics: log impression do screen
@@ -101,7 +101,7 @@ export default function ProScreen() {
   const yearlySavings = PRICING.monthlyBRL * 12 - PRICING.yearlyBRL;
   const savingsFormatted = `R$ ${yearlySavings.toFixed(2).replace('.', ',')}`;
 
-  const selectPlan = (next: SubscriptionPlan) => {
+  const selectPlan = (next: 'monthly' | 'yearly') => {
     setPlan(next);
     track('plan_selected', { plan: next });
   };

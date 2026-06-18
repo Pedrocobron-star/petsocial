@@ -7,11 +7,11 @@ import { LegalPage } from '@/components/legal-page';
 const FAQS = [
   {
     q: 'O Maestro Pet é grátis mesmo?',
-    a: 'Sim. Você pode cadastrar quantos pets quiser, postar, seguir e marcar encontros sem pagar nada. No futuro pode rolar funcionalidade premium, mas o que existe hoje continua grátis.',
+    a: 'O essencial é grátis pra sempre: 1 pet, carteirinha digital, calendário de vacinas, lembretes, comunidade e o Jornal Pet. Quem quiser mais pode assinar o Pet Pro (R$ 14,90/mês ou R$ 99,90/ano, compra avulsa, sem renovação automática), que libera até 6 pets, posts ilimitados, relatórios e gráficos de saúde, co-tutores e o prontuário/carteirinha em PDF sem marca d\'água.',
   },
   {
     q: 'Posso ter mais de um pet na mesma conta?',
-    a: 'Pode. O modelo é justamente esse — uma conta de tutor controla N pets. Cada pet tem perfil próprio, seguidores próprios e posta em nome próprio. Você troca de "pet ativo" no topo do feed ou na aba Perfil.',
+    a: 'Pode. No plano grátis você cadastra 1 pet; no Pet Pro, até 6. Cada pet tem perfil próprio, seguidores próprios e posta em nome próprio. Você troca de "pet ativo" no topo do feed ou na aba Perfil.',
   },
   {
     q: 'Por que não tem timeline de humano?',

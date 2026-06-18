@@ -5,8 +5,8 @@ import { ptBR } from 'date-fns/locale';
 import { Link, Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FONTS } from '@/lib/fonts';
 import { cleanupAccountStorage } from '@/lib/pet-cleanup';
-import { cancelSubscription, qk } from '@/lib/queries';
+import { qk } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/providers/session-provider';
 import { useSubscription } from '@/providers/subscription-provider';
@@ -55,15 +55,6 @@ export default function AccountScreen() {
     router.replace('/welcome' as never);
   };
 
-  const cancelMut = useMutation({
-    mutationFn: () => cancelSubscription(userId!),
-    onSuccess: () => {
-      toast.success('Cancelamento agendado', 'Você continua Pro até o fim do período');
-      if (userId) qc.invalidateQueries({ queryKey: qk.subscription(userId) });
-    },
-    onError: () => toast.error('Erro ao cancelar', 'Tenta de novo em uns minutos'),
-  });
-
   const exportMut = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.rpc('export_my_data');
@@ -92,18 +83,6 @@ export default function AccountScreen() {
     onError: (e) =>
       toast.error('Erro ao exportar', e instanceof Error ? e.message : 'Tente novamente.'),
   });
-
-  const onCancel = () => {
-    if (!subscription?.current_period_end) return;
-    Alert.alert(
-      'Cancelar assinatura?',
-      `Você continua Pro até ${format(parseISO(subscription.current_period_end), "d 'de' MMM", { locale: ptBR })}. Depois disso volta pro plano gratuito (seus dados ficam intactos).`,
-      [
-        { text: 'Manter Pro', style: 'cancel' },
-        { text: 'Cancelar', style: 'destructive', onPress: () => cancelMut.mutate() },
-      ],
-    );
-  };
 
   if (isLoading) return null;
 
@@ -151,20 +130,26 @@ export default function AccountScreen() {
                   color: '#E5E5E5',
                 }}
               >
-                Plano {subscription.plan === 'yearly' ? 'anual' : 'mensal'} •{' '}
-                {subscription.status === 'active' ? '✅ ativo' : `⏸ ${subscription.status}`}
+                {subscription.plan === 'founder'
+                  ? 'Membro Fundador'
+                  : subscription.plan === 'yearly'
+                    ? 'Plano anual'
+                    : 'Plano mensal'}{' '}
+                • {subscription.status === 'active' ? '✅ ativo' : `⏸ ${subscription.status}`}
               </Text>
               {subscription.current_period_end ? (
                 <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#A3A3A3' }}>
-                  {subscription.cancel_at_period_end
-                    ? `Termina em ${format(parseISO(subscription.current_period_end), "d 'de' MMM 'de' yyyy", { locale: ptBR })}`
-                    : `Renova em ${format(parseISO(subscription.current_period_end), "d 'de' MMM 'de' yyyy", { locale: ptBR })}`}
+                  Pro até {format(parseISO(subscription.current_period_end), "d 'de' MMM 'de' yyyy", { locale: ptBR })}
                 </Text>
-              ) : null}
+              ) : (
+                <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#A3A3A3' }}>
+                  Acesso permanente
+                </Text>
+              )}
             </>
           ) : (
             <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.textDim }}>
-              Limitado a 3 pets, 1 post/dia e carteirinha com marca d&apos;água
+              Limitado a 1 pet, 1 post/dia e carteirinha com marca d&apos;água
             </Text>
           )}
         </View>
@@ -178,42 +163,23 @@ export default function AccountScreen() {
             fullWidth
           />
         ) : (
-          <>
-            {!subscription?.cancel_at_period_end ? (
-              <Pressable
-                onPress={onCancel}
-                style={{
-                  backgroundColor: theme.surface,
-                  borderRadius: 12,
-                  padding: 14,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 10,
-                }}
-              >
-                <Ionicons name="close-circle-outline" size={20} color="#DC2626" />
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#DC2626' }}>
-                  Cancelar assinatura
-                </Text>
-              </Pressable>
-            ) : (
-              <View
-                style={{
-                  backgroundColor: '#FEF3C7',
-                  borderRadius: 12,
-                  padding: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 10,
-                }}
-              >
-                <Ionicons name="information-circle" size={20} color="#92400E" />
-                <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 12, color: '#78350F' }}>
-                  Cancelamento agendado. Você continua Pro até o fim do período.
-                </Text>
-              </View>
-            )}
-          </>
+          <View
+            style={{
+              backgroundColor: theme.surface,
+              borderRadius: 12,
+              padding: 14,
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              gap: 10,
+            }}
+          >
+            <Ionicons name="information-circle-outline" size={20} color={theme.textDim} />
+            <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 12.5, color: theme.textDim, lineHeight: 18 }}>
+              O Pet Pro é uma compra avulsa, sem renovação automática — nada é cobrado de novo.
+              Quando o período acaba, sua conta volta ao plano gratuito (seus dados ficam intactos)
+              e você pode comprar de novo quando quiser.
+            </Text>
+          </View>
         )}
 
         <View style={{ marginTop: 8 }}>
@@ -236,6 +202,54 @@ export default function AccountScreen() {
             <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }}>
               {session?.user.email}
             </Text>
+          </View>
+        </View>
+
+        {/* Ajuda & Suporte */}
+        <View style={{ marginTop: 8 }}>
+          <Text
+            style={{
+              fontFamily: FONTS.bodyBold,
+              fontSize: 11,
+              letterSpacing: 1.2,
+              color: theme.brand,
+              textTransform: 'uppercase',
+              marginBottom: 6,
+            }}
+          >
+            Ajuda & Suporte
+          </Text>
+          <View style={{ backgroundColor: theme.surface, borderRadius: 12, overflow: 'hidden' }}>
+            <Link href="/legal/faq" asChild>
+              <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 }}>
+                <Ionicons name="help-circle-outline" size={20} color={theme.textDim} />
+                <Text style={{ flex: 1, fontFamily: FONTS.bodyMedium, fontSize: 14, color: theme.text }}>
+                  Perguntas frequentes
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
+              </Pressable>
+            </Link>
+            <View style={{ height: 1, backgroundColor: theme.borderLight }} />
+            <Link href="/legal/about" asChild>
+              <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 }}>
+                <Ionicons name="information-circle-outline" size={20} color={theme.textDim} />
+                <Text style={{ flex: 1, fontFamily: FONTS.bodyMedium, fontSize: 14, color: theme.text }}>
+                  Sobre o Maestro Pet
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
+              </Pressable>
+            </Link>
+            <View style={{ height: 1, backgroundColor: theme.borderLight }} />
+            <Pressable
+              onPress={() => Linking.openURL('mailto:maestropetcontato@gmail.com').catch(() => {})}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 }}
+            >
+              <Ionicons name="mail-outline" size={20} color={theme.textDim} />
+              <Text style={{ flex: 1, fontFamily: FONTS.bodyMedium, fontSize: 14, color: theme.text }}>
+                Falar com o suporte
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
+            </Pressable>
           </View>
         </View>
 

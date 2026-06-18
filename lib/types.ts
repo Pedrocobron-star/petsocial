@@ -773,7 +773,7 @@ export type SubscriptionStatus =
   | 'canceled'
   | 'incomplete';
 
-export type SubscriptionPlan = 'monthly' | 'yearly';
+export type SubscriptionPlan = 'monthly' | 'yearly' | 'founder';
 
 export interface Subscription {
   id: string;
