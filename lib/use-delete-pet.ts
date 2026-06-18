@@ -5,6 +5,7 @@ import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 import { useToast } from '@/providers/toast-provider';
 
+import { cleanupPetStorage } from './pet-cleanup';
 import { deletePet, qk } from './queries';
 import type { Pet } from './types';
 
@@ -27,7 +28,12 @@ export function useDeletePet() {
   const userId = session?.user.id;
 
   const mutation = useMutation({
-    mutationFn: (petId: string) => deletePet(petId),
+    // Limpa os arquivos de storage ANTES de apagar a linha (a RPC precisa que os
+    // registros ainda existam pra coletar as URLs). Best-effort — não bloqueia.
+    mutationFn: async (petId: string) => {
+      await cleanupPetStorage(petId);
+      return deletePet(petId);
+    },
     onError: (e) =>
       toast.error('Erro ao excluir', e instanceof Error ? e.message : 'Tente novamente.'),
   });

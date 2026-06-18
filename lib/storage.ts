@@ -66,3 +66,25 @@ export async function deleteFromBucket(
     // ignora
   }
 }
+
+/**
+ * Apaga um objeto público detectando o bucket pela PRÓPRIA URL
+ * (/object/public/<bucket>/<path>). Útil pra limpar mídia de buckets variados
+ * de uma vez (ex.: ao excluir um pet). Best-effort — silencia erro.
+ */
+export async function deleteByPublicUrl(publicUrl: string): Promise<void> {
+  try {
+    const marker = '/object/public/';
+    const idx = publicUrl.indexOf(marker);
+    if (idx < 0) return;
+    const rest = publicUrl.substring(idx + marker.length); // <bucket>/<path...>
+    const slash = rest.indexOf('/');
+    if (slash < 0) return;
+    const bucket = rest.substring(0, slash);
+    const path = rest.substring(slash + 1).split('?')[0];
+    if (!bucket || !path) return;
+    await supabase.storage.from(bucket).remove([path]);
+  } catch {
+    // ignora
+  }
+}

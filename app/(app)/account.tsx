@@ -20,6 +20,7 @@ import { PremiumBadge } from '@/components/premium-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FONTS } from '@/lib/fonts';
+import { cleanupAccountStorage } from '@/lib/pet-cleanup';
 import { cancelSubscription, qk } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/providers/session-provider';
@@ -795,6 +796,14 @@ function DeleteAccountModal({ visible, onClose, onDeleted }: DeleteModalProps) {
     if (!canDelete) return;
     setDeleting(true);
     try {
+      // Apaga os arquivos do storage ANTES (enquanto a sessão ainda vale pra RLS
+      // de storage). Best-effort — o delete_my_account roda de qualquer forma.
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        if (u?.user?.id) await cleanupAccountStorage(u.user.id);
+      } catch {
+        // ignora — não bloqueia a exclusão da conta
+      }
       const { data, error } = await supabase.rpc('delete_my_account');
       if (error) throw error;
       const r = (data || {}) as DeleteResult;
