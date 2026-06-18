@@ -85,7 +85,7 @@ export function LeagueCard({ currentUserId }: { currentUserId?: string }) {
         </>
       ) : (
         <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11.5, color: lg.current.color, textAlign: 'center' }}>
-          👑 Liga máxima! Você é elite do Cassino Pet esta semana.
+          👑 Liga máxima! Você é elite da Arena Pet esta semana.
         </Text>
       )}
 

@@ -1,5 +1,5 @@
 /**
- * Desafio Diário do Cassino Pet.
+ * Desafio Diário da Arena Pet.
  *
  * Todo dia (fuso BR, vira à meia-noite) o app fixa UM jogo + UMA dificuldade,
  * iguais pra todo mundo — o que permite um placar diário compartilhado e

@@ -19,7 +19,7 @@ interface Props {
 }
 
 /**
- * Cartaz quadrado (1024) do resultado de um jogo do Cassino Pet, pra exportar
+ * Cartaz quadrado (1024) do resultado de um jogo da Arena Pet, pra exportar
  * como PNG e compartilhar. Usa só formas + texto (robusto no export pra canvas).
  * fontWeight bold sem fonte custom → renderiza igual no canvas de qualquer
  * browser.
@@ -52,7 +52,7 @@ export function GameResultPosterSvg({ game, score, difficulty, petName, size = 1
 
         {/* wordmark */}
         <SvgText x={V / 2} y="150" fontSize="46" fontWeight="800" fill="#FBBF24" textAnchor="middle" letterSpacing="2">
-          🎰 CASSINO PET
+          🏆 CASSINO PET
         </SvgText>
 
         {/* emoji do jogo */}

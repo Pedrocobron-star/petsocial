@@ -89,20 +89,20 @@ const BASE_ACHIEVEMENTS: AchievementDef[] = [
     tier: 2,
   },
   // ============================================================================
-  // Conquistas do Cassino Pet (jogos)
+  // Conquistas da Arena Pet (jogos)
   // ============================================================================
   {
     id: 'gamer',
     emoji: '🎮',
     title: 'Pet gamer',
-    description: 'Jogou um jogo do Cassino Pet',
+    description: 'Jogou um jogo da Arena Pet',
     tier: 1,
   },
   {
     id: 'arcade_explorer',
     emoji: '🕹️',
-    title: 'Explorador do Cassino',
-    description: 'Jogou os 3 jogos do Cassino Pet',
+    title: 'Explorador da Arena',
+    description: 'Jogou os 3 jogos da Arena Pet',
     tier: 2,
   },
   {
@@ -116,7 +116,7 @@ const BASE_ACHIEVEMENTS: AchievementDef[] = [
     id: 'tournament_champ',
     emoji: '🏆',
     title: 'Campeão de torneio',
-    description: 'Entrou no pódio (top 10) de um Torneio de Cassino',
+    description: 'Entrou no pódio (top 10) de um Torneio da Arena',
     tier: 3,
   },
   // ============================================================================

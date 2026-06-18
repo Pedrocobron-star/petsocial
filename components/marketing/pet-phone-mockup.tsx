@@ -25,7 +25,7 @@ const DOCK: { emoji: string; bg: string }[] = [
 
 /** Notificações que entram deslizando no topo — dão a sensação de "app vivo". */
 const NOTIFS: { emoji: string; title: string; body: string; tint: string }[] = [
-  { emoji: '🔥', title: 'Cassino Pet', body: 'Bidu, seu streak chegou a 3 dias!', tint: '#8B5CF6' },
+  { emoji: '🔥', title: 'Arena Pet', body: 'Bidu, seu streak chegou a 3 dias!', tint: '#8B5CF6' },
   { emoji: '💉', title: 'Saúde', body: 'Vacina V10 vence em 7 dias', tint: '#14B8A6' },
   { emoji: '📰', title: 'Redação Maestro Pet', body: 'Nova matéria: petiscos saudáveis', tint: '#EC4899' },
   { emoji: '🎯', title: 'Desafio de hoje', body: 'Quiz Pet no 🟡 Médio. Topa?', tint: '#F472B6' },

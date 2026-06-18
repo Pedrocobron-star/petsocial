@@ -33,11 +33,11 @@ export function GameResultShareButton({ game, score, difficulty, petName }: Prop
     const who = petName?.trim();
     const intro = who ? `Eu e ${who}` : 'Eu';
     const text =
-      `🎰 Cassino Pet · ${m.emoji} ${m.label}\n` +
+      `🏆 Arena Pet · ${m.emoji} ${m.label}\n` +
       `${intro} fizemos ${score} ${m.scoreLabel} no ${tier.emoji} ${tier.label}!\n` +
       `Cadê o seu? Me supera 👇`;
     haptic.light();
-    const r = await sharePost({ title: `Cassino Pet · ${m.label}`, message: text, url: gamesUrl() });
+    const r = await sharePost({ title: `Arena Pet · ${m.label}`, message: text, url: gamesUrl() });
     if (r === 'shared') {
       setTextState('shared');
       haptic.success();
@@ -58,7 +58,7 @@ export function GameResultShareButton({ game, score, difficulty, petName }: Prop
       const dataUrl = await svgNodeToPng(svg, 1024);
       if (!dataUrl) return;
       const m = GAME_META[game];
-      const shared = await sharePngDataUrl(dataUrl, `cassino-pet-${game}.png`, `Cassino Pet · ${m.label}`);
+      const shared = await sharePngDataUrl(dataUrl, `arena-pet-${game}.png`, `Arena Pet · ${m.label}`);
       setCardState(shared ? 'shared' : 'saved');
       haptic.success();
     } catch {

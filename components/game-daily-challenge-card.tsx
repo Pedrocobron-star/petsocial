@@ -34,7 +34,7 @@ function isUrl(u: string | null): u is string {
 }
 
 /**
- * Card do Desafio Diário no hub dos jogos (Cassino Pet). Mostra o
+ * Card do Desafio Diário no hub dos jogos (Arena Pet). Mostra o
  * jogo+dificuldade do dia (iguais pra todo mundo), detecta se o tutor já
  * completou (via game_scores), abre um baú surpresa cosmético com confete,
  * exibe o placar do dia (top 3) e deixa compartilhar o resultado. É o gancho
@@ -103,9 +103,9 @@ export function GameDailyChallengeCard() {
     haptic.light();
     const who = activePet?.name?.trim();
     const txt =
-      `🎯 Desafio de hoje do Cassino Pet · ${meta.emoji} ${meta.label} (${diff.emoji} ${diff.label})\n` +
+      `🎯 Desafio de hoje da Arena Pet · ${meta.emoji} ${meta.label} (${diff.emoji} ${diff.label})\n` +
       `${who ? `Eu e ${who} fizemos` : 'Fiz'} ${myBest} ${meta.scoreLabel}! Cadê o seu? Me supera 👇`;
-    await sharePost({ title: 'Desafio Diário · Cassino Pet', message: txt, url: gamesUrl() });
+    await sharePost({ title: 'Desafio Diário · Arena Pet', message: txt, url: gamesUrl() });
   };
 
   return (

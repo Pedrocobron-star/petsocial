@@ -87,7 +87,7 @@ export function newsUrl(slug: string): string {
   return `petsocial://ler/${slug}`;
 }
 
-/** Link pro hub dos jogos (Cassino Pet) — usado ao compartilhar resultado. */
+/** Link pro hub dos jogos (Arena Pet) — usado ao compartilhar resultado. */
 export function gamesUrl(): string {
   if (Platform.OS === 'web') {
     return `${shareBaseUrl()}/games`;

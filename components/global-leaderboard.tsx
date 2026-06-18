@@ -13,7 +13,7 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 /**
  * Placar geral combinado: ranking dos tutores somando o melhor score de cada
  * um dos 3 jogos (score efetivo já com multiplicador de dificuldade). Premia
- * quem é bom no Cassino Pet inteiro, não só em um jogo.
+ * quem é bom na Arena Pet inteiro, não só em um jogo.
  */
 export function GlobalLeaderboard({ limit = 30, currentUserId }: { limit?: number; currentUserId?: string }) {
   const q = useQuery({

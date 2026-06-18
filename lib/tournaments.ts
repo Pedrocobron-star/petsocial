@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import type { GameKey } from './games';
 
 /**
- * Torneios de Cassino — evento temporizado de 1 jogo. O placar e computado das
+ * Torneios da Arena — evento temporizado de 1 jogo. O placar e computado das
  * pontuacoes que ja entram em game_scores na janela (o jogador so joga o jogo).
  */
 

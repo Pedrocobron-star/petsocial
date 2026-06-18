@@ -1,5 +1,5 @@
 /**
- * Nível do jogador (XP cross-game do Cassino Pet).
+ * Nível do jogador (XP cross-game da Arena Pet).
  *
  * O XP é o "total_score" do placar geral combinado (soma do melhor score
  * efetivo de cada um dos 3 jogos). Aqui mapeamos esse XP num nível + título,
@@ -28,7 +28,7 @@ const TITLES: TitleBand[] = [
   { min: 5, title: 'Tutor Dedicado', emoji: '🐕' },
   { min: 8, title: 'Tutor Experiente', emoji: '🏅' },
   { min: 12, title: 'Mestre dos Pets', emoji: '🎖️' },
-  { min: 16, title: 'Lenda do Cassino Pet', emoji: '👑' },
+  { min: 16, title: 'Lenda da Arena Pet', emoji: '👑' },
 ];
 
 export interface PlayerLevel {

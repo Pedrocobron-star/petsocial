@@ -88,7 +88,7 @@ export default function GamesHubScreen() {
     <View style={{ flex: 1, backgroundColor: BG }}>
       <Stack.Screen
         options={{
-          title: '🎰 Cassino Pet',
+          title: '🏆 Arena Pet',
           headerShown: true,
           headerStyle: { backgroundColor: BG },
           headerTintColor: '#fff',
@@ -99,7 +99,7 @@ export default function GamesHubScreen() {
         {/* Hero */}
         <View style={{ alignItems: 'center', gap: 4, paddingTop: 6 }}>
           <Text style={[{ fontFamily: FONTS.display, fontSize: 30, color: '#FBBF24' }, NEON]}>
-            🎰 Cassino Pet 🐾
+            🏆 Arena Pet 🐾
           </Text>
           <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
             {activePet ? `Você joga, ${activePet.name} torce — ` : ''}dispute o ranking e seja o nº 1! 🏆

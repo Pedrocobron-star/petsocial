@@ -24,7 +24,7 @@ const PODIUM_DISMISS_KEY = 'petsocial:tourney-podium-dismissed';
 const PODIUM_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000; // mostra o pódio por até 3 dias
 
 /**
- * Card do Torneio de Cassino ativo — evento temporizado de 1 jogo. Mostra
+ * Card do Torneio da Arena ativo — evento temporizado de 1 jogo. Mostra
  * contagem regressiva, pódio top-3 e seu rank, com CTA pra jogar. Some quando
  * não há torneio ativo.
  */
@@ -90,7 +90,7 @@ export function TournamentCard() {
             flex: 1,
           }}
         >
-          Torneio de Cassino
+          Torneio da Arena
         </Text>
         <View
           style={{

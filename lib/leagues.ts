@@ -1,5 +1,5 @@
 /**
- * Ligas semanais do Cassino Pet.
+ * Ligas semanais da Arena Pet.
  *
  * Toda semana (BR, começa segunda) os pontos efetivos somados dos 3 jogos
  * colocam o tutor numa liga: Bronze → Prata → Ouro → Platina → Diamante.

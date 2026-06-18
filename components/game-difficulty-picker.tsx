@@ -6,7 +6,7 @@ import { DIFF_META, type GameDifficulty } from '@/lib/games';
 const TIERS: GameDifficulty[] = [1, 2, 3];
 
 /**
- * Seletor de dificuldade compartilhado pelos jogos (tema escuro do Cassino Pet).
+ * Seletor de dificuldade compartilhado pelos jogos (tema escuro da Arena Pet).
  * Mostra Fácil/Médio/Difícil + o multiplicador de score de cada tier.
  */
 export function GameDifficultyPicker({

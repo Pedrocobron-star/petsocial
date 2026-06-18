@@ -178,7 +178,7 @@ begin
     if v_uids is not null then
       perform net.http_post(url := v_url, headers := v_headers, body := jsonb_build_object(
         'user_ids', to_jsonb(v_uids),
-        'title', chr(127942) || ' Novo torneio no Cassino!',
+        'title', chr(127942) || ' Novo torneio na Arena!',
         'body', t.title || ' comecou. Jogue e dispute o podio!',
         'url', '/games', 'tag', 'tournament-start'));
     end if;
