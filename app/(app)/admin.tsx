@@ -282,6 +282,14 @@ export default function AdminScreen() {
             bg="#FCE7F3"
           />
           <NavCard
+            href="/(app)/admin/personas"
+            icon="people-circle"
+            label="Personas"
+            sub="3 pets pra semear o feed"
+            color="#0E7490"
+            bg="#CFFAFE"
+          />
+          <NavCard
             href="/(app)/admin/daily-missions"
             icon="camera"
             label="Missão do Dia"
