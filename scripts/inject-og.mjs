@@ -58,9 +58,25 @@ const block = `
     <meta name="twitter:description" content="${DESC}" />
     <meta name="twitter:image" content="${OG_IMAGE}" />
     <link rel="canonical" href="${SITE}/" />
+    <style>
+      #boot-splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#FFFBF5;transition:opacity .35s ease}
+      #boot-splash img{width:84px;height:84px;border-radius:50%}
+      #boot-splash .boot-spin{margin-top:18px;width:30px;height:30px;border-radius:50%;border:3px solid #FDE6CF;border-top-color:#F97316;animation:bootspin .8s linear infinite}
+      #boot-splash.hide{opacity:0;pointer-events:none}
+      @keyframes bootspin{to{transform:rotate(360deg)}}
+    </style>
   </head>`;
 
+// Splash inline (mata a tela branca de 2-5s do bundle SPA). O React monta no
+// #root; quando ele ganha conteúdo, escondemos. Fallback de 12s nunca prende.
+const splash = `<div id="boot-splash"><img src="/mozart/rosto.png" alt="Maestro Pet" /><div class="boot-spin"></div></div>
+<script>(function(){var mo;function hide(){if(mo){try{mo.disconnect();}catch(e){}}var s=document.getElementById('boot-splash');if(!s)return;s.classList.add('hide');setTimeout(function(){if(s&&s.parentNode)s.parentNode.removeChild(s);},400);}var done=false;function check(){if(done)return;var r=document.getElementById('root');if(r&&r.childElementCount>0){done=true;hide();}}try{mo=new MutationObserver(check);mo.observe(document.documentElement,{childList:true,subtree:true});}catch(e){}setTimeout(check,300);setTimeout(function(){done=true;hide();},12000);})();</script>
+</body>`;
+
 html = html.replace('</head>', block);
+if (!html.includes('id="boot-splash"')) {
+  html = html.replace('</body>', splash);
+}
 
 writeFileSync(distIndex, html, 'utf8');
-console.log('[inject-og] OG/Twitter/manifest injetados em dist/index.html.');
+console.log('[inject-og] OG/Twitter/manifest + boot-splash injetados em dist/index.html.');
