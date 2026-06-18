@@ -10,6 +10,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Screen } from '@/components/ui/screen';
 import { FONTS } from '@/lib/fonts';
 import { authErrorMessage } from '@/lib/auth-errors';
+import { fetchMyFounderStatus } from '@/lib/founder';
 import { signUpSchema } from '@/lib/validators';
 import { useSession } from '@/providers/session-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -50,7 +51,16 @@ export default function SignUpScreen() {
     setLoading(true);
     try {
       await signUp(parsed.data.email, parsed.data.password, parsed.data.display_name);
-      router.replace('/(app)/phone');
+      // Promo dos 100 primeiros: se ganhou o Pro de fundador, mostra a tela de
+      // parabéns; senão segue direto pro app. Nunca trava o cadastro se falhar.
+      try {
+        const founder = await fetchMyFounderStatus();
+        // '/(app)/founder' é rota nova; cast até o typegen do expo-router pegá-la.
+        if (founder?.is_founder) router.replace('/(app)/founder' as never);
+        else router.replace('/(app)/phone');
+      } catch {
+        router.replace('/(app)/phone');
+      }
     } catch (e) {
       toast.error('Erro ao criar conta', authErrorMessage(e));
     } finally {

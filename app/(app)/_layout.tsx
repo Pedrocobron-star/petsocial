@@ -117,6 +117,7 @@ export default function AppLayout() {
         <Stack.Screen name="places/[id]" options={{ headerShown: true }} />
         <Stack.Screen name="agenda" options={{ headerShown: true, title: 'Minha agenda' }} />
         <Stack.Screen name="phone" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="founder" options={{ headerShown: false, animation: 'fade', gestureEnabled: false }} />
         <Stack.Screen name="games/index" options={{ headerShown: true }} />
         <Stack.Screen name="games/treats" options={{ headerShown: true, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="games/quiz" options={{ headerShown: true, animation: 'slide_from_bottom' }} />

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { Link, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
@@ -10,6 +11,7 @@ import { PawPrintsBg } from '@/components/paw-prints-bg';
 import { WordSwap } from '@/components/word-swap';
 import { track } from '@/lib/analytics';
 import { FONTS } from '@/lib/fonts';
+import { fetchFounderPromo, qkFounder } from '@/lib/founder';
 import { MOZART } from '@/lib/mozart';
 import { useTranslation } from '@/lib/i18n';
 import { storePendingRef } from '@/lib/referral';
@@ -43,6 +45,7 @@ export default function WelcomeScreen() {
     <SafeAreaView edges={['top']} className="flex-1" style={{ backgroundColor: '#FFFBF5' }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 0 }}>
         <NavBar />
+        <FounderPromoBanner />
         {invited ? <InviteRibbon /> : null}
         <Hero />
         <AppsShowcase />
@@ -77,6 +80,42 @@ function InviteRibbon() {
         <Text style={{ color: '#6EE7B7' }}>7 dias de Pet Pro grátis</Text>.
       </Text>
     </View>
+  );
+}
+
+/** Banner da promo de lançamento: os 100 primeiros ganham 3 meses de Pro. */
+function FounderPromoBanner() {
+  const { data } = useQuery({
+    queryKey: qkFounder.promo,
+    queryFn: fetchFounderPromo,
+    staleTime: 60_000,
+  });
+  if (!data || !data.active) return null;
+  return (
+    <Link href="/(auth)/sign-up" asChild>
+      <Pressable
+        style={{
+          backgroundColor: '#C2410C',
+          paddingHorizontal: 18,
+          paddingVertical: 11,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        }}
+        className="active:opacity-90"
+      >
+        <Text style={{ fontSize: 15 }}>🎉</Text>
+        <Text
+          style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FFFFFF', textAlign: 'center' }}
+        >
+          Lançamento: os <Text style={{ color: '#FFE08A' }}>100 primeiros</Text> ganham{' '}
+          <Text style={{ color: '#FFE08A' }}>3 meses de Pet Pro grátis</Text> · restam{' '}
+          {data.remaining}
+        </Text>
+        <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+      </Pressable>
+    </Link>
   );
 }
 
@@ -247,7 +286,7 @@ function Hero() {
               textAlign: isWide ? 'left' : 'center',
             }}
           >
-            Saúde, jogos, notícias, carteirinha, lugares, rolês — cada coisa é um{' '}
+            Saúde, jogos, notícias, carteirinha, lugares, comunidade — cada coisa é um{' '}
             <Text style={{ fontFamily: FONTS.bodyBold, color: '#1A1410' }}>app</Text> dentro do
             Maestro Pet. Deslize, toque e cuide de tudo num lugar só.
           </Text>
@@ -304,10 +343,42 @@ function Hero() {
             </Link>
           </View>
 
+          {/* Promo de lançamento — gancho dos 100 primeiros */}
+          <View
+            style={{
+              marginTop: 18,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              backgroundColor: '#FEF3C7',
+              borderWidth: 1,
+              borderColor: '#FCD34D',
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              borderRadius: 12,
+              maxWidth: 520,
+            }}
+          >
+            <Text style={{ fontSize: 16 }}>🎁</Text>
+            <Text
+              style={{
+                fontFamily: FONTS.bodyMedium,
+                fontSize: 13.5,
+                lineHeight: 19,
+                color: '#92400E',
+                flex: 1,
+                textAlign: isWide ? 'left' : 'center',
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.bodyBold }}>Promo de lançamento:</Text> os 100
+              primeiros a entrar ganham 3 meses de Pet Pro grátis.
+            </Text>
+          </View>
+
           {/* Trust strip — fatos verificáveis, não vaidade */}
           <View
             style={{
-              marginTop: 28,
+              marginTop: 24,
               flexDirection: 'row',
               flexWrap: 'wrap',
               gap: 18,
@@ -347,7 +418,7 @@ function AppsShowcase() {
     { emoji: '🎮', name: 'Jogos', desc: 'Joguinhos, desafio diário, streak e ranking de tutores.', bg: '#EDE9FE', fg: '#6D28D9' },
     { emoji: '📰', name: 'Notícias', desc: 'Jornal do mundo pet, assinado pela Redação Maestro Pet.', bg: '#FCE7F3', fg: '#BE185D' },
     { emoji: '📍', name: 'Lugares', desc: 'Parques, vets e cafés pet-friendly perto de você.', bg: '#DBEAFE', fg: '#1D4ED8' },
-    { emoji: '🎉', name: 'Rolês', desc: 'Encontros de pets pra socializar na sua região.', bg: '#F3E8FF', fg: '#7E22CE' },
+    { emoji: '💬', name: 'Mensagens', desc: 'Converse no chat com outros tutores e combine cuidados.', bg: '#F3E8FF', fg: '#7E22CE' },
     { emoji: '🏆', name: 'Conquistas', desc: 'Medalhas por cuidar bem e manter tudo em dia.', bg: '#FEF3C7', fg: '#B45309' },
     { emoji: '🦴', name: 'Achados', desc: 'Mural de perdidos e encontrados com geolocalização.', bg: '#FEF9C3', fg: '#A16207' },
     { emoji: '🎁', name: 'Vantagens', desc: 'Clube de descontos em produtos e serviços pet.', bg: '#FCE7F3', fg: '#BE185D' },
@@ -888,7 +959,24 @@ function FinalCTA() {
         >
           Saúde, jogos, notícias, comunidade — todos os apps num lugar só. Grátis, em 30 segundos.
         </Text>
-        <View style={{ marginTop: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
+        <View
+          style={{
+            marginTop: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            backgroundColor: 'rgba(255,255,255,0.18)',
+            paddingHorizontal: 14,
+            paddingVertical: 9,
+            borderRadius: 999,
+          }}
+        >
+          <Text style={{ fontSize: 15 }}>🎁</Text>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13.5, color: '#fff', textAlign: 'center' }}>
+            Os 100 primeiros ganham 3 meses de Pet Pro grátis
+          </Text>
+        </View>
+        <View style={{ marginTop: 24, flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
           <Link href="/(auth)/sign-up" asChild>
             <Pressable
               style={{
