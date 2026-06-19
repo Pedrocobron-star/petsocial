@@ -84,7 +84,7 @@ export default function SignUpScreen() {
             Cadastre seu pet em 30s
           </Text>
           <Text style={{ fontFamily: FONTS.body, fontSize: 15, color: '#525252', marginTop: 4 }}>
-            Calendário de saúde pronto na hora — é grátis.
+            Calendário de saúde pronto na hora, e é grátis.
           </Text>
         </View>
 

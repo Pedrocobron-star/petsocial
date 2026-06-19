@@ -79,7 +79,7 @@ export default function OnboardingScreen() {
               lineHeight: 22,
             }}
           >
-            Bora cadastrar seu primeiro pet. Você pode adicionar mais depois — e
+            Bora cadastrar seu primeiro pet. Você pode adicionar mais depois, e
             cada um tem seu próprio perfil, feed e carteirinha.
           </Text>
 

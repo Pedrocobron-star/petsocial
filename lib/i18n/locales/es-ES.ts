@@ -40,7 +40,7 @@ export const esES: TranslationKeys = {
     hero: {
       title: 'Cuida de tu mascota con tranquilidad 🐾',
       subtitle:
-        'Vacunas al día, síntomas registrados, carnet digital — y la comunidad de mascotas.',
+        'Vacunas al día, síntomas registrados, carnet digital y la comunidad de mascotas.',
       cta: 'Empezar gratis',
       secondaryCta: 'Ya tengo cuenta',
     },

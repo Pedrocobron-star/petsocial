@@ -39,7 +39,7 @@ export const enUS: TranslationKeys = {
     },
     hero: {
       title: 'Take care of your pet with peace of mind 🐾',
-      subtitle: 'Vaccines on schedule, symptoms tracked, digital ID card — plus the pet community.',
+      subtitle: 'Vaccines on schedule, symptoms tracked, digital ID card, plus the pet community.',
       cta: 'Start free',
       secondaryCta: 'I already have an account',
     },

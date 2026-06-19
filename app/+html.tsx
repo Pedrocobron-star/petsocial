@@ -55,14 +55,14 @@ export default function Root({ children }: PropsWithChildren) {
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Maestro Pet" />
         <meta property="og:locale" content="pt_BR" />
-        <meta property="og:title" content="Maestro Pet — Saúde do pet + comunidade · App grátis" />
+        <meta property="og:title" content="Maestro Pet · Saúde do pet + comunidade · App grátis" />
         <meta
           property="og:description"
           content="Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu pet."
         />
         <meta property="og:image" content="/icon-512.png" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Maestro Pet — Saúde do pet + comunidade · App grátis" />
+        <meta name="twitter:title" content="Maestro Pet · Saúde do pet + comunidade · App grátis" />
         <meta
           name="twitter:description"
           content="Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu pet."

@@ -45,7 +45,7 @@ export const ptBR = {
     },
     hero: {
       title: 'Cuide do seu pet com tranquilidade 🐾',
-      subtitle: 'Vacinas em dia, sintomas registrados, carteirinha digital — e a comunidade pet do Brasil.',
+      subtitle: 'Vacinas em dia, sintomas registrados, carteirinha digital e a comunidade pet do Brasil.',
       cta: 'Começar grátis',
       secondaryCta: 'Já tenho conta',
     },

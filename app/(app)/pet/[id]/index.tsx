@@ -534,6 +534,11 @@ export default function PetProfileScreen() {
           // O(1): prefix-sum pre-computado em vez do loop O(postIndex) por tile.
           const mediaIndex = mediaOffsets[postIndex];
           const hasMultiple = item.media.length > 1;
+          const isVideo = cover?.media_type === 'video';
+          const caption = item.caption?.trim() ?? '';
+          // expo-image NÃO decodifica mp4 → vídeo virava quadrado preto. Só foto
+          // renderiza Image; vídeo vira tile com play; só-texto vira card de legenda.
+          const showImage = !!cover && !isVideo;
           return (
             <Pressable
               onPress={() =>
@@ -547,53 +552,97 @@ export default function PetProfileScreen() {
                     // foto de OUTRO post pelo índice de mídia somado).
                     router.push({ pathname: '/post/[id]' as never, params: { id: item.id } as never })
               }
+              accessibilityRole="button"
+              accessibilityLabel={caption ? `Publicação: ${caption.slice(0, 60)}` : 'Publicação sem legenda'}
               style={{
                 width: tileSize,
                 height: tileSize,
                 margin: 1,
                 borderRadius: 6,
                 overflow: 'hidden',
-                backgroundColor: theme.borderLight,
+                backgroundColor: showImage ? theme.borderLight : isVideo ? '#000' : theme.brandSurface,
+                borderWidth: showImage ? 0 : 1,
+                borderColor: theme.brandLight,
               }}
             >
-              {cover ? (
-                <>
-                  <Image
-                    source={{ uri: cover.url }}
-                    style={{ width: '100%', height: '100%' }}
-                    contentFit="cover"
-                    // Evita flash de imagem reciclada ao rolar o grid (FlatList
-                    // reusa views). cachePolicy igual ao padrao de pet-3d-emoji.
-                    recyclingKey={item.id}
-                    cachePolicy="memory-disk"
-                  />
-                  {hasMultiple ? (
-                    <View
-                      style={{
-                        position: 'absolute',
-                        top: 6,
-                        right: 6,
-                        backgroundColor: 'rgba(0,0,0,0.55)',
-                        borderRadius: 6,
-                        paddingHorizontal: 5,
-                        paddingVertical: 2,
-                      }}
-                    >
-                      <Ionicons name="copy-outline" size={12} color="#fff" />
-                    </View>
-                  ) : null}
-                </>
+              {showImage ? (
+                <Image
+                  source={{ uri: cover.url }}
+                  style={{ width: '100%', height: '100%' }}
+                  contentFit="cover"
+                  // Evita flash de imagem reciclada ao rolar o grid (FlatList
+                  // reusa views). cachePolicy igual ao padrao de pet-3d-emoji.
+                  recyclingKey={item.id}
+                  cachePolicy="memory-disk"
+                />
+              ) : isVideo ? (
+                // Vídeo: fundo escuro intencional + play (em vez de quadrado preto vazio).
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="play-circle" size={34} color="rgba(255,255,255,0.92)" />
+                </View>
+              ) : caption ? (
+                // Post só-texto: card de legenda com cor de marca (não some no dark).
+                <View style={{ flex: 1, padding: 8, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 13, marginBottom: 3 }}>📝</Text>
+                  <Text
+                    numberOfLines={4}
+                    ellipsizeMode="tail"
+                    style={{
+                      fontFamily: FONTS.bodyMedium,
+                      fontSize: 11.5,
+                      lineHeight: 15,
+                      color: theme.text,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {caption}
+                  </Text>
+                </View>
               ) : (
-                <View
-                  style={{
-                    flex: 1,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ fontSize: 20 }}>📝</Text>
                 </View>
               )}
+
+              {/* Badge de múltiplas mídias (só quando há mídia). */}
+              {cover && hasMultiple ? (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 6,
+                    right: 6,
+                    backgroundColor: 'rgba(0,0,0,0.55)',
+                    borderRadius: 6,
+                    paddingHorizontal: 5,
+                    paddingVertical: 2,
+                  }}
+                >
+                  <Ionicons name="copy-outline" size={12} color="#fff" />
+                </View>
+              ) : null}
+
+              {/* Prévia da legenda (1 linha) em posts COM foto/vídeo. */}
+              {cover && caption ? (
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.45)',
+                    paddingHorizontal: 6,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Text
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={{ color: '#fff', fontFamily: FONTS.bodyMedium, fontSize: 11 }}
+                  >
+                    {caption}
+                  </Text>
+                </View>
+              ) : null}
             </Pressable>
           );
         }}

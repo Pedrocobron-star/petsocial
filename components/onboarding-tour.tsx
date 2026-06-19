@@ -59,7 +59,7 @@ export function OnboardingTour() {
       emoji: '🐾',
       title: 'Bem-vindo ao Maestro Pet!',
       description:
-        'A rede social pros pets — mas com saúde de verdade. Vou te mostrar o essencial em 4 passos rápidos.',
+        'A rede social pros pets, mas com saúde de verdade. Vou te mostrar o essencial em 4 passos rápidos.',
     },
     {
       emoji: '📸',
@@ -79,7 +79,7 @@ export function OnboardingTour() {
       emoji: '⭐',
       title: 'Pet Pro quando quiser',
       description:
-        'O essencial é grátis pra sempre. Pro libera histórico Score de Saúde completo, IA ilimitada, PDFs sem marca d\'água e mais — quando fizer sentido pra você.',
+        'O essencial é de graça. O Pro libera histórico do Score de Saúde completo, IA ilimitada, PDFs sem marca d\'água e mais, quando fizer sentido pra você.',
     },
   ];
 

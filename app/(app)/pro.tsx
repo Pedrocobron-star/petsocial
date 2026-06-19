@@ -19,7 +19,7 @@ import { useToast } from '@/providers/toast-provider';
 // 3 hero benefits exibidos com peso visual maior, antes da lista completa.
 // Âncora da assinatura = "Cofre da Saúde": histórico clínico que nunca some.
 const HERO_BENEFITS = [
-  { emoji: '🩺', title: 'Histórico clínico completo', desc: 'Vacinas, exames e peso — sem limite de tempo' },
+  { emoji: '🩺', title: 'Histórico clínico completo', desc: 'Vacinas, exames e peso, sem limite de tempo' },
   { emoji: '📄', title: 'Prontuário pro vet', desc: 'PDF completo num clique, sem marca d\'água' },
   { emoji: '📈', title: 'Evolução da saúde', desc: 'Acompanhe o Score mês a mês, o ano todo' },
 ] as const;
@@ -45,7 +45,7 @@ const FREE_FEATURES = [
 const FAQ = [
   {
     q: 'Tem fidelidade ou cobrança automática?',
-    a: 'Não. O Pet Pro é por período (mês ou ano): você paga uma vez e usa. Quando acaba, volta ao grátis — só renova se quiser, sem surpresa no cartão.',
+    a: 'Não. O Pet Pro é por período (mês ou ano): você paga uma vez e usa. Quando acaba, volta ao grátis e você só renova se quiser, sem surpresa no cartão.',
   },
   {
     q: 'Tem garantia de reembolso?',
@@ -53,11 +53,11 @@ const FAQ = [
   },
   {
     q: 'Como funciona o pagamento?',
-    a: 'Pix ou cartão, com checkout seguro da Cakto. Pagamento por período (mês ou ano), sem débito automático — você renova quando quiser.',
+    a: 'Pix ou cartão, com checkout seguro da Cakto. Pagamento por período (mês ou ano), sem débito automático: você renova quando quiser.',
   },
   {
     q: 'O que acontece com meus dados se eu cancelar?',
-    a: 'Nada! Pets, posts e mensagens continuam intactos — apenas voltam pros limites do plano gratuito.',
+    a: 'Nada! Pets, posts e mensagens continuam intactos, apenas voltam pros limites do plano gratuito.',
   },
 ];
 

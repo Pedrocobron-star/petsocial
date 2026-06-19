@@ -286,7 +286,7 @@ function Hero() {
               textAlign: isWide ? 'left' : 'center',
             }}
           >
-            Saúde, jogos, notícias, carteirinha, lugares, comunidade — cada coisa é um{' '}
+            Saúde, jogos, notícias, carteirinha, lugares, comunidade: cada coisa é um{' '}
             <Text style={{ fontFamily: FONTS.bodyBold, color: '#1A1410' }}>app</Text> dentro do
             Maestro Pet. Deslize, toque e cuide de tudo num lugar só.
           </Text>
@@ -511,7 +511,7 @@ function Features() {
     {
       icon: 'shield-checkmark-outline',
       title: 'Carteirinha digital',
-      desc: 'QR público com nome, idade, contato e veterinário. Quem encontrar seu pet escaneia e te liga — sem precisar de chip.',
+      desc: 'QR público com nome, idade, contato e veterinário. Quem encontrar seu pet escaneia e te liga, sem precisar de chip.',
       tag: 'Utilidade',
     },
     {
@@ -638,7 +638,7 @@ function HowItWorks() {
     {
       n: '2',
       title: 'Cadastre seu pet',
-      desc: 'Nome, espécie, raça, data de nascimento. O calendário vacinal sugerido aparece automaticamente — V8/V10 pra cães, antirrábica anual, etc.',
+      desc: 'Nome, espécie, raça, data de nascimento. O calendário vacinal sugerido aparece automaticamente (V8/V10 pra cães, antirrábica anual, etc.)',
       icon: 'paw-outline',
     },
     {
@@ -722,7 +722,7 @@ function PrivacyPromise() {
     {
       icon: 'lock-closed-outline',
       title: 'Dados criptografados',
-      desc: 'Tudo trafega via HTTPS. Senhas são hash bcrypt. Histórico de saúde fica isolado por conta — só você (e cuidadores que você convidou) acessa.',
+      desc: 'Tudo trafega via HTTPS. Senhas são hash bcrypt. Histórico de saúde fica isolado por conta: só você (e cuidadores que você convidou) acessa.',
     },
     {
       icon: 'ban-outline',
@@ -781,7 +781,7 @@ function PrivacyPromise() {
               maxWidth: 560,
             }}
           >
-            Você confia o histórico de saúde do seu pet. A gente respeita isso de verdade — não com promessa de marketing.
+            Você confia o histórico de saúde do seu pet. A gente respeita isso de verdade, não com promessa de marketing.
           </Text>
         </View>
 
@@ -847,11 +847,11 @@ function Faq() {
   const items: { q: string; a: string }[] = [
     {
       q: 'O Maestro Pet substitui o veterinário?',
-      a: 'Não. É uma ferramenta de organização — calendário de vacinas, registro de sintomas, histórico pra mostrar ao vet. Diagnóstico e tratamento sempre com profissional. Nunca damos orientação clínica que pode colocar seu pet em risco.',
+      a: 'Não. É uma ferramenta de organização: calendário de vacinas, registro de sintomas, histórico pra mostrar ao vet. Diagnóstico e tratamento sempre com profissional. Nunca damos orientação clínica que pode colocar seu pet em risco.',
     },
     {
       q: 'Os lembretes de vacina seguem qual protocolo?',
-      a: 'O calendário sugerido é baseado nos protocolos padrão usados por veterinários no Brasil — V8/V10 pra cães, vacina quádrupla felina, antirrábica anual. Seu vet pode ajustar conforme idade, raça e estilo de vida do seu pet. Sempre confirme com ele antes de aplicar.',
+      a: 'O calendário sugerido é baseado nos protocolos padrão usados por veterinários no Brasil (V8/V10 pra cães, vacina quádrupla felina, antirrábica anual). Seu vet pode ajustar conforme idade, raça e estilo de vida do seu pet. Sempre confirme com ele antes de aplicar.',
     },
     {
       q: 'Posso usar pra mais de um pet?',
@@ -863,11 +863,11 @@ function Faq() {
     },
     {
       q: 'Funciona offline?',
-      a: 'Parcialmente. O app é PWA — você instala no celular, abre rápido, lê dados já carregados sem internet. Mas pra registrar vacinas e sincronizar com a nuvem, precisa de conexão.',
+      a: 'Parcialmente. O app é PWA: você instala no celular, abre rápido, lê dados já carregados sem internet. Mas pra registrar vacinas e sincronizar com a nuvem, precisa de conexão.',
     },
     {
       q: 'O que acontece se eu apagar minha conta?',
-      a: 'Tudo é apagado em até 30 dias (LGPD): perfis dos pets, fotos, posts, vacinas, sintomas, mensagens. Você pode exportar tudo em JSON antes — botão "Baixar meus dados" na sua conta.',
+      a: 'Tudo é apagado em até 30 dias (LGPD): perfis dos pets, fotos, posts, vacinas, sintomas, mensagens. Você pode exportar tudo em JSON antes, no botão "Baixar meus dados" na sua conta.',
     },
   ];
 
@@ -957,7 +957,7 @@ function FinalCTA() {
             maxWidth: 480,
           }}
         >
-          Saúde, jogos, notícias, comunidade — todos os apps num lugar só. Grátis, em 30 segundos.
+          Saúde, jogos, notícias, comunidade: todos os apps num lugar só. Grátis, em 30 segundos.
         </Text>
         <View
           style={{
@@ -1058,7 +1058,7 @@ function Footer() {
           }}
         >
           <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>
-            © {new Date().getFullYear()} Maestro Pet — Feito com 💛 pra quem ama bichinhos
+            © {new Date().getFullYear()} Maestro Pet · Feito com 💛 pra quem ama bichinhos
           </Text>
           <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#737373' }}>
             maestropetcontato@gmail.com
