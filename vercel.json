@@ -4,9 +4,15 @@
   "framework": null,
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/",
       "has": [{ "type": "host", "value": "petsocial-tawny.vercel.app" }],
-      "destination": "https://maestropet.com/:path*",
+      "destination": "https://maestropet.com/",
+      "permanent": true
+    },
+    {
+      "source": "/:path+",
+      "has": [{ "type": "host", "value": "petsocial-tawny.vercel.app" }],
+      "destination": "https://maestropet.com/:path+",
       "permanent": true
     }
   ],
