@@ -24,7 +24,7 @@
     "web": {
       "output": "single",
       "favicon": "./assets/images/favicon.png",
-      "name": "Maestro Pet — Saúde do pet + comunidade",
+      "name": "Maestro Pet · Saúde do pet + comunidade",
       "shortName": "Maestro Pet",
       "description": "Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu cachorro, gato, coelho e mais.",
       "lang": "pt-BR",

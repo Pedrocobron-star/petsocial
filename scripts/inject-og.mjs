@@ -17,7 +17,7 @@ import { join } from 'node:path';
 
 const SITE = 'https://maestropet.com';
 const OG_IMAGE = `${SITE}/icon-512.png`;
-const TITLE = 'Maestro Pet — Saúde do pet + comunidade · App grátis';
+const TITLE = 'Maestro Pet · Saúde do pet + comunidade · App grátis';
 const DESC =
   'Calendário de vacinas, registro de sintomas, carteirinha digital e a comunidade pet do Brasil. Grátis pra cuidar do seu pet.';
 
