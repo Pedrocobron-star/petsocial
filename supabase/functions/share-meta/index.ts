@@ -21,7 +21,7 @@
  * Deploy: `supabase functions deploy share-meta --no-verify-jwt`
  * Setup no Supabase:
  *  - vault.secrets:
- *    - PUBLIC_APP_URL: https://pet.social (ou domínio próprio)
+ *    - PUBLIC_APP_URL: https://maestropet.com (ou domínio próprio)
  */
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';

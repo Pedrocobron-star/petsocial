@@ -11,6 +11,7 @@ import { Screen } from '@/components/ui/screen';
 import { FONTS } from '@/lib/fonts';
 import { authErrorMessage } from '@/lib/auth-errors';
 import { fetchMyFounderStatus } from '@/lib/founder';
+import { supabase } from '@/lib/supabase';
 import { signUpSchema } from '@/lib/validators';
 import { useSession } from '@/providers/session-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -51,6 +52,17 @@ export default function SignUpScreen() {
     setLoading(true);
     try {
       await signUp(parsed.data.email, parsed.data.password, parsed.data.display_name);
+      // Registra a PROVA de consentimento (LGPD Art. 7) + confirmação de idade 13+.
+      // Best-effort: nunca trava o cadastro se a coluna/escrita falhar.
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          await supabase
+            .from('profiles')
+            .update({ terms_accepted_at: new Date().toISOString(), age_confirmed: true })
+            .eq('id', user.id);
+        }
+      } catch { /* não bloqueia o cadastro */ }
       // Promo dos 100 primeiros: se ganhou o Pro de fundador, mostra a tela de
       // parabéns; senão segue direto pro app. Nunca trava o cadastro se falhar.
       try {
@@ -133,7 +145,7 @@ export default function SignUpScreen() {
             }}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: acceptedTerms }}
-            accessibilityLabel="Aceitar termos e política de privacidade"
+            accessibilityLabel="Aceitar termos, política de privacidade e confirmar 13 anos ou mais"
           >
             <View
               style={{
@@ -192,7 +204,7 @@ export default function SignUpScreen() {
                 Política de Privacidade
               </Text>
               {'. '}Concedo licença ao Maestro Pet pra usar fotos, vídeos e dados do meu pet
-              dentro do app (seção 3 dos Termos).
+              dentro do app (seção 3 dos Termos) e confirmo que tenho 13 anos ou mais.
             </Text>
           </Pressable>
           {errors.terms ? (

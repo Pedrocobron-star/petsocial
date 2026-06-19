@@ -32,4 +32,4 @@ create policy "place_photos insert own" on public.place_photos for insert
 -- Sem UPDATE (foto é imutável; editar = apagar e repostar).
 drop policy if exists "place_photos delete own or admin" on public.place_photos;
 create policy "place_photos delete own or admin" on public.place_photos for delete
-  using (auth.uid() = user_id or (auth.jwt() ->> 'email') = 'pedrocobron@gmail.com');
+  using (auth.uid() = user_id or public.is_admin());

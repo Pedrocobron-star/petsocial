@@ -48,7 +48,7 @@ export function shareBaseUrl(): string {
   if (Platform.OS === 'web' && globalThis.location?.origin) {
     return globalThis.location.origin;
   }
-  return 'https://pet.social';
+  return 'https://maestropet.com';
 }
 
 export function postUrl(postId: string): string {

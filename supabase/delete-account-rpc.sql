@@ -50,6 +50,16 @@ begin
   delete from public.messages where sender_id = uid;
   delete from public.conversation_participants where user_id = uid;
 
+  -- Remove conversas que ficaram sem nenhum participante (não deixa órfã).
+  -- Best-effort: nunca bloqueia a exclusão da conta.
+  begin
+    delete from public.conversations c
+      where not exists (
+        select 1 from public.conversation_participants cp where cp.conversation_id = c.id
+      );
+  exception when others then null;
+  end;
+
   -- Reports / blocks feitos pelo user
   delete from public.reports where reporter_user_id = uid;
   delete from public.blocked_users where blocker_id = uid or blocked_id = uid;
@@ -59,6 +69,18 @@ begin
 
   -- Subscription do user
   delete from public.subscriptions where user_id = uid;
+
+  -- Histórico de eventos de assinatura/pagamento (dado pessoal — LGPD)
+  begin
+    delete from public.subscription_events where user_id = uid;
+  exception when undefined_table then null;
+  end;
+
+  -- Tokens de push / registro de device (rastreável — LGPD)
+  begin
+    delete from public.push_tokens where user_id = uid;
+  exception when undefined_table then null;
+  end;
 
   -- Notifications recebidas
   delete from public.notifications where user_id = uid;
@@ -98,7 +120,9 @@ grant execute on function public.delete_my_account to authenticated;
 -- EXPORT DATA (LGPD) — retorna JSON com todos os dados do user
 -- ============================================================================
 -- Direito de portabilidade: usuário pode pegar uma cópia dos próprios dados.
--- Retorna JSON consolidado com profile, pets, posts (sem fotos), reviews, etc.
+-- Retorna JSON consolidado com profile, pets, posts, mensagens, etc.
+-- coalesce(..., '[]') garante array vazio (não null) quando não há linhas —
+-- senão um importador LGPD quebra ao ler "pets": null.
 
 create or replace function public.export_my_data()
 returns json
@@ -122,22 +146,46 @@ begin
       select row_to_json(p) from public.profiles p where p.id = uid
     ),
     'pets', (
-      select json_agg(row_to_json(pe))
+      select coalesce(json_agg(row_to_json(pe)), '[]'::json)
       from public.pets pe where pe.owner_id = uid
     ),
     'posts', (
-      select json_agg(row_to_json(po))
+      select coalesce(json_agg(row_to_json(po)), '[]'::json)
       from public.posts po
       join public.pets pe on pe.id = po.pet_id
       where pe.owner_id = uid
     ),
     'lost_reports', (
-      select json_agg(row_to_json(lr))
+      select coalesce(json_agg(row_to_json(lr)), '[]'::json)
       from public.lost_reports lr where lr.reporter_user_id = uid
     ),
     'place_reviews', (
-      select json_agg(row_to_json(pr))
+      select coalesce(json_agg(row_to_json(pr)), '[]'::json)
       from public.place_reviews pr where pr.user_id = uid
+    ),
+    'messages_sent', (
+      select coalesce(json_agg(row_to_json(m)), '[]'::json)
+      from public.messages m where m.sender_id = uid
+    ),
+    'saved_posts', (
+      select coalesce(json_agg(row_to_json(sp)), '[]'::json)
+      from public.saved_posts sp where sp.user_id = uid
+    ),
+    'blocked_users', (
+      select coalesce(json_agg(row_to_json(bu)), '[]'::json)
+      from public.blocked_users bu where bu.blocker_id = uid
+    ),
+    'reports_made', (
+      select coalesce(json_agg(row_to_json(r)), '[]'::json)
+      from public.reports r where r.reporter_user_id = uid
+    ),
+    'notifications', (
+      select coalesce(json_agg(row_to_json(n)), '[]'::json)
+      from public.notifications n where n.user_id = uid
+    ),
+    'ai_conversations', (
+      select coalesce(json_agg(row_to_json(ac)), '[]'::json)
+      from public.ai_conversations ac where ac.user_id = uid
     ),
     'subscription', (
       select row_to_json(s) from public.subscriptions s where s.user_id = uid

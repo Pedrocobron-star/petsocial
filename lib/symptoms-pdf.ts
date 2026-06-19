@@ -258,8 +258,8 @@ export function buildSymptomsHtml(
   <div class="footer">
     ${
       isPro
-        ? `Gerado pelo Maestro Pet Pro em ${today} &bull; pet.social`
-        : `Gerado pelo Maestro Pet em ${today} &bull; pet.social &bull; <strong>Upgrade pra Pet Pro pra remover a marca d'água</strong>`
+        ? `Gerado pelo Maestro Pet Pro em ${today} &bull; maestropet.com`
+        : `Gerado pelo Maestro Pet em ${today} &bull; maestropet.com &bull; <strong>Upgrade pra Pet Pro pra remover a marca d'água</strong>`
     }
   </div>
 </body>

@@ -7,5 +7,5 @@
 -- ============================================================================
 drop policy if exists "admin manage places" on public.places;
 create policy "admin manage places" on public.places for all
-  using ((auth.jwt() ->> 'email') = 'pedrocobron@gmail.com')
-  with check ((auth.jwt() ->> 'email') = 'pedrocobron@gmail.com');
+  using (public.is_admin())
+  with check (public.is_admin());

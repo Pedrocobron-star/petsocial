@@ -16,6 +16,13 @@
 -- 1) Rastrear a origem Cakto na subscription -------------------------------
 alter table public.subscriptions add column if not exists cakto_order_id text;
 
+-- Índice ÚNICO parcial: cada order_id do Cakto só pode virar UMA subscription.
+-- Fecha o buraco de idempotência (webhook reenviado com mesmo order_id não cria/
+-- estende em duplicidade). Parcial (where not null) porque grants do admin/founder
+-- não têm order_id e podem coexistir.
+create unique index if not exists subscriptions_cakto_order_uidx
+  on public.subscriptions(cakto_order_id) where cakto_order_id is not null;
+
 -- 2) Log cru dos eventos do Cakto (auditoria + calibração do parser) --------
 create table if not exists public.cakto_events (
   id uuid primary key default gen_random_uuid(),

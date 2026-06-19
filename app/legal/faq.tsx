@@ -38,6 +38,14 @@ const FAQS = [
     a: 'Toque nos três pontinhos do post ou do comentário e escolha "Reportar". A equipe avalia e remove o que viola as regras. Casos graves, fale com maestropetcontato@gmail.com.',
   },
   {
+    q: 'Como falo com o suporte e em quanto tempo respondem?',
+    a: 'É só mandar um email pra maestropetcontato@gmail.com. A gente responde dúvidas gerais em até 48h úteis; pedidos de reembolso e questões de pagamento em até 24h úteis; e solicitações de privacidade (LGPD) no prazo legal de até 15 dias.',
+  },
+  {
+    q: 'Como peço reembolso?',
+    a: 'Por ser compra online, você tem direito de arrependimento em até 7 dias corridos a partir do pagamento (Art. 49 do Código de Defesa do Consumidor). Manda um email pra maestropetcontato@gmail.com com o email usado na compra que devolvemos o valor integral e seu acesso Pro volta ao plano grátis.',
+  },
+  {
     q: 'O Maestro Pet tem versão mobile na App Store ou Play Store?',
     a: 'Ainda não. A versão atual roda no navegador do celular (PWA, dá pra instalar como app). Versões nativas pras lojas estão no roadmap.',
   },

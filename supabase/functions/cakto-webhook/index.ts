@@ -10,7 +10,8 @@
  *   3. Mapeia o evento:
  *        aprovado  (purchase_approved / subscription_created|renewed) → cakto_grant_pro
  *        estornado (refund / chargeback / subscription_canceled)      → cakto_revoke_pro
- *      Plano por valor (>= 50 → anual, senão mensal). Calibrável.
+ *      Plano pelo valor pago (detectPlan: mais perto de 99,90=anual senão mensal,
+ *      tolerante a centavos). Loga purchase_completed em analytics_events.
  *   4. Responde rápido (< 5s, exigência do Cakto).
  *
  * Deploy: supabase functions deploy cakto-webhook --no-verify-jwt
@@ -66,6 +67,20 @@ function deepEmail(obj: any, depth = 0): string | null {
   }
   return null;
 }
+/**
+ * Detecta o plano pelo valor pago. Tolerante a: (a) centavos (1490 = R$14,90) e
+ * (b) valor fora do padrão (marca `matched=false` pra calibrar sem misclassificar).
+ * Preços conhecidos: mensal R$14,90 · anual R$99,90.
+ */
+function detectPlan(rawAmount: number): { plan: string; days: number; normalized: number; matched: boolean } {
+  let v = Number(rawAmount) || 0;
+  if (v > 1000) v = v / 100; // alguns gateways mandam em centavos
+  const dMonthly = Math.abs(v - 14.9);
+  const dYearly = Math.abs(v - 99.9);
+  const yearly = dYearly < dMonthly;
+  const matched = Math.min(dMonthly, dYearly) <= 5; // tolerância de R$5
+  return { plan: yearly ? 'yearly' : 'monthly', days: yearly ? 365 : 30, normalized: v, matched };
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
@@ -114,12 +129,21 @@ serve(async (req) => {
   let result: any = { skipped: event };
   try {
     if (APPROVE.has(event)) {
-      const plan = amount >= 50 ? 'yearly' : 'monthly';
-      const days = plan === 'yearly' ? 365 : 30;
+      const { plan, days, normalized, matched } = detectPlan(amount);
       const { data } = await supabase.rpc('cakto_grant_pro', {
         p_email: email, p_plan: plan, p_days: days, p_order_id: orderId,
       });
-      result = { action: 'grant', plan, ...data };
+      result = { action: 'grant', plan, amount_brl: normalized, amount_matched: matched, ...data };
+      if (!matched) result.warning = `valor R$${normalized} fora dos preços conhecidos (14,90 / 99,90)`;
+      // Evento de analytics pra medir conversão/receita (best-effort, não bloqueia).
+      if (data?.user_id) {
+        await supabase.from('analytics_events').insert({
+          user_id: data.user_id,
+          event_name: 'purchase_completed',
+          props: { plan, amount_brl: normalized, gateway: 'cakto', order_id: orderId },
+          platform: 'web',
+        }).then(undefined, () => {});
+      }
     } else if (REVOKE.has(event)) {
       const { data } = await supabase.rpc('cakto_revoke_pro', { p_email: email, p_order_id: orderId });
       result = { action: 'revoke', ...data };
