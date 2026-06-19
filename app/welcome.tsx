@@ -1029,6 +1029,9 @@ function Footer() {
             <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#fff' }}>Maestro Pet</Text>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginLeft: 'auto' }}>
+            <Link href={'/noticias' as never} style={{ fontFamily: FONTS.bodyMedium, fontSize: 13, color: '#A3A3A3' }}>
+              Jornal Pet
+            </Link>
             <Link href="/legal/about" style={{ fontFamily: FONTS.bodyMedium, fontSize: 13, color: '#A3A3A3' }}>
               Sobre
             </Link>

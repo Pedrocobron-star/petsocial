@@ -1,15 +1,11 @@
 {
-  "buildCommand": "npx expo export --platform web && node scripts/inject-og.mjs",
+  "buildCommand": "npx expo export --platform web && node scripts/inject-og.mjs && node scripts/gen-sitemap.mjs",
   "outputDirectory": "dist",
   "framework": null,
   "rewrites": [
     {
       "source": "/share/:kind/:id",
       "destination": "https://aefrcwysifgniogumxwk.supabase.co/functions/v1/share-meta/share/:kind/:id"
-    },
-    {
-      "source": "/sitemap.xml",
-      "destination": "https://aefrcwysifgniogumxwk.supabase.co/functions/v1/share-meta/sitemap"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ],

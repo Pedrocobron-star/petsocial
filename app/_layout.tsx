@@ -110,6 +110,7 @@ export default function RootLayout() {
                             <Stack.Screen name="id/[token]" />
                             <Stack.Screen name="endorse/[token]" />
                             <Stack.Screen name="ler/[slug]" />
+                            <Stack.Screen name="noticias" />
                           </Stack>
                         </ErrorBoundary>
                         <StatusBar style="auto" />
