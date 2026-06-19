@@ -20,6 +20,7 @@ import {
   deletePetMilestone,
   fetchHealthTimeline,
   fetchPet,
+  fetchPetAgendaMemories,
   fetchPetMilestones,
   fetchPostsByPet,
   qk,
@@ -44,6 +45,24 @@ interface TimelineEvent {
 function toISODate(s: string): string {
   if (s.length === 10 && s[4] === '-') return s;
   return s.slice(0, 10);
+}
+
+/** Humor (1..5) registrado numa atividade vira carinha. */
+function moodEmoji(mood: number | null): string {
+  switch (mood) {
+    case 1:
+      return '😣';
+    case 2:
+      return '😕';
+    case 3:
+      return '😐';
+    case 4:
+      return '😊';
+    case 5:
+      return '🤩';
+    default:
+      return '';
+  }
 }
 
 /** "2026-06" → "Junho de 2026" (cabeçalho de mês da timeline). */
@@ -86,6 +105,12 @@ export default function PetDiaryScreen() {
   const healthQuery = useQuery({
     queryKey: ['pet-timeline-health', id],
     queryFn: () => fetchHealthTimeline(id, 100),
+    enabled: !!id,
+  });
+  // Atividades de agenda concluídas COM FOTO (banho, passeio, tosa...) = memórias.
+  const agendaQuery = useQuery({
+    queryKey: ['pet-timeline-agenda', id],
+    queryFn: () => fetchPetAgendaMemories(id, 100),
     enabled: !!id,
   });
 
@@ -177,6 +202,21 @@ export default function PetDiaryScreen() {
       });
     }
 
+    // Atividades concluídas COM FOTO (banho, passeio, tosa) = memórias do dia a dia
+    for (const log of agendaQuery.data ?? []) {
+      const mood = moodEmoji(log.mood);
+      events.push({
+        id: `auto-agenda-${log.id}`,
+        date: toISODate(log.completed_at ?? log.occurrence_date),
+        emoji: log.event?.emoji ?? '🐾',
+        title: log.event?.title ?? 'Atividade',
+        description: [mood, log.notes].filter(Boolean).join(' ') || undefined,
+        photo_url: log.photo_url,
+        source: 'auto',
+        color: '#F59E0B',
+      });
+    }
+
     // Marcos manuais
     for (const m of milestonesQuery.data ?? []) {
       events.push({
@@ -194,7 +234,7 @@ export default function PetDiaryScreen() {
 
     events.sort((a, b) => b.date.localeCompare(a.date));
     return events;
-  }, [petQuery.data, milestonesQuery.data, postsQuery.data, healthQuery.data, id]);
+  }, [petQuery.data, milestonesQuery.data, postsQuery.data, healthQuery.data, agendaQuery.data, id]);
 
   // Agrupa por mês/ano pra leitura tipo "álbum de memórias" (timeline já desc).
   const groups = useMemo(() => {

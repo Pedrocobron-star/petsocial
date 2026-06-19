@@ -612,7 +612,7 @@ export default function PetAgendaScreen() {
               title="Agenda vazia"
               description={
                 isOwner
-                  ? 'Adicione rotinas prontas (banho, escolinha, passeio) ou crie eventos personalizados — tudo num lugar só.'
+                  ? 'Adicione rotinas prontas (banho, escolinha, passeio) ou crie eventos personalizados, tudo num lugar só.'
                   : 'O tutor ainda não cadastrou eventos.'
               }
             />

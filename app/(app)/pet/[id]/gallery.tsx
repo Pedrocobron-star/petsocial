@@ -19,6 +19,9 @@ import {
   View,
 } from 'react-native';
 
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+
 import { EmptyState } from '@/components/empty-state';
 import { FONTS } from '@/lib/fonts';
 import { fetchPet, fetchPostsByPet, qk } from '@/lib/queries';
@@ -272,7 +275,7 @@ function GalleryLightbox({
 
   return (
     <Modal visible animationType="fade" onRequestClose={onClose} transparent={false}>
-      <View style={{ flex: 1, backgroundColor: '#000' }}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000' }}>
         <FlatList
           data={items}
           keyExtractor={(item) => item.id}
@@ -282,18 +285,23 @@ function GalleryLightbox({
           initialScrollIndex={startIndex}
           getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
           onMomentumScrollEnd={onMomentumEnd}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => setShowChrome((s) => !s)}
-              style={{ width, height, alignItems: 'center', justifyContent: 'center' }}
-            >
-              {item.type === 'video' ? (
+          renderItem={({ item }) =>
+            item.type === 'video' ? (
+              <Pressable
+                onPress={() => setShowChrome((s) => !s)}
+                style={{ width, height, alignItems: 'center', justifyContent: 'center' }}
+              >
                 <GalleryVideo uri={item.url} width={width} height={height} />
-              ) : (
-                <Image source={{ uri: item.url }} style={{ width, height }} contentFit="contain" transition={150} />
-              )}
-            </Pressable>
-          )}
+              </Pressable>
+            ) : (
+              <ZoomableImage
+                uri={item.url}
+                width={width}
+                height={height}
+                onSingleTap={() => setShowChrome((s) => !s)}
+              />
+            )
+          }
         />
 
         {/* Top bar */}
@@ -354,8 +362,69 @@ function GalleryLightbox({
             ) : null}
           </View>
         ) : null}
-      </View>
+      </GestureHandlerRootView>
     </Modal>
+  );
+}
+
+/**
+ * Foto do lightbox com pinch-to-zoom + duplo-toque pra ampliar. 1 dedo (toque
+ * simples) alterna a barra; 2 dedos (pinça) e duplo-toque dão zoom. Sem pan, pra
+ * não brigar com o swipe horizontal entre fotos. Reseta ao sair de cena.
+ */
+function ZoomableImage({
+  uri,
+  width,
+  height,
+  onSingleTap,
+}: {
+  uri: string;
+  width: number;
+  height: number;
+  onSingleTap: () => void;
+}) {
+  const scale = useSharedValue(1);
+  const saved = useSharedValue(1);
+
+  const pinch = Gesture.Pinch()
+    .onUpdate((e) => {
+      scale.value = Math.min(Math.max(saved.value * e.scale, 1), 5);
+    })
+    .onEnd(() => {
+      saved.value = scale.value;
+      if (scale.value < 1.05) {
+        scale.value = withTiming(1);
+        saved.value = 1;
+      }
+    });
+
+  const doubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      if (scale.value > 1.05) {
+        scale.value = withTiming(1);
+        saved.value = 1;
+      } else {
+        scale.value = withTiming(2.5);
+        saved.value = 2.5;
+      }
+    });
+
+  const singleTap = Gesture.Tap()
+    .numberOfTaps(1)
+    .onEnd(() => {
+      runOnJS(onSingleTap)();
+    });
+
+  const composed = Gesture.Simultaneous(pinch, Gesture.Exclusive(doubleTap, singleTap));
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  return (
+    <GestureDetector gesture={composed}>
+      <Animated.View style={[{ width, height, alignItems: 'center', justifyContent: 'center' }, animStyle]}>
+        <Image source={{ uri }} style={{ width, height }} contentFit="contain" transition={150} />
+      </Animated.View>
+    </GestureDetector>
   );
 }
 

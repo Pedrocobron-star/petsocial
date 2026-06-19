@@ -102,7 +102,7 @@ export function MotionSwitcher() {
         >
           {mode === 'auto'
             ? systemReducedMotion
-              ? 'Detectamos "Reduzir Movimento" no seu dispositivo — animações pausadas.'
+              ? 'Detectamos "Reduzir Movimento" no seu dispositivo, animações pausadas.'
               : 'Segue a preferência de movimento do seu dispositivo.'
             : mode === 'on'
               ? 'Avatares respiram, piscam e reagem nas interações.'

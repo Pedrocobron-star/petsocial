@@ -553,7 +553,7 @@ export default function CreatePostScreen() {
 
         <View className="mt-4">
           <Button
-            title={reachedLimit ? 'Limite atingido — Virar Pro' : 'Postar'}
+            title={reachedLimit ? 'Limite atingido: Virar Pro' : 'Postar'}
             onPress={handleSubmit}
             loading={submitting}
             fullWidth

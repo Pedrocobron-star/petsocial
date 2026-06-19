@@ -96,7 +96,7 @@ export default function TermsPage() {
         </LegalParagraph>
       </LegalSection>
 
-      <LegalSection title="5. Saúde e cuidados — o que somos e NÃO somos">
+      <LegalSection title="5. Saúde e cuidados: o que somos e NÃO somos">
         <LegalListItem>
           <strong>O Maestro Pet NÃO é veterinário</strong>. Sintomas, severidades, calendários
           sugeridos e respostas do Tira-dúvidas de Saúde são <strong>referência informativa</strong>,

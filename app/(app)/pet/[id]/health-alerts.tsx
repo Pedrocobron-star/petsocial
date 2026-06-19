@@ -114,7 +114,7 @@ export default function HealthAlertsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <Stack.Screen options={{ title: petQuery.data ? `Alertas — ${petQuery.data.name}` : 'Alertas' }} />
+      <Stack.Screen options={{ title: petQuery.data ? `Alertas de ${petQuery.data.name}` : 'Alertas' }} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
         {isLoading && alerts.length === 0 ? <HealthListSkeleton count={3} /> : null}
 
@@ -146,7 +146,7 @@ export default function HealthAlertsScreen() {
             intent="health-coach"
             emoji="🩺"
             title="Coach de prevenção no Pet Pro"
-            description={`${lockedPreventive} dica${lockedPreventive === 1 ? '' : 's'} de prevenção pra ${petQuery.data?.name ?? 'seu pet'} (check-up na hora certa, pesagem, fase da vida) — antecipe problemas antes de virarem urgência. Urgências e atenções você sempre vê de graça.`}
+            description={`${lockedPreventive} dica${lockedPreventive === 1 ? '' : 's'} de prevenção pra ${petQuery.data?.name ?? 'seu pet'} (check-up na hora certa, pesagem, fase da vida), antecipe problemas antes de virarem urgência. Urgências e atenções você sempre vê de graça.`}
             style={{ marginTop: 4 }}
           />
         ) : null}

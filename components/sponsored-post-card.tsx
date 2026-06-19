@@ -201,7 +201,7 @@ export function SponsoredPostCard({ post }: { post: SponsoredPost }) {
       <Pressable
         onPress={openCta}
         accessibilityRole="link"
-        accessibilityLabel={`${post.cta_label} — abrir ${post.sponsor_name}`}
+        accessibilityLabel={`${post.cta_label}: abrir ${post.sponsor_name}`}
         style={{
           marginHorizontal: 14,
           marginBottom: 14,

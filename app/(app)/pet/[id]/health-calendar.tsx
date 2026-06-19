@@ -78,7 +78,7 @@ export default function HealthCalendarScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <Stack.Screen options={{ title: petQuery.data ? `Calendário — ${petQuery.data.name}` : 'Calendário' }} />
+      <Stack.Screen options={{ title: petQuery.data ? `Calendário de ${petQuery.data.name}` : 'Calendário' }} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
         {/* Navegação de mês */}
         <View

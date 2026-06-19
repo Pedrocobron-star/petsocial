@@ -276,8 +276,8 @@ function MedicationCard({
             }}
           >
             {remainingToday > 0
-              ? `Hoje: ${med.doses_today}/${expectedToday} doses — falta ${remainingToday}`
-              : `Hoje: ${med.doses_today}/${expectedToday} — completo!`}
+              ? `Hoje: ${med.doses_today}/${expectedToday} doses, falta ${remainingToday}`
+              : `Hoje: ${med.doses_today}/${expectedToday}, completo!`}
           </Text>
         </View>
       ) : null}

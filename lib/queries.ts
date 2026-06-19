@@ -1217,6 +1217,34 @@ export async function fetchPetEventLogs(petId: string, limit = 200): Promise<Pet
   return (data ?? []) as PetEventLog[];
 }
 
+export interface AgendaMemory {
+  id: string;
+  occurrence_date: string;
+  completed_at: string | null;
+  mood: number | null;
+  notes: string | null;
+  photo_url: string | null;
+  event: { title: string; kind: string; emoji: string | null } | null;
+}
+
+/**
+ * Atividades de agenda CONCLUÍDAS com FOTO (banho, passeio, tosa, treino...) —
+ * as "memórias" que alimentam o diário. Junta o evento pai pelo event_id pra
+ * pegar título/emoji. Só status='done' e com photo_url.
+ */
+export async function fetchPetAgendaMemories(petId: string, limit = 100): Promise<AgendaMemory[]> {
+  const { data, error } = await supabase
+    .from('pet_event_logs')
+    .select('id, occurrence_date, completed_at, mood, notes, photo_url, status, event:pet_events(title, kind, emoji)')
+    .eq('pet_id', petId)
+    .eq('status', 'done')
+    .not('photo_url', 'is', null)
+    .order('occurrence_date', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as unknown as AgendaMemory[];
+}
+
 /**
  * Marca ocorrência como concluída/skipada com mood e foto opcionais.
  * Idempotente: upsert na chave (event_id, occurrence_date).

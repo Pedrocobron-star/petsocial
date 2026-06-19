@@ -26,7 +26,7 @@ const REASONS: Record<Props['reason'], { emoji: string; title: string; desc: str
   maxPets: {
     emoji: '🐾',
     title: 'Adicione mais pets',
-    desc: 'No plano gratuito você cadastra 1 pet. Vire Pet Pro pra ter até 6 pets — a família toda num lugar só.',
+    desc: 'No plano gratuito você cadastra 1 pet. Vire Pet Pro pra ter até 6 pets: a família toda num lugar só.',
   },
   maxPostsPerDay: {
     emoji: '📸',

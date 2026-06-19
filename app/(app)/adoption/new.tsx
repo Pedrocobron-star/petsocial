@@ -136,7 +136,7 @@ export default function NewAdoptionScreen() {
       return;
     }
     if (images.length === 0) {
-      toast.error('Adicione uma foto', 'Anúncios sem foto não são publicados — uma foto aumenta muito a chance de adoção.');
+      toast.error('Adicione uma foto', 'Anúncios sem foto não são publicados. Uma foto aumenta muito a chance de adoção.');
       return;
     }
     if (!accepted) {

@@ -73,7 +73,7 @@ export default function NotificationSettingsScreen() {
       toast.success('Permissão concedida!');
       await refresh();
     } else {
-      toast.info('Permissão não concedida — abra as configurações do sistema pra liberar');
+      toast.info('Permissão não concedida. Abra as configurações do sistema pra liberar');
     }
   };
 

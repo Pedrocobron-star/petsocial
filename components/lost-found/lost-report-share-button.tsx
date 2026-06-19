@@ -53,8 +53,8 @@ export function LostReportShareButton({ report }: Props) {
       const petName = report.pet?.name ?? report.pet_name ?? 'pet';
       const title =
         report.kind === 'lost'
-          ? `🆘 ${petName} está perdido — ajude a achar`
-          : `🐾 Achei um pet — alguém perdeu?`;
+          ? `🆘 ${petName} está perdido! Ajude a achar`
+          : `🐾 Achei um pet! Alguém perdeu?`;
       const shared = await sharePngDataUrl(dataUrl, `${slug}-cartaz.png`, title);
       const days = differenceInDays(new Date(), parseISO(report.created_at));
       trackLostReportShared({
@@ -123,8 +123,8 @@ export function LostReportShareButton({ report }: Props) {
           {busy
             ? 'Gerando cartaz...'
             : report.kind === 'lost'
-              ? 'Compartilhar — ajude a achar'
-              : 'Compartilhar — alguém pode reconhecer'}
+              ? 'Compartilhar: ajude a achar'
+              : 'Compartilhar: alguém pode reconhecer'}
         </Text>
       </Pressable>
     </>

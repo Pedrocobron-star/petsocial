@@ -105,7 +105,7 @@ function HealthHubInner() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <Stack.Screen options={{ title: pet ? `Saúde — ${pet.name}` : 'Saúde' }} />
+      <Stack.Screen options={{ title: pet ? `Saúde de ${pet.name}` : 'Saúde' }} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 110 }}>
         <AreaHero area="health" />
 

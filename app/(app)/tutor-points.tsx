@@ -92,7 +92,7 @@ export default function TutorPointsScreen() {
             <EmptyState
               emoji="⭐"
               title="Você ainda não tem pontos"
-              description="Cuide do seu pet, cumpra a Missão do Dia e poste no feed — cada ação vira ponto."
+              description="Cuide do seu pet, cumpra a Missão do Dia e poste no feed, cada ação vira ponto."
             />
           )
         }

@@ -88,7 +88,7 @@ export default function PetRecapScreen() {
               intent="health-recap"
               emoji="🗓️"
               title="Resumo mensal do seu pet"
-              description="Tudo que rolou no mês — vacinas, consultas, peso e custos — num cartão lindo pra compartilhar. Exclusivo do Pet Pro."
+              description="Tudo que rolou no mês (vacinas, consultas, peso e custos) num cartão lindo pra compartilhar. Exclusivo do Pet Pro."
             />
           </CenteredColumn>
         </ScrollView>

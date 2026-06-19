@@ -80,7 +80,7 @@ export default function DietScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <Stack.Screen options={{ title: petQuery.data ? `Dieta — ${petQuery.data.name}` : 'Dieta' }} />
+      <Stack.Screen options={{ title: petQuery.data ? `Dieta de ${petQuery.data.name}` : 'Dieta' }} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
         {/* Form (visível só quando aberto) */}
         {showForm ? (

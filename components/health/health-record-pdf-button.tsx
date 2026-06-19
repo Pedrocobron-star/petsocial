@@ -51,7 +51,7 @@ export function HealthRecordPdfButton({ pet, tutorName }: { pet: Pet; tutorName?
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={isPro ? 'Gerar prontuário completo em PDF' : 'Prontuário completo em PDF — exclusivo Pet Pro'}
+      accessibilityLabel={isPro ? 'Gerar prontuário completo em PDF' : 'Prontuário completo em PDF, exclusivo Pet Pro'}
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',

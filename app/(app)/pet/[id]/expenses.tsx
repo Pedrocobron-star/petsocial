@@ -151,7 +151,7 @@ export default function PetExpensesScreen() {
               intent="health-expenses"
               emoji="💸"
               title="Controle de gastos do pet"
-              description="Acompanhe quanto você investe no seu pet — ração, vet, banho e mais — com resumo por categoria e período. Exclusivo do Pet Pro."
+              description="Acompanhe quanto você investe no seu pet (ração, vet, banho e mais) com resumo por categoria e período. Exclusivo do Pet Pro."
             />
           </CenteredColumn>
         </ScrollView>

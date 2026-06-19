@@ -471,7 +471,7 @@ export default function NewLostReportScreen() {
               else
                 Alert.alert(
                   'Localização',
-                  'Não consegui pegar sua localização (permissão negada ou indisponível). Sem problema — o endereço acima já ajuda.',
+                  'Não consegui pegar sua localização (permissão negada ou indisponível). Sem problema, o endereço acima já ajuda.',
                 );
             }}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 2 }}
@@ -487,7 +487,7 @@ export default function NewLostReportScreen() {
               {locating
                 ? '📍 Localizando…'
                 : coords
-                  ? '✓ Localização capturada — aparece pra quem busca por perto'
+                  ? '✓ Localização capturada, aparece pra quem busca por perto'
                   : '📍 Usar minha localização (busca por proximidade)'}
             </Text>
           </Pressable>
@@ -498,7 +498,7 @@ export default function NewLostReportScreen() {
           />
           <TextArea
             label="Descrição (opcional)"
-            placeholder="Detalhes que ajudem a identificar — comportamento, coleira, etc."
+            placeholder="Detalhes que ajudem a identificar: comportamento, coleira, etc."
             value={description}
             onChangeText={setDescription}
             rows={3}

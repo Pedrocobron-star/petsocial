@@ -127,7 +127,7 @@ export default function SymptomsScreen() {
       await exportSymptomsPdf(petQuery.data, symptoms, isPro);
       toast.success(
         'PDF gerado! 📄',
-        isPro ? 'Sem marca d\'água — você é Pro!' : 'Upgrade pra Pet Pro pra remover a marca d\'água',
+        isPro ? 'Sem marca d\'água, você é Pro!' : 'Upgrade pra Pet Pro pra remover a marca d\'água',
       );
     } catch (e) {
       toast.error('Erro ao gerar PDF', e instanceof Error ? e.message : '');
@@ -264,7 +264,7 @@ export default function SymptomsScreen() {
             }
             description={
               filter === 'all'
-                ? 'Use este espaço pra anotar o que percebeu — coceira, vômito, falta de apetite — e mostrar pro veterinário na próxima consulta.'
+                ? 'Use este espaço pra anotar o que percebeu (coceira, vômito, falta de apetite) e mostrar pro veterinário na próxima consulta.'
                 : 'Mude o filtro pra ver outros registros.'
             }
           />

@@ -144,7 +144,7 @@ export function FeedEngagementNudge() {
           </Text>
           <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim, marginTop: 2, lineHeight: 17 }}>
             {needPush
-              ? 'Ative as notificações pra receber lembretes de vacina, novidades e interações — mesmo com o app fechado.'
+              ? 'Ative as notificações pra receber lembretes de vacina, novidades e interações, mesmo com o app fechado.'
               : 'Instale o app na tela inicial pra abrir num toque, como um app de verdade.'}
           </Text>
         </View>

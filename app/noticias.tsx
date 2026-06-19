@@ -33,7 +33,7 @@ export default function PublicNewsIndex() {
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#FFFBF5' }}>
       <Stack.Screen options={{ headerShown: false }} />
       <MetaTags
-        title="Jornal Pet — notícias e cuidados | Maestro Pet"
+        title="Jornal Pet: notícias e cuidados | Maestro Pet"
         description="Saúde, comportamento, alimentação e curiosidades do mundo pet, pela Redação do Maestro Pet. Leia grátis, sem login."
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>

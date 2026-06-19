@@ -186,7 +186,7 @@ export function HealthSummaryPosterSvg({
         </SvgText>
         <SvgText x="80" y="840" fontSize="18" fill="#1A1410">
           {summary.last_vet_visit
-            ? `${format(parseISO(summary.last_vet_visit.visited_at), "d 'de' MMM 'de' yyyy", { locale: ptBR })} — ${trunc(summary.last_vet_visit.reason, 30)}`
+            ? `${format(parseISO(summary.last_vet_visit.visited_at), "d 'de' MMM 'de' yyyy", { locale: ptBR })} · ${trunc(summary.last_vet_visit.reason, 30)}`
             : 'Sem registro'}
         </SvgText>
 

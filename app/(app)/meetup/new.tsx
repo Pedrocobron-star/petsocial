@@ -210,7 +210,7 @@ function NewMeetupInner() {
                         key={p.id}
                         onPress={() => {
                           setPlaceId(p.id);
-                          setLocationName(`${p.name}${p.city ? ' — ' + p.city : ''}`);
+                          setLocationName(`${p.name}${p.city ? ', ' + p.city : ''}`);
                           setPlaceSearch('');
                         }}
                         style={{

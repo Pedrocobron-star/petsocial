@@ -148,7 +148,7 @@ export default function VaccinationsScreen() {
                     await exportVaccinationPdf(petQuery.data, vacQuery.data ?? [], isPro);
                     toast.success(
                       'PDF gerado! 📄',
-                      isPro ? 'Sem marca d\'água — você é Pro!' : 'Upgrade pro Pet Pro pra remover a marca d\'água',
+                      isPro ? 'Sem marca d\'água, você é Pro!' : 'Upgrade pro Pet Pro pra remover a marca d\'água',
                     );
                   } catch (e) {
                     toast.error('Erro ao gerar PDF', e instanceof Error ? e.message : '');

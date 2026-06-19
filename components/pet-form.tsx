@@ -261,7 +261,7 @@ export function PetForm({ userId, initial, submitLabel, onSubmit }: Props) {
               hint="15 dígitos do padrão internacional ISO 11784"
             />
             <Input
-              label="RGA — Registro Animal (opcional)"
+              label="RGA: Registro Animal (opcional)"
               placeholder="Ex: 123456"
               value={rgaNumber}
               onChangeText={setRgaNumber}
@@ -410,7 +410,7 @@ export function PetForm({ userId, initial, submitLabel, onSubmit }: Props) {
             </Text>
             <Input
               label="Nome / Clínica"
-              placeholder="Ex: Dra. Carla — Clínica Pata Amiga"
+              placeholder="Ex: Dra. Carla, Clínica Pata Amiga"
               value={preferredVetName}
               onChangeText={setPreferredVetName}
               error={errors.preferred_vet_name}

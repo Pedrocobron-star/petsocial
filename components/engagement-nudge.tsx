@@ -118,7 +118,7 @@ export function EngagementNudge() {
       return {
         key: `health:${activePet.id}`,
         emoji: '💉',
-        text: `${activePet.name} ainda não tem vacina registrada. Comece o histórico de saúde — leva 30s.`,
+        text: `${activePet.name} ainda não tem vacina registrada. Comece o histórico de saúde, leva 30s.`,
         cta: 'Registrar vacina',
         href: { pathname: '/(app)/pet/[id]/vaccinations', params: { id: activePet.id } },
         color: '#0F766E',

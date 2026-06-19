@@ -206,7 +206,7 @@ export function HealthTimeline({ events, limit = 8 }: Props) {
           intent="health-timeline"
           emoji="🩺"
           title="Histórico clínico completo no Pet Pro"
-          description={`${lockedCount} ${lockedCount === 1 ? 'registro mais antigo está' : 'registros mais antigos estão'} guardados no Cofre da Saúde. No free você vê os últimos 3 meses; no Pet Pro, a vida toda do seu pet — vacinas, exames, peso e consultas que nunca somem.`}
+          description={`${lockedCount} ${lockedCount === 1 ? 'registro mais antigo está' : 'registros mais antigos estão'} guardados no Cofre da Saúde. No free você vê os últimos 3 meses; no Pet Pro, a vida toda do seu pet: vacinas, exames, peso e consultas que nunca somem.`}
           compact
           style={{ marginTop: 12 }}
         />

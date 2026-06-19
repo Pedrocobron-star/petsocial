@@ -285,13 +285,13 @@ export function MobileAppBanner() {
                 <>
                   <Step num={1} text="Toque no botão Compartilhar do Safari (quadrado com seta ↑)" icon="share-outline" />
                   <Step num={2} text="Role e escolha 'Adicionar à Tela de Início'" icon="add-circle-outline" />
-                  <Step num={3} text="Toque em 'Adicionar' — pronto, vira ícone na home!" icon="checkmark-circle" />
+                  <Step num={3} text="Toque em 'Adicionar' e pronto: vira ícone na home!" icon="checkmark-circle" />
                 </>
               ) : (
                 <>
                   <Step num={1} text="Toque no menu do navegador (os 3 pontinhos ⋮, no canto)" icon="ellipsis-vertical" />
                   <Step num={2} text="Escolha 'Instalar app' ou 'Adicionar à tela inicial'" icon="add-circle-outline" />
-                  <Step num={3} text="Confirme — pronto, vira ícone na sua tela!" icon="checkmark-circle" />
+                  <Step num={3} text="Confirme e pronto: vira ícone na sua tela!" icon="checkmark-circle" />
                 </>
               )}
             </View>
