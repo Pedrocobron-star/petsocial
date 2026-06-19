@@ -54,6 +54,22 @@ export function PetIdStoryCard({ pet, tutorProfile, qrUrl, width = 360 }: Props)
     ? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrUrl)}&size=180x180&margin=4&color=1A1410&bgcolor=ffffff`
     : null;
 
+  // No máximo 3 cards (prioridade pra quem achou o pet: emergência, microchip, vet).
+  const infoRows = [
+    pet.emergency_contact_phone ? (
+      <InfoRow key="e" icon="🚨" label="EMERGÊNCIA" value={pet.emergency_contact_phone} tint="#FEE2E2" tintText="#991B1B" />
+    ) : null,
+    pet.microchip_number ? (
+      <InfoRow key="m" icon="🔖" label="MICROCHIP" value={pet.microchip_number} mono />
+    ) : null,
+    pet.preferred_vet_name ? (
+      <InfoRow key="v" icon="🩺" label="VET" value={pet.preferred_vet_name} />
+    ) : null,
+    pet.rga_number ? <InfoRow key="r" icon="📋" label="RGA" value={pet.rga_number} mono /> : null,
+  ]
+    .filter(Boolean)
+    .slice(0, 3);
+
   return (
     <View
       style={{
@@ -114,6 +130,8 @@ export function PetIdStoryCard({ pet, tutorProfile, qrUrl, width = 360 }: Props)
         </Text>
       </View>
 
+      {/* Conteúdo do meio em flex:1 (com overflow) pra o rodapé nunca sobrepor. */}
+      <View style={{ flex: 1, overflow: 'hidden' }}>
       {/* ============================================================
           HERO — foto grande + nome
           ============================================================ */}
@@ -265,33 +283,15 @@ export function PetIdStoryCard({ pet, tutorProfile, qrUrl, width = 360 }: Props)
           INFO CARDS — minimalista
           ============================================================ */}
       <View style={{ paddingHorizontal: 20, marginTop: 16, gap: 6 }}>
-        {pet.microchip_number ? (
-          <InfoRow icon="🔖" label="MICROCHIP" value={pet.microchip_number} mono />
-        ) : null}
-        {pet.rga_number ? <InfoRow icon="📋" label="RGA" value={pet.rga_number} mono /> : null}
-        {pet.emergency_contact_phone ? (
-          <InfoRow
-            icon="🚨"
-            label="EMERGÊNCIA"
-            value={pet.emergency_contact_phone}
-            tint="#FEE2E2"
-            tintText="#991B1B"
-          />
-        ) : null}
-        {pet.preferred_vet_name ? (
-          <InfoRow icon="🩺" label="VET" value={pet.preferred_vet_name} />
-        ) : null}
+        {infoRows}
+      </View>
       </View>
 
       {/* ============================================================
-          FOOTER — QR + tutor + serial
+          FOOTER — QR + tutor + serial (flex:none, fica no rodapé sem sobrepor)
           ============================================================ */}
       <View
         style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
           backgroundColor: '#1A1410',
           paddingTop: 16,
           paddingBottom: 22,
