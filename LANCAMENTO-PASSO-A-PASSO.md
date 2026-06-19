@@ -12,13 +12,19 @@ Abre: https://supabase.com/dashboard/project/aefrcwysifgniogumxwk/sql/new
 **A1. Endurecimento (LGPD + pagamento + consentimento)**
 1. Abre o arquivo `supabase/_APLICAR-no-lancamento.sql`, copia TUDO.
 2. Cola no SQL Editor e clica **Run** (ou Ctrl+Enter).
-3. ✅ Deve aparecer "Success. No rows returned".
+3. ✅ Deve aparecer "Success. No rows returned".  [FEITO em 2026-06-19]
 
 **A2. Conteúdo do feed (Mozart + personas)**
 1. Abre o arquivo `supabase/_SEED-conteudo-lancamento.sql`, copia TUDO.
 2. Cola numa query nova e clica **Run**.
 3. ✅ A última linha mostra uma tabela: `mozart_agendados` > 0 e `persona_posts_total` = 15.
    Os posts aparecem no feed aos poucos (o cron publica a cada 5 min).
+   [FEITO em 2026-06-19: mozart_agendados=20, persona_posts_total=15, materias=9]
+
+**A3. Correções da caça a bugs (limite de pet no servidor + trial conta como Pro)**
+1. Abre o arquivo `supabase/_APLICAR-2-correcoes.sql`, copia TUDO.
+2. Cola numa query nova e clica **Run** (aceita o aviso de "destrutivo", é trigger/função).
+3. ✅ "Success. No rows returned".
 
 ---
 
