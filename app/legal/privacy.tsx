@@ -179,7 +179,7 @@ export default function PrivacyPage() {
           Dúvidas, pedidos ou reclamações sobre privacidade: maestropetcontato@gmail.com
         </LegalParagraph>
         <LegalParagraph>
-          Encarregado de Dados (DPO): a ser nomeado quando atingirmos critérios LGPD Art. 41.
+          Encarregado de Dados (DPO): Pedro Amaral. Fale pelo e-mail maestropetcontato@gmail.com.
         </LegalParagraph>
       </LegalSection>
     </LegalPage>

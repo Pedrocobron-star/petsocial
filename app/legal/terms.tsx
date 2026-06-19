@@ -178,8 +178,9 @@ export default function TermsPage() {
           grátis.
         </LegalListItem>
         <LegalListItem>
-          <strong>Fornecedor:</strong> o Maestro Pet é operado por Pedro Amaral. Contato e suporte:
-          maestropetcontato@gmail.com.
+          <strong>Fornecedor:</strong> o Maestro Pet é operado por Pedro Amaral (pessoa física,
+          CPF 412.***.***-95). Contato e suporte: maestropetcontato@gmail.com. O endereço completo
+          do responsável pode ser solicitado a qualquer momento por esse e-mail.
         </LegalListItem>
       </LegalSection>
 
