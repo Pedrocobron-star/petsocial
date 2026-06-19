@@ -10,6 +10,7 @@ import { Screen } from '@/components/ui/screen';
 import { TextArea } from '@/components/ui/text-area';
 import { MEETUP_CATEGORIES } from '@/lib/constants';
 import { FONTS } from '@/lib/fonts';
+import { ScreenLoading } from '@/components/screen-loading';
 import { fetchMeetup, qk, updateMeetup } from '@/lib/queries';
 import type { MeetupCategory } from '@/lib/types';
 import { useActivePet } from '@/providers/active-pet-provider';
@@ -88,6 +89,7 @@ function EditMeetupInner() {
     updateMutation.mutate();
   };
 
+  if (meetupQuery.isLoading) return <ScreenLoading />;
   if (!meetupQuery.data) return null;
 
   return (

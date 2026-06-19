@@ -9,6 +9,7 @@ import { FONTS } from '@/lib/fonts';
 import { MOZART } from '@/lib/mozart';
 import { markOnboardingSkipped } from '@/lib/onboarding-state';
 import { qk } from '@/lib/queries';
+import { claimReferral, clearPendingRef, readPendingRef } from '@/lib/referral';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/providers/session-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -98,6 +99,11 @@ export default function OnboardingScreen() {
             submitLabel="Continuar"
             onSubmit={async (data) => {
               try {
+                // Convite: registra quem indicou ANTES de inserir o 1º pet
+                // (o trigger concede a recompensa de Pro pra ambos). Sem isso,
+                // quem cadastra o pet pela tela de onboarding perdia o bônus.
+                const pendingRef = readPendingRef();
+                if (pendingRef) await claimReferral(pendingRef).catch(() => false);
                 const { error } = await supabase.from('pets').insert({
                   owner_id: userId,
                   name: data.name,
@@ -108,6 +114,7 @@ export default function OnboardingScreen() {
                   avatar_url: data.avatar_url || null,
                 });
                 if (error) throw error;
+                clearPendingRef();
                 await qc.invalidateQueries({ queryKey: qk.myPets(userId) });
                 toast.success(`Bem-vindo, ${data.name}! 🐾`, 'Esse é o celular do seu pet 🐾📱');
                 router.replace('/(app)/phone');

@@ -62,6 +62,7 @@ export default function MedicationsScreen() {
       qc.invalidateQueries({ queryKey: qk.medications(id) });
       qc.invalidateQueries({ queryKey: qk.healthSummary(id) });
     },
+    onError: (e) => toast.error('Não foi possível atualizar', e instanceof Error ? e.message : ''),
   });
 
   const deleteMutation = useMutation({
@@ -71,6 +72,7 @@ export default function MedicationsScreen() {
       qc.invalidateQueries({ queryKey: qk.healthSummary(id) });
       toast.success('Removido');
     },
+    onError: (e) => toast.error('Não foi possível remover', e instanceof Error ? e.message : ''),
   });
 
   const meds = listQuery.data ?? [];

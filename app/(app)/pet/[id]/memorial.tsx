@@ -21,6 +21,7 @@ import {
   unmarkPetMemorial,
 } from '@/lib/queries';
 import type { MemorialMessageWithProfile } from '@/lib/types';
+import { ScreenLoading } from '@/components/screen-loading';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
@@ -92,6 +93,7 @@ export default function MemorialScreen() {
   });
 
   const pet = petQuery.data;
+  if (petQuery.isLoading) return <ScreenLoading />;
   if (!pet) return null;
 
   const isOwner = pet.owner_id === session?.user.id;
@@ -208,7 +210,7 @@ export default function MemorialScreen() {
             <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#737373' }}>
               {format(parseISO(pet.birthdate), "d 'de' MMM 'de' yyyy", { locale: ptBR })}
               {pet.memorial_at
-                ? ` — ${format(parseISO(pet.memorial_at), "d 'de' MMM 'de' yyyy", { locale: ptBR })}`
+                ? ` - ${format(parseISO(pet.memorial_at), "d 'de' MMM 'de' yyyy", { locale: ptBR })}`
                 : ''}
             </Text>
           ) : null}

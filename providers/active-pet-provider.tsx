@@ -12,7 +12,7 @@ const STORAGE_KEY = 'petsocial:active-pet-id';
 interface ActivePetContextValue {
   pets: Pet[];
   activePet: Pet | null;
-  setActivePet: (id: string) => void;
+  setActivePet: (id: string | null) => void;
   loading: boolean;
   refetch: () => Promise<unknown>;
 }
@@ -36,7 +36,16 @@ export function ActivePetProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!pets || pets.length === 0) return;
+    if (!pets) return;
+    // Conta sem pet (apagou o último): zera o ativo pra não apontar pra um
+    // pet inexistente. Sem isso, activeId fica "preso" num id morto.
+    if (pets.length === 0) {
+      if (activeId !== null) {
+        setActiveId(null);
+        AsyncStorage.removeItem(STORAGE_KEY);
+      }
+      return;
+    }
     if (!activeId || !pets.find((p) => p.id === activeId)) {
       const fallback = pets[0].id;
       setActiveId(fallback);
@@ -50,7 +59,8 @@ export function ActivePetProvider({ children }: { children: ReactNode }) {
       activePet: pets?.find((p) => p.id === activeId) ?? null,
       setActivePet: (id) => {
         setActiveId(id);
-        AsyncStorage.setItem(STORAGE_KEY, id);
+        if (id) AsyncStorage.setItem(STORAGE_KEY, id);
+        else AsyncStorage.removeItem(STORAGE_KEY);
       },
       loading: isLoading,
       refetch,

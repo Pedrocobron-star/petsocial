@@ -189,7 +189,7 @@ export function HealthScoreTrend({
                       : theme.textDim,
                 }}
               >
-                {isLocked ? '⭐' : m.score != null ? `${m.score}%` : '—'}
+                {isLocked ? '⭐' : m.score != null ? `${m.score}%` : '-'}
               </Text>
             </View>
           );

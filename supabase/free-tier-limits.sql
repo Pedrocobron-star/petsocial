@@ -73,10 +73,11 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- Pro passa direto
+  -- Pro passa direto (active OU trialing — bate com is_user_pro() canônica;
+  -- antes só contava 'active' e barrava quem estava em trial de Pro).
   IF EXISTS (
     SELECT 1 FROM public.subscriptions
-    WHERE user_id = v_owner AND status = 'active'
+    WHERE user_id = v_owner AND status IN ('active', 'trialing')
   ) THEN
     RETURN NEW;
   END IF;

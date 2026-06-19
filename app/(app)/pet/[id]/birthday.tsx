@@ -20,6 +20,7 @@ import { FONTS } from '@/lib/fonts';
 import { birthdayYears, daysUntilBirthday, isBirthdayToday, petAgeText } from '@/lib/pet-age';
 import { fetchPet, fetchPostsByPet, qk } from '@/lib/queries';
 import { petUrl } from '@/lib/share';
+import { ScreenLoading } from '@/components/screen-loading';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useTheme } from '@/providers/theme-provider';
 
@@ -64,6 +65,7 @@ export default function BirthdayScreen() {
     transform: [{ scale: scale.value }],
   }));
 
+  if (petQuery.isLoading) return <ScreenLoading />;
   if (!pet) return null;
 
   const years = birthdayYears(pet.birthdate);

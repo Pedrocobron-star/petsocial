@@ -178,7 +178,7 @@ export default function ProfileScreen() {
                       marginTop: 2,
                     }}
                   >
-                    Pets ilimitados, posts à vontade e mais — R${' '}
+                    Pets ilimitados, posts à vontade e mais por R${' '}
                     {PRICING.monthlyBRL.toFixed(2).replace('.', ',')}/mês
                   </Text>
                 </View>

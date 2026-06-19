@@ -52,7 +52,7 @@ export function useDeletePet() {
               onSuccess: async () => {
                 if (userId) await qc.invalidateQueries({ queryKey: qk.myPets(userId) });
                 const remaining = pets.filter((p) => p.id !== pet.id);
-                if (remaining[0]) setActivePet(remaining[0].id);
+                setActivePet(remaining[0] ? remaining[0].id : null);
                 toast.success('Pet excluído', 'Os dados foram removidos definitivamente.');
                 onDeleted?.();
               },

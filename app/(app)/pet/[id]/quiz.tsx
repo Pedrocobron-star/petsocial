@@ -12,6 +12,7 @@ import { calculateResult, QUIZ_QUESTIONS } from '@/lib/personality-quiz';
 import { fetchPet, qk, savePersonality } from '@/lib/queries';
 import { petUrl } from '@/lib/share';
 import { PERSONALITIES, type PersonalityType } from '@/lib/types';
+import { ScreenLoading } from '@/components/screen-loading';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
 
@@ -56,6 +57,7 @@ export default function QuizScreen() {
     }
   };
 
+  if (petQuery.isLoading) return <ScreenLoading />;
   if (!pet) return null;
 
   // Resultado

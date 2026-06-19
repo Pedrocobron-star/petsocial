@@ -328,12 +328,30 @@ function PostCardComponent({
         }}
         style={{ position: 'relative', backgroundColor: theme.name === 'dark' ? '#000' : '#F5F3F0' }}
       >
-        {/* Quando é repost: mostra mídia do post ORIGINAL. */}
-        <MediaCarousel
-          media={post.reposted_from && post.original_post ? post.original_post.media : post.media}
-          width={mediaWidth}
-          isActive={isActive}
-        />
+        {/* Quando é repost: mostra mídia do post ORIGINAL. Se o original foi
+            apagado, mostra um aviso em vez de um card vazio/fantasma. */}
+        {post.reposted_from && !post.original_post ? (
+          <View
+            style={{
+              width: mediaWidth,
+              paddingVertical: 30,
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+            }}
+          >
+            <Ionicons name="trash-outline" size={22} color={theme.textDim} />
+            <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.textDim }}>
+              O post original foi removido
+            </Text>
+          </View>
+        ) : (
+          <MediaCarousel
+            media={post.reposted_from && post.original_post ? post.original_post.media : post.media}
+            width={mediaWidth}
+            isActive={isActive}
+          />
+        )}
         <HeartBurst visible={heartBurstVisible} onComplete={() => setHeartBurstVisible(false)} />
         {firstImage ? (
           <Pressable

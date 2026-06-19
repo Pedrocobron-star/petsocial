@@ -283,12 +283,12 @@ export function PetForm({ userId, initial, submitLabel, onSubmit }: Props) {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={{ fontSize: 18 }}>🇧🇷</Text>
                 <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#065F46', flex: 1 }}>
-                  SinPatinhas — RG federal do seu pet
+                  SinPatinhas, o RG federal do seu pet
                 </Text>
               </View>
               <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#047857', lineHeight: 17 }}>
                 Registro oficial do governo federal (Ministério do Meio Ambiente), gratuito e
-                voluntário. Se você já registrou, cole o número aqui — ele aparece na carteirinha do
+                voluntário. Se você já registrou, cole o número aqui e ele aparece na carteirinha do
                 seu pet.
               </Text>
               <Input

@@ -3,6 +3,7 @@ import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { PetForm } from '@/components/pet-form';
+import { ScreenLoading } from '@/components/screen-loading';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { useDeletePet } from '@/lib/use-delete-pet';
@@ -32,6 +33,7 @@ export default function EditPetScreen() {
     enabled: !!id,
   });
 
+  if (petQuery.isLoading) return <ScreenLoading />;
   if (!userId || !petQuery.data) return null;
   const pet = petQuery.data;
   const priv = petPrivateQuery.data ?? null;

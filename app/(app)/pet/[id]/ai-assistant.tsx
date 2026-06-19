@@ -165,7 +165,7 @@ export default function HealthGuideScreen() {
               >
                 Respostas de referência sobre cuidados, alimentação e sinais de alerta.{'\n'}
                 <Text style={{ fontFamily: FONTS.bodyBold }}>
-                  Não substituem o veterinário — em emergências, procure atendimento.
+                  Não substituem o veterinário. Em emergências, procure atendimento.
                 </Text>
               </Text>
 

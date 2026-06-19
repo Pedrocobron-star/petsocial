@@ -130,19 +130,25 @@ serve(async (req) => {
   try {
     if (APPROVE.has(event)) {
       const { plan, days, normalized, matched } = detectPlan(amount);
-      const { data } = await supabase.rpc('cakto_grant_pro', {
-        p_email: email, p_plan: plan, p_days: days, p_order_id: orderId,
-      });
-      result = { action: 'grant', plan, amount_brl: normalized, amount_matched: matched, ...data };
-      if (!matched) result.warning = `valor R$${normalized} fora dos preços conhecidos (14,90 / 99,90)`;
-      // Evento de analytics pra medir conversão/receita (best-effort, não bloqueia).
-      if (data?.user_id) {
-        await supabase.from('analytics_events').insert({
-          user_id: data.user_id,
-          event_name: 'purchase_completed',
-          props: { plan, amount_brl: normalized, gateway: 'cakto', order_id: orderId },
-          platform: 'web',
-        }).then(undefined, () => {});
+      if (!matched) {
+        // Valor fora dos preços conhecidos (14,90 / 99,90 ± R$5): NÃO ativa Pro.
+        // Evita conceder por valor zero/errado/evento de outro produto. Fica
+        // logado em cakto_events com este resultado pra você calibrar se preciso.
+        result = { skipped: 'amount_unmatched', amount_brl: normalized };
+      } else {
+        const { data } = await supabase.rpc('cakto_grant_pro', {
+          p_email: email, p_plan: plan, p_days: days, p_order_id: orderId,
+        });
+        result = { action: 'grant', plan, amount_brl: normalized, ...data };
+        // Evento de analytics pra medir conversão/receita (best-effort, não bloqueia).
+        if (data?.user_id) {
+          await supabase.from('analytics_events').insert({
+            user_id: data.user_id,
+            event_name: 'purchase_completed',
+            props: { plan, amount_brl: normalized, gateway: 'cakto', order_id: orderId },
+            platform: 'web',
+          }).then(undefined, () => {});
+        }
       }
     } else if (REVOKE.has(event)) {
       const { data } = await supabase.rpc('cakto_revoke_pro', { p_email: email, p_order_id: orderId });

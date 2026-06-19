@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { fetchTimeCapsule, qk } from '@/lib/queries';
 import { petUrl } from '@/lib/share';
+import { ScreenLoading } from '@/components/screen-loading';
 import { useTheme } from '@/providers/theme-provider';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -27,6 +28,7 @@ export default function TimeCapsuleScreen() {
   });
 
   if (healthGate) return healthGate;
+  if (query.isLoading) return <ScreenLoading />;
   if (!query.data) return null;
   const { pet, topPosts, stats, monthlyHighlights } = query.data;
 
