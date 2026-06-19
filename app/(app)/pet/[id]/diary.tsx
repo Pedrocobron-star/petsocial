@@ -18,10 +18,10 @@ import { FONTS } from '@/lib/fonts';
 import {
   addPetMilestone,
   deletePetMilestone,
+  fetchHealthTimeline,
   fetchPet,
   fetchPetMilestones,
   fetchPostsByPet,
-  fetchVaccinations,
   qk,
 } from '@/lib/queries';
 import { guessExtension, uploadToBucket } from '@/lib/storage';
@@ -44,6 +44,16 @@ interface TimelineEvent {
 function toISODate(s: string): string {
   if (s.length === 10 && s[4] === '-') return s;
   return s.slice(0, 10);
+}
+
+/** "2026-06" → "Junho de 2026" (cabeçalho de mês da timeline). */
+function capitalizeMonth(monthKey: string): string {
+  try {
+    const label = format(parseISO(`${monthKey}-01`), "MMMM 'de' yyyy", { locale: ptBR });
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  } catch {
+    return monthKey;
+  }
 }
 
 export default function PetDiaryScreen() {
@@ -71,9 +81,11 @@ export default function PetDiaryScreen() {
     queryFn: () => fetchPostsByPet(id, activePet?.id ?? null),
     enabled: !!id,
   });
-  const vacQuery = useQuery({
-    queryKey: qk.vaccinations(id),
-    queryFn: () => fetchVaccinations(id),
+  // Eventos de saúde (vacina/vermífugo/consulta) já agregados; peso/sintoma/
+  // remédio ficam de fora (são clínicos, vivem na aba Saúde, não no diário).
+  const healthQuery = useQuery({
+    queryKey: ['pet-timeline-health', id],
+    queryFn: () => fetchHealthTimeline(id, 100),
     enabled: !!id,
   });
 
@@ -81,73 +93,87 @@ export default function PetDiaryScreen() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const timeline = useMemo<TimelineEvent[]>(() => {
-    if (!petQuery.data) return [];
+    const pet = petQuery.data;
+    if (!pet) return [];
     const events: TimelineEvent[] = [];
 
-    // Bem-vindo ao app
+    // Entrou no app
     events.push({
       id: `auto-welcome-${id}`,
-      date: toISODate(petQuery.data.created_at),
+      date: toISODate(pet.created_at),
       emoji: '🐾',
       title: 'Entrou no Maestro Pet',
-      description: `${petQuery.data.name} criou conta na rede`,
+      description: `${pet.name} chegou na rede`,
       source: 'auto',
       color: '#F97316',
     });
 
-    // Nascimento
-    if (petQuery.data.birthdate) {
+    // Nascimento + aniversários já completados (derivados, sem tabela)
+    if (pet.birthdate) {
       events.push({
         id: `auto-birth-${id}`,
-        date: petQuery.data.birthdate,
+        date: pet.birthdate,
         emoji: '🎂',
         title: 'Nasceu',
-        description: `Bem-vindo ao mundo, ${petQuery.data.name}!`,
+        description: `Bem-vindo ao mundo, ${pet.name}!`,
         source: 'auto',
         color: '#EC4899',
       });
+      try {
+        const bd = parseISO(pet.birthdate);
+        const now = new Date();
+        for (let year = bd.getFullYear() + 1; year <= now.getFullYear(); year++) {
+          const ann = `${year}-${String(bd.getMonth() + 1).padStart(2, '0')}-${String(bd.getDate()).padStart(2, '0')}`;
+          if (parseISO(ann) <= now) {
+            const age = year - bd.getFullYear();
+            events.push({
+              id: `auto-bday-${id}-${year}`,
+              date: ann,
+              emoji: '🥳',
+              title: `Fez ${age} ${age === 1 ? 'ano' : 'anos'}!`,
+              description: `${pet.name} completou ${age} ${age === 1 ? 'aninho' : 'aninhos'} 🎉`,
+              source: 'auto',
+              color: '#EC4899',
+            });
+          }
+        }
+      } catch {
+        // birthdate inválida: ignora os aniversários derivados
+      }
     }
 
-    // Primeira vacina
-    const sortedVacs = [...(vacQuery.data ?? [])].sort((a, b) => a.applied_at.localeCompare(b.applied_at));
-    if (sortedVacs[0]) {
-      events.push({
-        id: `auto-first-vac-${sortedVacs[0].id}`,
-        date: sortedVacs[0].applied_at,
-        emoji: '💉',
-        title: 'Primeira vacina',
-        description: sortedVacs[0].name,
-        source: 'auto',
-        color: '#3B82F6',
-      });
-    }
-    // Outras vacinas
-    for (const v of sortedVacs.slice(1)) {
-      events.push({
-        id: `auto-vac-${v.id}`,
-        date: v.applied_at,
-        emoji: '💉',
-        title: `Vacina: ${v.name}`,
-        description: v.notes ?? undefined,
-        source: 'auto',
-        color: '#3B82F6',
-      });
-    }
-
-    // Primeiro post
+    // TODOS os posts (foto + legenda) — o que mais enche o diário
     const sortedPosts = [...(postsQuery.data ?? [])].sort((a, b) =>
       a.created_at.localeCompare(b.created_at),
     );
-    if (sortedPosts[0]) {
+    sortedPosts.forEach((p, idx) => {
+      const photo = p.media.find((m) => m.media_type === 'image')?.url ?? null;
       events.push({
-        id: `auto-first-post-${sortedPosts[0].id}`,
-        date: toISODate(sortedPosts[0].created_at),
-        emoji: '📸',
-        title: 'Primeira publicação',
-        description: sortedPosts[0].caption ?? 'Primeiro post no feed',
-        photo_url: sortedPosts[0].media[0]?.url,
+        id: `auto-post-${p.id}`,
+        date: toISODate(p.created_at),
+        emoji: idx === 0 ? '📸' : '📷',
+        title: idx === 0 ? 'Primeira publicação' : 'Postou no feed',
+        description: p.caption ?? (photo ? undefined : 'Publicação no feed'),
+        photo_url: photo,
         source: 'auto',
         color: '#10B981',
+      });
+    });
+
+    // Saúde curada: vacina, vermífugo, consulta (peso/sintoma/remédio ficam na aba Saúde)
+    const healthEmoji: Record<string, string> = { vaccine: '💉', parasite: '💊', vet_visit: '🩺' };
+    const healthColor: Record<string, string> = { vaccine: '#3B82F6', parasite: '#0EA5E9', vet_visit: '#14B8A6' };
+    for (const h of healthQuery.data ?? []) {
+      const emoji = healthEmoji[h.kind];
+      if (!emoji) continue;
+      events.push({
+        id: `auto-health-${h.kind}-${h.source_id}`,
+        date: toISODate(h.date),
+        emoji,
+        title: h.title,
+        description: h.detail ?? undefined,
+        source: 'auto',
+        color: healthColor[h.kind],
       });
     }
 
@@ -166,10 +192,21 @@ export default function PetDiaryScreen() {
       });
     }
 
-    // Ordena desc por data
     events.sort((a, b) => b.date.localeCompare(a.date));
     return events;
-  }, [petQuery.data, milestonesQuery.data, postsQuery.data, vacQuery.data, id]);
+  }, [petQuery.data, milestonesQuery.data, postsQuery.data, healthQuery.data, id]);
+
+  // Agrupa por mês/ano pra leitura tipo "álbum de memórias" (timeline já desc).
+  const groups = useMemo(() => {
+    const map = new Map<string, TimelineEvent[]>();
+    for (const ev of timeline) {
+      const key = ev.date.slice(0, 7); // YYYY-MM
+      const arr = map.get(key);
+      if (arr) arr.push(ev);
+      else map.set(key, [ev]);
+    }
+    return Array.from(map.entries());
+  }, [timeline]);
 
   const deleteMutation = useMutation({
     mutationFn: (mid: string) => deletePetMilestone(mid),
@@ -211,22 +248,40 @@ export default function PetDiaryScreen() {
       {timeline.length === 0 ? (
         <EmptyState
           emoji="📔"
-          title="Diário em branco"
-          description="Adicione marcos importantes pra criar a linha do tempo do pet."
+          title="Esse diário tá só começando!"
+          description="Publica uma foto, anota uma vacina ou um banho que eu vou guardando tudo aqui pra você 🐾"
           action={
-            isOwner ? <Button title="Adicionar marco" onPress={() => setModalOpen(true)} /> : undefined
+            isOwner ? <Button title="Adicionar um marco" onPress={() => setModalOpen(true)} /> : undefined
           }
         />
       ) : (
         <View className="px-4 pt-4">
-          {timeline.map((ev, i) => (
-            <TimelineItem
-              key={ev.id}
-              event={ev}
-              isLast={i === timeline.length - 1}
-              isOwner={isOwner}
-              onLongPress={ev.source === 'manual' ? () => confirmDelete(ev) : undefined}
-            />
+          {groups.map(([monthKey, evs], gi) => (
+            <View key={monthKey}>
+              <Text
+                style={{
+                  fontFamily: FONTS.bodyBold,
+                  fontSize: 12,
+                  letterSpacing: 1,
+                  textTransform: 'uppercase',
+                  color: '#A3A3A3',
+                  marginTop: gi === 0 ? 0 : 10,
+                  marginBottom: 10,
+                  marginLeft: 4,
+                }}
+              >
+                {capitalizeMonth(monthKey)}
+              </Text>
+              {evs.map((ev, i) => (
+                <TimelineItem
+                  key={ev.id}
+                  event={ev}
+                  isLast={gi === groups.length - 1 && i === evs.length - 1}
+                  isOwner={isOwner}
+                  onLongPress={ev.source === 'manual' ? () => confirmDelete(ev) : undefined}
+                />
+              ))}
+            </View>
           ))}
         </View>
       )}
@@ -378,7 +433,7 @@ function MilestoneForm({
     try {
       const asset = result.assets[0];
       const ext = guessExtension(asset.uri, 'jpg');
-      const url = await uploadToBucket('avatars', userId, asset.uri, ext);
+      const url = await uploadToBucket('posts', userId, asset.uri, ext);
       setPhotoUrl(url);
     } catch (e) {
       toast.error('Erro no upload', e instanceof Error ? e.message : undefined);
