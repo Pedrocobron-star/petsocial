@@ -22,7 +22,15 @@ export interface PersonaPet {
   name: string;
   species: string;
   breed: string | null;
+  bio: string | null;
+  birthdate: string | null;
   avatar_url: string | null;
+}
+
+export interface PersonaTodayStatus {
+  pet_id: string;
+  name: string;
+  done: boolean;
 }
 
 export type PersonaPostStatus = 'draft' | 'scheduled' | 'published';
@@ -51,7 +59,7 @@ export interface PersonaPostInput {
 export async function fetchPersonas(): Promise<PersonaPet[]> {
   const { data, error } = await supabase
     .from('pets')
-    .select('id, name, species, breed, avatar_url')
+    .select('id, name, species, breed, bio, birthdate, avatar_url')
     .in('id', PERSONA_PET_IDS as unknown as string[]);
   if (error) throw error;
   // Mantém a ordem dos UUIDs fixos.
@@ -96,10 +104,40 @@ export async function deletePersonaPost(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Edita o perfil de uma persona (nome/espécie/raça/bio/nascimento/foto) via RPC admin. */
+export async function updatePersonaProfile(input: {
+  pet_id: string;
+  name: string;
+  species: string;
+  breed: string | null;
+  bio: string | null;
+  birthdate: string | null;
+  avatar_url: string | null;
+}): Promise<void> {
+  const { error } = await supabase.rpc('admin_update_persona', {
+    p_pet_id: input.pet_id,
+    p_name: input.name,
+    p_species: input.species,
+    p_breed: input.breed,
+    p_bio: input.bio,
+    p_birthdate: input.birthdate,
+    p_avatar_url: input.avatar_url,
+  });
+  if (error) throw error;
+}
+
+/** Checklist do Desafio do Dia: cada persona já postou o desafio de hoje? */
+export async function fetchPersonasTodayStatus(): Promise<PersonaTodayStatus[]> {
+  const { data, error } = await supabase.rpc('personas_today_status');
+  if (error) throw error;
+  return (data ?? []) as PersonaTodayStatus[];
+}
+
 /** Dispara o dispatch na hora (pro "publicar agora" não esperar o cron). */
 export async function runPersonaPublishNow(): Promise<void> {
   await adminRunDispatchNow();
 }
 
 export const qkPersonas = ['admin', 'personas'] as const;
+export const qkPersonasStatus = ['admin', 'personas-status'] as const;
 export const qkPersonaPosts = (petId: string) => ['admin', 'persona-posts', petId] as const;

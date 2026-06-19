@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Redirect, Stack } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -19,21 +19,26 @@ import {
 } from 'react-native';
 
 import { Button } from '@/components/ui/button';
-import { speciesEmoji } from '@/lib/constants';
+import { SPECIES_OPTIONS, speciesEmoji } from '@/lib/constants';
+import { fetchTodayMission } from '@/lib/daily-missions';
 import { FONTS } from '@/lib/fonts';
 import {
   createPersonaPost,
   deletePersonaPost,
   fetchPersonaPosts,
   fetchPersonas,
+  fetchPersonasTodayStatus,
   qkPersonaPosts,
   qkPersonas,
+  qkPersonasStatus,
   runPersonaPublishNow,
   updatePersonaPost,
+  updatePersonaProfile,
   type PersonaPet,
   type PersonaPost,
 } from '@/lib/personas';
 import { guessExtension, uploadToBucket } from '@/lib/storage';
+import type { Species } from '@/lib/types';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -66,12 +71,39 @@ export default function AdminPersonasScreen() {
     enabled: isAdmin && !!activeId,
   });
   const [editing, setEditing] = useState<PersonaPost | 'new' | null>(null);
+  const [editingProfile, setEditingProfile] = useState<PersonaPet | null>(null);
+  // Caption pré-preenchida quando o admin clica "postar desafio" numa persona.
+  const [seedCaption, setSeedCaption] = useState<string | null>(null);
+
+  const missionQuery = useQuery({
+    queryKey: ['admin', 'today-mission'],
+    queryFn: fetchTodayMission,
+    enabled: isAdmin,
+  });
+  const statusQuery = useQuery({
+    queryKey: qkPersonasStatus,
+    queryFn: fetchPersonasTodayStatus,
+    enabled: isAdmin,
+  });
 
   if (!session) return <Redirect href="/welcome" />;
   if (!isAdmin) return <Redirect href="/(app)/(tabs)" />;
 
   const posts = postsQuery.data ?? [];
   const activePersona = personas.find((p) => p.id === activeId) ?? null;
+  const mission = missionQuery.data ?? null;
+  const status = statusQuery.data ?? [];
+  const doneCount = status.filter((s) => s.done).length;
+  const total = personas.length || 3;
+
+  // "Postar desafio" numa persona: seleciona ela + abre o composer com a
+  // legenda do desafio do dia já preenchida (prompt + hashtag).
+  const startChallenge = (petId: string) => {
+    if (!mission) return;
+    setSelectedId(petId);
+    setSeedCaption(`${mission.prompt}\n\n#${mission.hashtag}`);
+    setEditing('new');
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -90,6 +122,67 @@ export default function AdminPersonasScreen() {
             dia). Não fale do app como se fosse usuário, nem use pessoa real.
           </Text>
         </View>
+
+        {/* Desafio do Dia + checklist N/3 (a primeira coisa que o admin vê) */}
+        {mission ? (
+          <View style={{ backgroundColor: theme.surface, borderRadius: 16, padding: 14, gap: 10, borderWidth: 1, borderColor: theme.borderLight }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ fontSize: 24 }}>{mission.emoji}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 10.5, color: theme.brand, letterSpacing: 1 }}>
+                  DESAFIO DE HOJE
+                </Text>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: theme.text }}>{mission.title}</Text>
+              </View>
+              <View
+                style={{
+                  backgroundColor: doneCount >= total ? '#DCFCE7' : theme.brandSurface,
+                  borderRadius: 999,
+                  paddingHorizontal: 11,
+                  paddingVertical: 5,
+                }}
+              >
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: doneCount >= total ? '#166534' : theme.brandDark }}>
+                  {doneCount}/{total}
+                </Text>
+              </View>
+            </View>
+            <Text style={{ fontFamily: FONTS.body, fontSize: 12.5, color: theme.textDim, lineHeight: 17 }}>
+              {mission.prompt}  #{mission.hashtag}
+            </Text>
+            <View style={{ gap: 8 }}>
+              {personas.map((p) => {
+                const done = status.find((s) => s.pet_id === p.id)?.done ?? false;
+                return (
+                  <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons
+                      name={done ? 'checkmark-circle' : 'ellipse-outline'}
+                      size={18}
+                      color={done ? '#16A34A' : theme.textDim}
+                    />
+                    <Text style={{ flex: 1, fontFamily: FONTS.bodyMedium, fontSize: 13, color: theme.text }}>
+                      {speciesEmoji(p.species as Species)} {p.name}
+                    </Text>
+                    {done ? (
+                      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#16A34A' }}>no desafio</Text>
+                    ) : (
+                      <Pressable
+                        onPress={() => startChallenge(p.id)}
+                        style={{ backgroundColor: theme.brand, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}
+                      >
+                        <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#fff' }}>Postar desafio</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        ) : (
+          <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim, textAlign: 'center' }}>
+            Sem desafio programado pra hoje.
+          </Text>
+        )}
 
         {/* Seletor de persona */}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -121,7 +214,34 @@ export default function AdminPersonasScreen() {
         </View>
 
         {activePersona ? (
-          <Button title={`+ Novo post de ${activePersona.name}`} onPress={() => setEditing('new')} fullWidth />
+          <View style={{ gap: 8 }}>
+            <Pressable
+              onPress={() => setEditingProfile(activePersona)}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                paddingVertical: 12,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: theme.brand,
+              }}
+            >
+              <Ionicons name="create-outline" size={18} color={theme.brand} />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.brand }}>
+                Editar perfil de {activePersona.name}
+              </Text>
+            </Pressable>
+            <Button
+              title={`+ Novo post de ${activePersona.name}`}
+              onPress={() => {
+                setSeedCaption(null);
+                setEditing('new');
+              }}
+              fullWidth
+            />
+          </View>
         ) : null}
 
         {personasQuery.isLoading || postsQuery.isLoading ? (
@@ -184,7 +304,18 @@ export default function AdminPersonasScreen() {
       </ScrollView>
 
       {activeId ? (
-        <PersonaPostModal petId={activeId} target={editing} onClose={() => setEditing(null)} />
+        <PersonaPostModal
+          petId={activeId}
+          target={editing}
+          seedCaption={seedCaption}
+          onClose={() => {
+            setEditing(null);
+            setSeedCaption(null);
+          }}
+        />
+      ) : null}
+      {editingProfile ? (
+        <PersonaProfileModal persona={editingProfile} onClose={() => setEditingProfile(null)} />
       ) : null}
     </View>
   );
@@ -193,10 +324,12 @@ export default function AdminPersonasScreen() {
 function PersonaPostModal({
   petId,
   target,
+  seedCaption,
   onClose,
 }: {
   petId: string;
   target: PersonaPost | 'new' | null;
+  seedCaption?: string | null;
   onClose: () => void;
 }) {
   const { theme } = useTheme();
@@ -229,11 +362,11 @@ function PersonaPostModal({
         setSchedTime(`${pad2(d.getHours())}:${pad2(d.getMinutes())}`);
       }
     } else {
-      setCaption('');
+      setCaption(seedCaption ?? '');
       setMediaUrl(null);
       setMode('now');
     }
-  }, [target, existing]);
+  }, [target, existing, seedCaption]);
 
   async function pickImage() {
     if (!userId) return;
@@ -469,6 +602,197 @@ function PersonaPostModal({
         </ScrollView>
       </KeyboardAvoidingView>
     </Modal>
+  );
+}
+
+function PersonaProfileModal({ persona, onClose }: { persona: PersonaPet; onClose: () => void }) {
+  const { theme } = useTheme();
+  const toast = useToast();
+  const qc = useQueryClient();
+  const { session } = useSession();
+  const userId = session?.user.id;
+
+  const [name, setName] = useState(persona.name);
+  const [species, setSpecies] = useState<string>(persona.species);
+  const [breed, setBreed] = useState(persona.breed ?? '');
+  const [birthdate, setBirthdate] = useState(persona.birthdate ?? '');
+  const [bio, setBio] = useState(persona.bio ?? '');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(persona.avatar_url);
+  const [uploading, setUploading] = useState(false);
+
+  const fieldStyle = {
+    borderWidth: 1,
+    borderColor: theme.borderLight,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontFamily: FONTS.body,
+    fontSize: 14,
+    color: theme.text,
+    backgroundColor: theme.bg,
+  } as const;
+
+  async function pickAvatar() {
+    if (!userId) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.85,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (result.canceled || !result.assets[0]) return;
+    setUploading(true);
+    try {
+      const asset = result.assets[0];
+      const ext = guessExtension(asset.uri, 'jpg');
+      const url = await uploadToBucket('avatars', userId, asset.uri, ext);
+      setAvatarUrl(url);
+    } catch (e) {
+      toast.error('Erro no upload', e instanceof Error ? e.message : 'Tenta outra imagem');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  const saveMut = useMutation({
+    mutationFn: async () => {
+      const clean = name.trim();
+      if (!clean) throw new Error('O nome não pode ficar vazio');
+      await updatePersonaProfile({
+        pet_id: persona.id,
+        name: clean,
+        species,
+        breed: breed.trim() || null,
+        bio: bio.trim() || null,
+        birthdate: birthdate.trim() || null,
+        avatar_url: avatarUrl,
+      });
+    },
+    onSuccess: () => {
+      toast.success('Perfil atualizado 🐾');
+      qc.invalidateQueries({ queryKey: qkPersonas });
+      qc.invalidateQueries({ queryKey: qkPersonasStatus });
+      onClose();
+    },
+    onError: (e) => toast.error('Erro ao salvar', e instanceof Error ? e.message : 'Tenta de novo'),
+  });
+
+  return (
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}
+      >
+        <ScrollView
+          style={{ maxHeight: '92%' }}
+          contentContainerStyle={{
+            backgroundColor: theme.surface,
+            borderTopLeftRadius: 22,
+            borderTopRightRadius: 22,
+            padding: 20,
+            paddingBottom: 34,
+            gap: 14,
+          }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: theme.text }}>Editar perfil</Text>
+            <Pressable onPress={onClose} hitSlop={8}>
+              <Ionicons name="close" size={24} color={theme.textDim} />
+            </Pressable>
+          </View>
+
+          <Pressable onPress={pickAvatar} disabled={uploading} style={{ alignSelf: 'center', alignItems: 'center', gap: 6 }}>
+            <View
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: 48,
+                backgroundColor: theme.bg,
+                borderWidth: 2,
+                borderColor: theme.borderLight,
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}
+            >
+              {uploading ? (
+                <ActivityIndicator color={theme.brand} />
+              ) : avatarUrl ? (
+                <Image source={{ uri: avatarUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+              ) : (
+                <Text style={{ fontSize: 40 }}>{speciesEmoji(species as Species)}</Text>
+              )}
+            </View>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.brand }}>Trocar foto</Text>
+          </Pressable>
+
+          <PersonaField label="Nome">
+            <TextInput value={name} onChangeText={setName} style={fieldStyle} placeholderTextColor={theme.textDim} />
+          </PersonaField>
+
+          <View style={{ gap: 6 }}>
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.text }}>Espécie</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+              {SPECIES_OPTIONS.map((o) => {
+                const on = species === o.value;
+                return (
+                  <Pressable
+                    key={o.value}
+                    onPress={() => setSpecies(o.value)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      backgroundColor: on ? theme.brand : theme.bg,
+                      borderWidth: 1,
+                      borderColor: on ? theme.brand : theme.borderLight,
+                    }}
+                  >
+                    <Text style={{ fontSize: 14 }}>{o.emoji}</Text>
+                    <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: on ? '#fff' : theme.text }}>
+                      {o.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <PersonaField label="Raça (opcional)">
+            <TextInput value={breed} onChangeText={setBreed} placeholder="SRD, Golden Retriever..." style={fieldStyle} placeholderTextColor={theme.textDim} />
+          </PersonaField>
+          <PersonaField label="Nascimento (AAAA-MM-DD, opcional)">
+            <TextInput value={birthdate} onChangeText={setBirthdate} placeholder="2022-05-10" autoCapitalize="none" style={fieldStyle} placeholderTextColor={theme.textDim} />
+          </PersonaField>
+          <PersonaField label="Bio (opcional)">
+            <TextInput
+              value={bio}
+              onChangeText={setBio}
+              multiline
+              placeholder="Conta um pouquinho da rotina dele 🐾"
+              style={{ ...fieldStyle, minHeight: 70, textAlignVertical: 'top' }}
+              placeholderTextColor={theme.textDim}
+            />
+          </PersonaField>
+
+          <Button title="Salvar perfil" onPress={() => saveMut.mutate()} loading={saveMut.isPending} disabled={uploading} fullWidth />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function PersonaField({ label, children }: { label: string; children: ReactNode }) {
+  const { theme } = useTheme();
+  return (
+    <View style={{ gap: 4 }}>
+      <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: theme.text }}>{label}</Text>
+      {children}
+    </View>
   );
 }
 
