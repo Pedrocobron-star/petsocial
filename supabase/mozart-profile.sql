@@ -32,7 +32,7 @@ insert into public.profiles (id, display_name, avatar_url, bio)
 values (
   'd0c0ffee-0000-4000-8000-00000000cafe',
   'Mozart 🐾',
-  'https://petsocial-tawny.vercel.app/mozart/rosto.png',
+  'https://maestropet.com/mozart/rosto.png',
   'Mascote oficial do Maestro Pet. Tô aqui pra te dar as boas-vindas e as novidades! 🐾'
 )
 on conflict (id) do update set

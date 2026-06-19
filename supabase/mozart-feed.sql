@@ -13,7 +13,7 @@ values (
   'Mozart',
   'dog',
   'Mascote oficial do Maestro Pet 🐾 Dicas, novidades e a alegria dos bichos.',
-  'https://petsocial-tawny.vercel.app/mozart/rosto.png'
+  'https://maestropet.com/mozart/rosto.png'
 )
 on conflict (id) do update set
   name = excluded.name,

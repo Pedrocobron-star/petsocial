@@ -2,6 +2,14 @@
   "buildCommand": "npx expo export --platform web && node scripts/inject-og.mjs && node scripts/gen-sitemap.mjs",
   "outputDirectory": "dist",
   "framework": null,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "petsocial-tawny.vercel.app" }],
+      "destination": "https://maestropet.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/share/:kind/:id",
