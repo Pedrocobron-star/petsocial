@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
-import { Stack, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { PremiumBadge } from '@/components/premium-badge';
@@ -65,7 +65,7 @@ export default function ProScreen() {
   const { theme } = useTheme();
   const router = useRouter();
   const toast = useToast();
-  const { isPro, subscription } = useSubscription();
+  const { isPro, subscription, refetch } = useSubscription();
   const { session } = useSession();
   const [plan, setPlan] = useState<'monthly' | 'yearly'>('yearly');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -74,6 +74,23 @@ export default function ProScreen() {
   useEffect(() => {
     track('pro_screen_view', { is_pro: isPro });
   }, [isPro]);
+
+  // Ao voltar do checkout do Cakto (outra aba), revalida a assinatura — assim,
+  // quando o webhook ativa o Pro, a tela reflete sozinha sem o usuário recarregar.
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
+
+  // Festeja quando o Pro acabou de ativar (free -> pro com a tela aberta).
+  const wasPro = useRef(isPro);
+  useEffect(() => {
+    if (isPro && !wasPro.current) {
+      toast.success('Bem-vindo ao Pet Pro! 🎉', 'Aproveita tudo agora 🐾');
+    }
+    wasPro.current = isPro;
+  }, [isPro, toast]);
 
   // Checkout via Cakto (Pix + cartão). Abre o link hospedado com o email no
   // prefill — o webhook cakto-webhook casa o pagamento com a conta e ativa o Pro.
