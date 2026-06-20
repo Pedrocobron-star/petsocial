@@ -7,6 +7,7 @@ import { PetForm } from '@/components/pet-form';
 import { Screen } from '@/components/ui/screen';
 import { FONTS } from '@/lib/fonts';
 import { MOZART } from '@/lib/mozart';
+import { safeErrorMessage } from '@/lib/errors';
 import { markOnboardingSkipped } from '@/lib/onboarding-state';
 import { qk } from '@/lib/queries';
 import { claimReferral, clearPendingRef, readPendingRef } from '@/lib/referral';
@@ -119,7 +120,7 @@ export default function OnboardingScreen() {
                 toast.success(`Bem-vindo, ${data.name}! 🐾`, 'Esse é o celular do seu pet 🐾📱');
                 router.replace('/(app)/phone');
               } catch (e) {
-                toast.error('Erro ao salvar', e instanceof Error ? e.message : 'Tente de novo');
+                toast.error('Não consegui salvar', safeErrorMessage(e));
                 throw e;
               }
             }}

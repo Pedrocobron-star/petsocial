@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { forwardRef, useState } from 'react';
+import { forwardRef, useId, useState } from 'react';
 import { Pressable, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
+import { useTheme } from '@/providers/theme-provider';
 
 interface Props extends Omit<TextInputProps, 'secureTextEntry'> {
   label?: string;
@@ -21,6 +22,9 @@ export const PasswordInput = forwardRef<TextInput, Props>(function PasswordInput
   { label, error, hint, className, style, showStrength, value, ...rest },
   ref,
 ) {
+  const { theme } = useTheme();
+  const labelId = useId();
+  const errorColor = theme.name === 'dark' ? '#F87171' : '#DC2626';
   const [reveal, setReveal] = useState(false);
   const strength = showStrength ? scorePassword(typeof value === 'string' ? value : '') : null;
 
@@ -28,10 +32,11 @@ export const PasswordInput = forwardRef<TextInput, Props>(function PasswordInput
     <View className="w-full">
       {label ? (
         <Text
+          nativeID={labelId}
           style={{
             fontFamily: FONTS.bodySemibold,
             fontSize: 13,
-            color: '#404040',
+            color: theme.textMuted,
             marginBottom: 6,
           }}
         >
@@ -44,19 +49,24 @@ export const PasswordInput = forwardRef<TextInput, Props>(function PasswordInput
           ref={ref}
           value={value}
           secureTextEntry={!reveal}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={theme.textDim}
+          accessibilityLabelledBy={label ? labelId : undefined}
           style={[
             {
               fontFamily: FONTS.body,
               fontSize: 15,
-              color: '#1A1410',
+              color: theme.text,
+              backgroundColor: theme.card,
+              borderWidth: 1,
+              borderColor: error ? errorColor : theme.border,
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
               paddingRight: 44,
             },
             style,
           ]}
-          className={`rounded-xl border border-neutral-300 bg-white px-4 py-3 ${
-            error ? 'border-red-500' : ''
-          } ${className ?? ''}`}
+          className={className}
           {...rest}
         />
         <Pressable
@@ -77,7 +87,7 @@ export const PasswordInput = forwardRef<TextInput, Props>(function PasswordInput
           <Ionicons
             name={reveal ? 'eye-off-outline' : 'eye-outline'}
             size={20}
-            color="#737373"
+            color={theme.textDim}
           />
         </Pressable>
       </View>
@@ -93,7 +103,7 @@ export const PasswordInput = forwardRef<TextInput, Props>(function PasswordInput
                   flex: 1,
                   height: 4,
                   borderRadius: 2,
-                  backgroundColor: i < strength.level ? strength.color : '#F5F5F5',
+                  backgroundColor: i < strength.level ? strength.color : theme.borderLight,
                 }}
               />
             ))}
@@ -105,12 +115,12 @@ export const PasswordInput = forwardRef<TextInput, Props>(function PasswordInput
       ) : null}
 
       {error ? (
-        <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: '#dc2626', marginTop: 4 }}>
+        <Text style={{ fontFamily: FONTS.bodyMedium, fontSize: 12, color: errorColor, marginTop: 4 }}>
           {error}
         </Text>
       ) : null}
       {!error && hint ? (
-        <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: '#737373', marginTop: 4 }}>
+        <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim, marginTop: 4 }}>
           {hint}
         </Text>
       ) : null}

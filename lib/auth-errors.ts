@@ -6,7 +6,7 @@ export function authErrorMessage(e: unknown): string {
 
   if (m.includes('invalid login credentials')) return 'Email ou senha incorretos.';
   if (m.includes('email not confirmed'))
-    return 'Confirme seu email antes de entrar — dá uma olhada na caixa de entrada.';
+    return 'Confirme seu email antes de entrar. Dá uma olhada na caixa de entrada.';
   if (m.includes('already registered') || m.includes('already been registered'))
     return 'Esse email já tem conta. Tenta entrar.';
   if (m.includes('password should be at least'))

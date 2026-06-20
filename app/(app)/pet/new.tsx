@@ -8,6 +8,7 @@ import { PetForm } from '@/components/pet-form';
 import { PremiumBadge } from '@/components/premium-badge';
 import { Screen } from '@/components/ui/screen';
 import { UpgradeModal } from '@/components/upgrade-modal';
+import { safeErrorMessage } from '@/lib/errors';
 import { FONTS } from '@/lib/fonts';
 import { qk, upsertPetPrivate } from '@/lib/queries';
 import { claimReferral, clearPendingRef, readPendingRef } from '@/lib/referral';
@@ -172,7 +173,7 @@ export default function NewPetScreen() {
               toast.success(`${data.name} entrou na família! 🎉`, 'Bora customizar o avatar?');
               router.back();
             } catch (e) {
-              toast.error('Erro ao salvar', e instanceof Error ? e.message : 'Tente novamente.');
+              toast.error('Não consegui adicionar o pet', safeErrorMessage(e));
               throw e;
             }
           }}

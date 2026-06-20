@@ -202,7 +202,7 @@ export default function CreatePostScreen() {
     }
     if (tooBig > 0) {
       toast.info(
-        'Vídeo muito pesado',
+        'Esse vídeo tá pesado demais',
         `Limite de ${MAX_VIDEO_MB} MB por vídeo. Use um clipe mais curto ou em menor resolução (evite 4K).`,
       );
     }
@@ -226,7 +226,7 @@ export default function CreatePostScreen() {
 
   const handleSubmit = async () => {
     if (media.length === 0) {
-      toast.info('Adiciona uma mídia', 'Pelo menos 1 foto ou vídeo é necessário.');
+      toast.info('Precisa de uma mídia', 'Escolha pelo menos 1 foto ou vídeo pra postar.');
       return;
     }
     // Gate de paywall pro free tier (defensa em UI; server tem trigger duro também)
@@ -488,7 +488,7 @@ export default function CreatePostScreen() {
 
         <TextArea
           label="Legenda (opcional)"
-          placeholder="O que tá rolando? Use #hashtags e @nomes pra interagir"
+          placeholder="O que tá rolando? Use #hashtags e @nomes pra marcar outros pets"
           value={caption}
           onChangeText={setCaption}
           rows={3}

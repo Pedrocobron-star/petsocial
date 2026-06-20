@@ -163,7 +163,7 @@ function PostCardComponent({
     } catch {
       setLiked(liked);
       setLikesCount(post.likes_count);
-      toast.error('Erro ao curtir', 'Tenta de novo.');
+      toast.error('Não consegui curtir', 'Tenta de novo.');
       return;
     }
     qc.invalidateQueries({ queryKey: ['feed'] });
@@ -184,7 +184,7 @@ function PostCardComponent({
     } catch {
       setCommentsCount((c) => Math.max(0, c - 1));
       setCommentText(text);
-      toast.error('Erro ao comentar', 'Tenta de novo.');
+      toast.error('Não consegui comentar', 'Tenta de novo.');
     } finally {
       setPostingComment(false);
     }
@@ -313,6 +313,8 @@ function PostCardComponent({
             haptic.light();
             setActionsOpen(true);
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Mais ações do post"
           style={{ width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}
         >
           <Ionicons name="ellipsis-horizontal" size={20} color={theme.text} />
@@ -361,6 +363,8 @@ function PostCardComponent({
               setImageViewerOpen(true);
             }}
             hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel="Expandir imagem"
             style={{
               position: 'absolute',
               top: 10,
@@ -429,7 +433,7 @@ function PostCardComponent({
                 await qc.invalidateQueries({ queryKey: qk.petPosts(activePet.id) });
                 await qc.invalidateQueries({ queryKey: ['feed', activePet.id] });
               } catch (e) {
-                toast.error('Erro ao repostar', e instanceof Error ? e.message : 'Tente novamente.');
+                toast.error('Não consegui repostar', e instanceof Error ? e.message : 'Tente novamente.');
               }
             }}
             accessibilityLabel={`Repostar como ${activePet.name}`}
@@ -628,7 +632,7 @@ function PostCardComponent({
                       await qc.invalidateQueries({ queryKey: ['feed', activePet.id] });
                     } catch (e) {
                       toast.error(
-                        'Erro ao repostar',
+                        'Não consegui repostar',
                         e instanceof Error ? e.message : 'Tente novamente.',
                       );
                     }

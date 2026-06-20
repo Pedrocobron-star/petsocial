@@ -207,12 +207,17 @@ export default function FeedScreen() {
             <EmptyState
               emoji="🦴"
               mozart="oi"
-              title="Sem posts ainda"
-              description="Posta a primeira foto ou siga outros pets pra ver o feed encher."
+              title="Seja o primeiro!"
+              description="Crie um post pro seu pet ou siga outros pets pra ver o feed encher."
               action={
-                <Link href="/(app)/(tabs)/create" asChild>
-                  <Button title="Criar primeiro post" />
-                </Link>
+                <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <Link href="/(app)/(tabs)/create" asChild>
+                    <Button title="Postar foto" />
+                  </Link>
+                  <Link href="/(app)/(tabs)/explore" asChild>
+                    <Button title="Descobrir pets" variant="secondary" />
+                  </Link>
+                </View>
               }
             />
           }

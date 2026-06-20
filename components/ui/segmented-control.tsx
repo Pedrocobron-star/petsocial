@@ -69,7 +69,12 @@ function SegmentItem({ label, active, onPress }: { label: string; active: boolea
   }));
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
+    >
       <Animated.View
         style={[
           bgStyle,

@@ -98,6 +98,7 @@ export default function ExploreScreen() {
 
   const items = isSearching ? (searchQuery.data ?? []) : (popularQuery.data ?? []);
   const isLoading = isSearching ? searchQuery.isLoading : popularQuery.isLoading;
+  const isError = isSearching ? searchQuery.isError : popularQuery.isError;
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -169,6 +170,22 @@ export default function ExploreScreen() {
                 {isSearching ? `Buscando "${trimmed}"...` : 'Carregando pets...'}
               </Text>
             </View>
+          ) : isError ? (
+            <EmptyState
+              emoji="⚠️"
+              title="Algo deu errado"
+              description="Não consegui carregar os pets agora. Tenta de novo?"
+              action={
+                <Pressable
+                  onPress={() => (isSearching ? searchQuery.refetch() : popularQuery.refetch())}
+                  accessibilityRole="button"
+                  accessibilityLabel="Tentar de novo"
+                  style={{ backgroundColor: theme.brand, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999 }}
+                >
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#fff' }}>Tentar de novo</Text>
+                </Pressable>
+              }
+            />
           ) : isSearching ? (
             <EmptyState
               emoji="🔍"

@@ -79,8 +79,8 @@ export default function SavedPostsScreen() {
           ) : (
             <EmptyState
               emoji="🔖"
-              title="Sem salvos ainda"
-              description="Toca no ícone de marcador em qualquer post pra guardar pra ver depois. Ótimo pra lembrar de um truque, receita ou dica de cuidado."
+              title="Comece a salvar posts"
+              description="Toca no ícone de marcador em qualquer post pra ver depois. Ótimo pra lembrar de truques e dicas de cuidado."
               action={
                 <Link href="/(app)/(tabs)" asChild>
                   <Pressable

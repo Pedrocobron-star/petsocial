@@ -23,6 +23,9 @@ export function PetPicker({ pets, selectedId, onSelect }: Props) {
           <PressScale
             key={pet.id}
             onPress={() => onSelect(pet.id)}
+            accessibilityRole="radio"
+            accessibilityLabel={pet.name}
+            accessibilityState={{ selected: active }}
             scale={0.94}
             style={{
               alignItems: 'center',
