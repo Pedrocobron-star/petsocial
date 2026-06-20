@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx expo export --platform web && node scripts/inject-og.mjs && node scripts/gen-sitemap.mjs",
+  "buildCommand": "npx expo export --platform web && node scripts/inject-og.mjs && node scripts/gen-sitemap.mjs && node scripts/prerender-articles.mjs",
   "outputDirectory": "dist",
   "framework": null,
   "redirects": [
