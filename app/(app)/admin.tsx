@@ -306,6 +306,14 @@ export default function AdminScreen() {
             bg="#FEF3C7"
           />
           <NavCard
+            href="/(app)/admin/payments"
+            icon="card"
+            label="Pagamentos"
+            sub="Vendas Cakto + receita"
+            color="#166534"
+            bg="#DCFCE7"
+          />
+          <NavCard
             href="/(app)/admin/founder-promo"
             icon="ribbon"
             label="Fundadores"

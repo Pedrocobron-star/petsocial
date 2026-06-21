@@ -166,6 +166,7 @@ export default function AppLayout() {
           <Stack.Screen name="admin/personas" options={{ headerShown: true, title: 'Personas · Admin' }} />
           <Stack.Screen name="admin/daily-missions" options={{ headerShown: true, title: 'Missão do Dia · Admin' }} />
           <Stack.Screen name="admin/economy" options={{ headerShown: true, title: 'Economia · Admin' }} />
+          <Stack.Screen name="admin/payments" options={{ headerShown: true, title: 'Pagamentos · Admin' }} />
           <Stack.Screen name="admin/founder-promo" options={{ headerShown: true, title: 'Promo Fundadores · Admin' }} />
           <Stack.Screen name="admin/banned-users" options={{ headerShown: true, title: 'Banidos · Admin' }} />
           <Stack.Screen name="admin/errors" options={{ headerShown: true, title: 'Erros · Admin' }} />

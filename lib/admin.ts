@@ -177,3 +177,46 @@ export async function fetchAuditLog(limit = 200): Promise<AdminAuditRow[]> {
   if (error) throw error;
   return (data ?? []) as AdminAuditRow[];
 }
+
+// ----------------------------------------------------------------------------
+// Pagamentos (Cakto) + receita
+// ----------------------------------------------------------------------------
+
+export interface CaktoEventRow {
+  id: string;
+  created_at: string;
+  event: string | null;
+  email: string | null;
+  order_id: string | null;
+  amount: number | null;
+  result: string | null;
+  matched_user: string | null;
+}
+
+export async function fetchCaktoEvents(limit = 100, search?: string): Promise<CaktoEventRow[]> {
+  const { data, error } = await supabase.rpc('admin_cakto_events', {
+    p_limit: limit,
+    p_offset: 0,
+    p_search: search?.trim() || null,
+  });
+  if (error) throw error;
+  return (data ?? []) as CaktoEventRow[];
+}
+
+export interface CaktoRevenue {
+  total_revenue: number;
+  sales_count: number;
+  rev_30d: number;
+  sales_30d: number;
+  rev_7d: number;
+  rev_today: number;
+  avg_ticket: number;
+  refunds: number;
+  active_pro_paid: number;
+}
+
+export async function fetchCaktoRevenue(): Promise<CaktoRevenue | null> {
+  const { data, error } = await supabase.rpc('admin_cakto_revenue');
+  if (error) throw error;
+  return (data as CaktoRevenue) ?? null;
+}
