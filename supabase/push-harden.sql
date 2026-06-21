@@ -123,6 +123,56 @@ begin
     end if;
   end loop;
 
+  -- 4) VACINAS ATRASADAS (venceram ha 1..90 dias) -> nudge SEMANAL (sem spam)
+  --    Fecha o buraco do "vacina vencida ha meses invisivel": a janela acima so
+  --    pega os proximos 3 dias; depois que passa, o tutor nao era mais lembrado.
+  for r in
+    select pet.owner_id as uid, string_agg(distinct pet.name, ', ') as pet_names
+    from public.vaccinations v
+    join public.pets pet on pet.id = v.pet_id
+    where v.next_dose_at is not null
+      and v.next_dose_at < current_date
+      and v.next_dose_at >= current_date - 90
+      and exists (select 1 from public.push_subscriptions ps where ps.user_id = pet.owner_id)
+    group by pet.owner_id
+  loop
+    v_dedup := 'vaccine_overdue:' || to_char(current_date, 'IYYY-IW');  -- 1x por semana ISO
+    select count(*) into v_already from public.push_notifications_sent
+      where user_id = r.uid and dedup_key = v_dedup and sent_at > now() - interval '6 days';
+    if v_already = 0 then
+      perform net.http_post(url := v_url, headers := v_headers,
+        body := jsonb_build_object('user_id', r.uid,
+          'title', chr(128137) || ' Vacina atrasada',
+          'body', 'A vacina de ' || r.pet_names || ' esta atrasada. Que tal reservar um horario?',
+          'url', '/reminders', 'tag', 'vaccine-overdue'));
+      insert into public.push_notifications_sent(user_id, dedup_key) values (r.uid, v_dedup);
+    end if;
+  end loop;
+
+  -- 5) ANTIPARASITARIOS ATRASADOS (1..90 dias) -> nudge SEMANAL
+  for r in
+    select pet.owner_id as uid, string_agg(distinct pet.name, ', ') as pet_names
+    from public.parasite_treatments pt
+    join public.pets pet on pet.id = pt.pet_id
+    where pt.next_due_at is not null
+      and pt.next_due_at < current_date
+      and pt.next_due_at >= current_date - 90
+      and exists (select 1 from public.push_subscriptions ps where ps.user_id = pet.owner_id)
+    group by pet.owner_id
+  loop
+    v_dedup := 'parasite_overdue:' || to_char(current_date, 'IYYY-IW');
+    select count(*) into v_already from public.push_notifications_sent
+      where user_id = r.uid and dedup_key = v_dedup and sent_at > now() - interval '6 days';
+    if v_already = 0 then
+      perform net.http_post(url := v_url, headers := v_headers,
+        body := jsonb_build_object('user_id', r.uid,
+          'title', chr(129714) || ' Antiparasitario atrasado',
+          'body', 'A protecao de ' || r.pet_names || ' contra pulgas e vermes venceu. Reaplique quando puder.',
+          'url', '/reminders', 'tag', 'parasite-overdue'));
+      insert into public.push_notifications_sent(user_id, dedup_key) values (r.uid, v_dedup);
+    end if;
+  end loop;
+
   -- housekeeping: limpa dedup antigo
   delete from public.push_notifications_sent where sent_at < now() - interval '30 days';
 end;
