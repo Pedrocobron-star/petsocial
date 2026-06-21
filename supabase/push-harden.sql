@@ -173,17 +173,21 @@ begin
     end if;
   end loop;
 
-  -- 6) REMEDIOS continuos ATIVOS -> lembrete diario de manha (cobre app fechado).
-  --    So daily/twice_daily (continuos): weekly/monthly precisariam de intervalo
-  --    a partir do start_date (nao modelado). Dedup diario (1x/dia).
+  -- 6) REMEDIOS ATIVOS com dose HOJE -> push de manha (cobre app fechado).
+  --    daily/twice_daily todo dia; weekly no mesmo dia-da-semana do start_date;
+  --    monthly no mesmo dia-do-mes do start_date. Dedup diario (1x/dia).
   for r in
     select pet.owner_id as uid, string_agg(distinct pet.name, ', ') as pet_names
     from public.medications m
     join public.pets pet on pet.id = m.pet_id
     where m.active = true
-      and m.frequency in ('daily', 'twice_daily')
       and m.start_date <= current_date
       and (m.end_date is null or m.end_date >= current_date)
+      and (
+        m.frequency in ('daily', 'twice_daily')
+        or (m.frequency = 'weekly' and ((current_date - m.start_date) % 7) = 0)
+        or (m.frequency = 'monthly' and extract(day from m.start_date) = extract(day from current_date))
+      )
       and exists (select 1 from public.push_subscriptions ps where ps.user_id = pet.owner_id)
     group by pet.owner_id
   loop

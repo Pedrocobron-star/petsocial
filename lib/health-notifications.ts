@@ -310,6 +310,79 @@ export async function cancelVetVisitReminders(visitId: string): Promise<void> {
 }
 
 // ============================================================================
+// REMÉDIOS (lembrete recorrente diário no horário definido)
+// ============================================================================
+
+/** Parseia "08:00, 20:00" / "8h" / "20h00" em [{hour, minute}] (máx 4). */
+function parseTimeOfDay(raw: string | null | undefined): { hour: number; minute: number }[] {
+  if (!raw) return [];
+  const out: { hour: number; minute: number }[] = [];
+  const re = /(\d{1,2})\s*[:hH]\s*(\d{2})?/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(raw)) !== null && out.length < 4) {
+    const hour = parseInt(m[1], 10);
+    const minute = m[2] ? parseInt(m[2], 10) : 0;
+    if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) out.push({ hour, minute });
+  }
+  return out;
+}
+
+/**
+ * Agenda lembretes locais RECORRENTES (diários no horário) pro remédio.
+ * Só pra contínuos (daily/twice_daily) COM horário definido em time_of_day.
+ * Semanal/mensal e sem-horário ficam pro push diário do servidor (notify_due_care).
+ */
+export async function scheduleMedicationReminders(input: {
+  medicationId: string;
+  petId: string;
+  petName: string;
+  medName: string;
+  frequency: string;
+  timeOfDay: string | null;
+  active: boolean;
+  endDate?: string | null;
+}): Promise<void> {
+  const sourceKey = `${HEALTH_SOURCE_PREFIX.medication}${input.medicationId}`;
+  await cancelHealthRemindersFor(sourceKey);
+  if (Platform.OS === 'web') return;
+  if (!input.active || input.frequency === 'as_needed') return;
+  if (input.frequency !== 'daily' && input.frequency !== 'twice_daily') return;
+  if (input.endDate && new Date(input.endDate).getTime() < Date.now()) return;
+  const times = parseTimeOfDay(input.timeOfDay);
+  if (times.length === 0) return;
+
+  const granted = await ensurePermission();
+  if (!granted) return;
+  await registerNotificationCategories();
+
+  for (const t of times) {
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `💊 Hora do remédio de ${input.petName}`,
+          body: `${input.medName} agora.`,
+          data: {
+            sourceKey,
+            kind: 'medication',
+            resourceId: input.medicationId,
+            petId: input.petId,
+            medicationId: input.medicationId,
+          },
+          categoryIdentifier: CATEGORIES.MEDICATION,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: t.hour, minute: t.minute },
+      });
+    } catch {
+      // ignora — uma falha de agendamento não bloqueia o save
+    }
+  }
+}
+
+export async function cancelMedicationReminders(medicationId: string): Promise<void> {
+  await cancelHealthRemindersFor(`${HEALTH_SOURCE_PREFIX.medication}${medicationId}`);
+}
+
+// ============================================================================
 // UTILS
 // ============================================================================
 

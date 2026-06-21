@@ -10,10 +10,12 @@ import { EmptyState } from '@/components/empty-state';
 import { usePetHealthGate } from '@/components/pet-health-gate';
 import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
+import { cancelMedicationReminders, scheduleMedicationReminders } from '@/lib/health-notifications';
 import {
   createMedication,
   deleteMedication,
   fetchMedications,
+  fetchPet,
   logMedicationDose,
   qk,
   updateMedication,
@@ -56,8 +58,10 @@ export default function MedicationsScreen() {
   });
 
   const toggleActiveMutation = useMutation({
-    mutationFn: ({ medId, active }: { medId: string; active: boolean }) =>
-      updateMedication(medId, { active }),
+    mutationFn: async ({ medId, active }: { medId: string; active: boolean }) => {
+      await updateMedication(medId, { active });
+      if (!active) await cancelMedicationReminders(medId); // pausou -> some o lembrete local
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.medications(id) });
       qc.invalidateQueries({ queryKey: qk.healthSummary(id) });
@@ -66,7 +70,10 @@ export default function MedicationsScreen() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (medId: string) => deleteMedication(medId),
+    mutationFn: async (medId: string) => {
+      await deleteMedication(medId);
+      await cancelMedicationReminders(medId); // tira os lembretes locais do remédio removido
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.medications(id) });
       qc.invalidateQueries({ queryKey: qk.healthSummary(id) });
@@ -318,29 +325,44 @@ function MedicationForm({
   const [timeOfDay, setTimeOfDay] = useState(existing?.time_of_day ?? '');
   const [notes, setNotes] = useState(existing?.notes ?? '');
 
+  const petQ = useQuery({ queryKey: qk.pet(petId), queryFn: () => fetchPet(petId), enabled: !!petId });
+
   const saveMut = useMutation({
     mutationFn: async () => {
+      const tod = timeOfDay.trim() || null;
       if (existing) {
         await updateMedication(existing.id, {
           name: name.trim(),
           dosage: dosage.trim() || null,
           frequency,
-          time_of_day: timeOfDay.trim() || null,
+          time_of_day: tod,
           notes: notes.trim() || null,
         });
-      } else {
-        await createMedication({
-          pet_id: petId,
-          name: name.trim(),
-          dosage: dosage.trim() || undefined,
-          frequency,
-          time_of_day: timeOfDay.trim() || undefined,
-          notes: notes.trim() || undefined,
-        });
+        return { id: existing.id, active: existing.active, endDate: existing.end_date ?? null, tod };
       }
+      const created = await createMedication({
+        pet_id: petId,
+        name: name.trim(),
+        dosage: dosage.trim() || undefined,
+        frequency,
+        time_of_day: tod || undefined,
+        notes: notes.trim() || undefined,
+      });
+      return { id: created.id, active: created.active, endDate: created.end_date ?? null, tod };
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       toast.success(existing ? 'Remédio atualizado!' : 'Remédio adicionado!');
+      // agenda lembrete local no horário (recorrente diário) pros contínuos com horário
+      scheduleMedicationReminders({
+        medicationId: saved.id,
+        petId,
+        petName: petQ.data?.name ?? 'seu pet',
+        medName: name.trim(),
+        frequency,
+        timeOfDay: saved.tod,
+        active: saved.active,
+        endDate: saved.endDate,
+      }).catch(() => {});
       onSaved();
     },
     onError: () => toast.error('Não foi possível salvar'),
