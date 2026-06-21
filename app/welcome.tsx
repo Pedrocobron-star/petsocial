@@ -5,10 +5,8 @@ import { useEffect, useState } from 'react';
 import { Image, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedPet } from '@/components/animated-pet';
 import { PetPhoneMockup } from '@/components/marketing/pet-phone-mockup';
 import { PawPrintsBg } from '@/components/paw-prints-bg';
-import { WordSwap } from '@/components/word-swap';
 import { track } from '@/lib/analytics';
 import { FONTS } from '@/lib/fonts';
 import { fetchFounderPromo, qkFounder } from '@/lib/founder';
@@ -253,9 +251,7 @@ function Hero() {
             >
               Um celular
             </Text>
-            <WordSwap
-              words={['inteirinho', 'só dele', 'completo', 'de verdade']}
-              interval={2200}
+            <Text
               style={{
                 fontFamily: FONTS.display,
                 fontSize: headlineSize,
@@ -263,7 +259,9 @@ function Hero() {
                 color: '#F97316',
                 textAlign: isWide ? 'left' : 'center',
               }}
-            />
+            >
+              de verdade
+            </Text>
             <Text
               style={{
                 fontFamily: FONTS.display,
@@ -414,15 +412,15 @@ function Hero() {
 
 /** Vitrine dos "apps" — comunica a amplitude do produto, reforça a metáfora do celular. */
 function AppsShowcase() {
-  const apps: { emoji: string; name: string; desc: string; bg: string; fg: string }[] = [
-    { emoji: '🩺', name: 'Saúde', desc: 'Vacinas, sintomas e o Score de Saúde do seu pet.', bg: '#CCFBF1', fg: '#0F766E' },
-    { emoji: '🪪', name: 'Carteirinha', desc: 'ID digital com QR pra quem encontrar seu pet te achar.', bg: '#CFFAFE', fg: '#0E7490' },
-    { emoji: '🎮', name: 'Jogos', desc: 'Joguinhos, desafio diário, streak e ranking de tutores.', bg: '#EDE9FE', fg: '#6D28D9' },
-    { emoji: '📰', name: 'Notícias', desc: 'Jornal do mundo pet, assinado pela Redação Maestro Pet.', bg: '#FCE7F3', fg: '#BE185D' },
-    { emoji: '📍', name: 'Lugares', desc: 'Parques, vets e cafés pet-friendly perto de você.', bg: '#DBEAFE', fg: '#1D4ED8' },
-    { emoji: '💬', name: 'Mensagens', desc: 'Converse no chat com outros tutores e combine cuidados.', bg: '#F3E8FF', fg: '#7E22CE' },
-    { emoji: '🏆', name: 'Conquistas', desc: 'Medalhas por cuidar bem e manter tudo em dia.', bg: '#FEF3C7', fg: '#B45309' },
-    { emoji: '🦴', name: 'Achados', desc: 'Mural de perdidos e encontrados com geolocalização.', bg: '#FEF9C3', fg: '#A16207' },
+  const apps: { icon: keyof typeof Ionicons.glyphMap; name: string; desc: string; bg: string; fg: string }[] = [
+    { icon: 'medical-outline', name: 'Saúde', desc: 'Vacinas, sintomas e o Score de Saúde do seu pet.', bg: '#CCFBF1', fg: '#0F766E' },
+    { icon: 'card-outline', name: 'Carteirinha', desc: 'ID digital com QR pra quem encontrar seu pet te achar.', bg: '#CFFAFE', fg: '#0E7490' },
+    { icon: 'game-controller-outline', name: 'Jogos', desc: 'Joguinhos, desafio diário, streak e ranking de tutores.', bg: '#EDE9FE', fg: '#6D28D9' },
+    { icon: 'newspaper-outline', name: 'Notícias', desc: 'Jornal do mundo pet, assinado pela Redação Maestro Pet.', bg: '#FCE7F3', fg: '#BE185D' },
+    { icon: 'location-outline', name: 'Lugares', desc: 'Parques, vets e cafés pet-friendly perto de você.', bg: '#DBEAFE', fg: '#1D4ED8' },
+    { icon: 'chatbubbles-outline', name: 'Mensagens', desc: 'Converse no chat com outros tutores e combine cuidados.', bg: '#F3E8FF', fg: '#7E22CE' },
+    { icon: 'trophy-outline', name: 'Conquistas', desc: 'Medalhas por cuidar bem e manter tudo em dia.', bg: '#FEF3C7', fg: '#B45309' },
+    { icon: 'paw-outline', name: 'Achados', desc: 'Mural de perdidos e encontrados com geolocalização.', bg: '#FEF9C3', fg: '#A16207' },
     // 'Vantagens' (clube de descontos) escondido da vitrine até ter ofertas reais.
   ];
   const { width } = useWindowDimensions();
@@ -460,7 +458,7 @@ function AppsShowcase() {
                     flexShrink: 0,
                   }}
                 >
-                  <Text style={{ fontSize: 26 }}>{a.emoji}</Text>
+                  <Ionicons name={a.icon} size={26} color={a.fg} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontFamily: FONTS.display, fontSize: 17, color: a.fg, marginBottom: 3 }}>
@@ -932,11 +930,12 @@ function FinalCTA() {
           zIndex: 1,
         }}
       >
-        <View style={{ flexDirection: 'row', gap: 4, marginBottom: 16 }}>
-          <AnimatedPet kind="dog" size={44} delay={0} />
-          <AnimatedPet kind="cat" size={44} delay={200} />
-          <AnimatedPet kind="rabbit" size={44} delay={400} />
-        </View>
+        <Image
+          source={{ uri: MOZART.rosto }}
+          style={{ width: 76, height: 76, marginBottom: 14 }}
+          resizeMode="contain"
+          accessibilityLabel="Mozart, mascote do Maestro Pet"
+        />
         <Text
           style={{
             fontFamily: FONTS.display,
