@@ -6,7 +6,9 @@ import { Link, Redirect, Stack } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
+import { CsvButton } from '@/components/admin/csv-button';
 import { fetchFounderOverview, fetchFounders, isAdminEmail, type FounderRow } from '@/lib/admin';
+import { downloadCsv } from '@/lib/csv';
 import { FONTS } from '@/lib/fonts';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
@@ -72,6 +74,20 @@ export default function AdminFounderPromoScreen() {
 
         {overviewQ.isError ? (
           <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#EF4444' }}>Erro ao carregar. Rode supabase/admin-ops-2.sql.</Text>
+        ) : null}
+
+        {all.length > 0 ? (
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+            <CsvButton
+              onPress={() =>
+                downloadCsv(
+                  'fundadores.csv',
+                  all.map((f) => ({ numero: f.founder_number, email: f.email, nome: f.display_name, pro_ate: f.pro_until, pro_ativo: f.pro_active })),
+                )
+              }
+              theme={theme}
+            />
+          </View>
         ) : null}
 
         {/* Filtro */}

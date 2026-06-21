@@ -6,7 +6,9 @@ import { Link, Redirect, Stack } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 
+import { CsvButton } from '@/components/admin/csv-button';
 import { fetchCaktoEvents, fetchCaktoRevenue, isAdminEmail, type CaktoEventRow } from '@/lib/admin';
+import { downloadCsv } from '@/lib/csv';
 import { FONTS } from '@/lib/fonts';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
@@ -81,9 +83,22 @@ export default function AdminPaymentsScreen() {
           <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#EF4444' }}>Erro ao carregar. Rode supabase/admin-payments.sql.</Text>
         ) : null}
 
-        <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
-          Estorno do dinheiro é feito no painel do Cakto. Aqui você vê tudo e pode revogar o Pro do comprador (toque na transação).
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 12, color: theme.textDim }}>
+            Estorno do dinheiro é feito no painel do Cakto. Toque na transação pra ir ao comprador (revogar Pro).
+          </Text>
+          {rows.length > 0 ? (
+            <CsvButton
+              onPress={() =>
+                downloadCsv(
+                  'pagamentos-cakto.csv',
+                  rows.map((e) => ({ data: e.created_at, evento: e.event, email: e.email, pedido: e.order_id, valor: e.amount, resultado: e.result })),
+                )
+              }
+              theme={theme}
+            />
+          ) : null}
+        </View>
 
         <TextInput
           value={search}

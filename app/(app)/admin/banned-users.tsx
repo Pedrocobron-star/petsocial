@@ -6,8 +6,10 @@ import { Link, Redirect, Stack } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 
+import { CsvButton } from '@/components/admin/csv-button';
 import { Button } from '@/components/ui/button';
 import { adminUnbanUser, fetchBannedUsers, isAdminEmail, type AdminBannedRow } from '@/lib/admin';
+import { downloadCsv } from '@/lib/csv';
 import { FONTS } from '@/lib/fonts';
 import { useSession } from '@/providers/session-provider';
 import { useTheme } from '@/providers/theme-provider';
@@ -55,9 +57,12 @@ export default function AdminBannedUsersScreen() {
         contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }}
         refreshControl={<RefreshControl refreshing={q.isFetching} onRefresh={q.refetch} tintColor={theme.brand} />}
       >
-        <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: theme.textMuted }}>
-          Usuários banidos não publicam, comentam nem mandam DM. {rows.length} {rows.length === 1 ? 'banido' : 'banidos'}.
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={{ flex: 1, fontFamily: FONTS.body, fontSize: 13, color: theme.textMuted }}>
+            Banidos não publicam, comentam nem mandam DM. {rows.length} {rows.length === 1 ? 'banido' : 'banidos'}.
+          </Text>
+          {rows.length > 0 ? <CsvButton onPress={() => downloadCsv('banidos.csv', rows.map((r) => ({ email: r.email, nome: r.display_name, banido_em: r.banned_at, motivo: r.banned_reason })))} theme={theme} /> : null}
+        </View>
 
         <TextInput
           value={search}

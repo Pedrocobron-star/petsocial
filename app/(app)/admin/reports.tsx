@@ -12,6 +12,7 @@ import {
   adminBanUser,
   adminDeleteComment,
   adminDeleteLostReport,
+  adminDeleteMessage,
   adminDeletePost,
   adminResolveReport,
   fetchAdminReports,
@@ -91,7 +92,9 @@ export default function AdminReportsScreen() {
             ? () => adminDeleteLostReport(r.target_id)
             : r.target_kind === 'adoption_listing'
               ? () => adminDeleteAdoption(r.target_id)
-              : () => Promise.reject(new Error(`Tipo não removível: ${r.target_kind}`));
+              : r.target_kind === 'message'
+                ? () => adminDeleteMessage(r.target_id)
+                : () => Promise.reject(new Error(`Tipo não removível: ${r.target_kind}`));
     Alert.alert(
       `Remover ${KIND_LABEL[r.target_kind] ?? 'conteúdo'}?`,
       'Hard-delete. Não dá pra desfazer. As denúncias deste alvo viram "tratadas".',
@@ -265,7 +268,7 @@ function ReportRow({
   onResolve: (r: AdminReport, status: ReportStatus, label: string) => void;
 }) {
   const { theme } = useTheme();
-  const canDelete = ['post', 'comment', 'lost_report', 'adoption_listing'].includes(r.target_kind);
+  const canDelete = ['post', 'comment', 'lost_report', 'adoption_listing', 'message'].includes(r.target_kind);
   const canBan = r.target_kind === 'user';
   const statusColor: Record<ReportStatus, string> = {
     open: '#B45309',
