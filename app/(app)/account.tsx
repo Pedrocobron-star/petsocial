@@ -62,6 +62,11 @@ export default function AccountScreen() {
       return data;
     },
     onSuccess: (data) => {
+      // registra o pedido pra trilha de LGPD (compliance) — best-effort
+      supabase.rpc('lgpd_log_request', { p_kind: 'export' }).then(
+        () => {},
+        () => {},
+      );
       const stamp = new Date().toISOString().slice(0, 10);
       const filename = `petsocial-meus-dados-${stamp}.json`;
       const json = JSON.stringify(data, null, 2);
@@ -875,6 +880,12 @@ function DeleteAccountModal({ visible, onClose, onDeleted }: DeleteModalProps) {
         if (u?.user?.id) await cleanupAccountStorage(u.user.id);
       } catch {
         // ignora — não bloqueia a exclusão da conta
+      }
+      // registra o pedido de exclusão ANTES de apagar (enquanto a sessão vale) — LGPD
+      try {
+        await supabase.rpc('lgpd_log_request', { p_kind: 'delete' });
+      } catch {
+        // best-effort: nunca bloqueia a exclusão
       }
       const { data, error } = await supabase.rpc('delete_my_account');
       if (error) throw error;

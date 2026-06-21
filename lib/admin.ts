@@ -220,3 +220,28 @@ export async function fetchCaktoRevenue(): Promise<CaktoRevenue | null> {
   if (error) throw error;
   return (data as CaktoRevenue) ?? null;
 }
+
+// ----------------------------------------------------------------------------
+// LGPD: trilha de pedidos de exportar/excluir conta
+// ----------------------------------------------------------------------------
+
+export interface LgpdRequestRow {
+  id: string;
+  user_id: string | null;
+  email: string | null;
+  kind: 'export' | 'delete';
+  status: 'pending' | 'completed';
+  requested_at: string;
+  completed_at: string | null;
+  notes: string | null;
+}
+
+export async function fetchLgpdRequests(limit = 200): Promise<LgpdRequestRow[]> {
+  const { data, error } = await supabase
+    .from('lgpd_requests')
+    .select('id, user_id, email, kind, status, requested_at, completed_at, notes')
+    .order('requested_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as LgpdRequestRow[];
+}

@@ -171,6 +171,7 @@ export default function AppLayout() {
           <Stack.Screen name="admin/banned-users" options={{ headerShown: true, title: 'Banidos · Admin' }} />
           <Stack.Screen name="admin/errors" options={{ headerShown: true, title: 'Erros · Admin' }} />
           <Stack.Screen name="admin/audit-log" options={{ headerShown: true, title: 'Auditoria · Admin' }} />
+          <Stack.Screen name="admin/lgpd" options={{ headerShown: true, title: 'LGPD · Admin' }} />
         </Stack>
         </RealtimeProvider>
       </ActivePetProvider>

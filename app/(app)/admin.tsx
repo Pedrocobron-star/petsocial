@@ -345,6 +345,14 @@ export default function AdminScreen() {
             color="#374151"
             bg="#F1F5F9"
           />
+          <NavCard
+            href="/(app)/admin/lgpd"
+            icon="lock-closed"
+            label="LGPD"
+            sub="Pedidos de dados/exclusão"
+            color="#1E40AF"
+            bg="#DBEAFE"
+          />
         </View>
 
         {/* Loading */}
