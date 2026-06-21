@@ -90,15 +90,19 @@ export default function AdminUserDetailScreen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('banned_at')
+        .select('banned_at, muted_until')
         .eq('id', id)
         .single();
       if (error) throw error;
-      return (data as { banned_at: string | null }).banned_at;
+      return data as { banned_at: string | null; muted_until: string | null };
     },
     enabled: isAdmin && !!id,
   });
-  const isBanned = !!bannedQuery.data;
+  const isBanned = !!bannedQuery.data?.banned_at;
+  const mutedUntil =
+    bannedQuery.data?.muted_until && new Date(bannedQuery.data.muted_until) > new Date()
+      ? bannedQuery.data.muted_until
+      : null;
 
   const banMutation = useMutation({
     mutationFn: async (ban: boolean) => {
@@ -134,6 +138,19 @@ export default function AdminUserDetailScreen() {
       ],
     );
   };
+
+  const muteMutation = useMutation({
+    mutationFn: async (hours: number | null) => {
+      const { error } = await supabase.rpc('admin_mute_user', { p_user_id: id, p_hours: hours, p_reason: null });
+      if (error) throw error;
+      return hours;
+    },
+    onSuccess: async (hours) => {
+      await qc.invalidateQueries({ queryKey: ['admin-user-banned', id] });
+      toast.success(hours ? 'Usuário silenciado' : 'Silêncio removido');
+    },
+    onError: (e) => toast.error('Erro', e instanceof Error ? e.message : 'Tente de novo'),
+  });
 
   const grantMutation = useMutation({
     mutationFn: ({ days, label }: { days: number | null; label: string }) =>
@@ -438,6 +455,49 @@ export default function AdminUserDetailScreen() {
                       : 'Banir usuário'}
                 </Text>
               </Pressable>
+            </View>
+
+            {/* Silenciar: suspensão temporária (volta sozinho) */}
+            <View
+              style={{
+                backgroundColor: mutedUntil ? '#FEF3C7' : theme.surface,
+                borderRadius: 14,
+                padding: 14,
+                gap: 10,
+                borderWidth: 1,
+                borderColor: mutedUntil ? '#FCD34D' : theme.borderLight,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: mutedUntil ? '#92400E' : theme.text }}>
+                {mutedUntil
+                  ? `Silenciado até ${new Date(mutedUntil).toLocaleString('pt-BR')}. Não posta, comenta nem manda DM até lá.`
+                  : 'Silenciar é uma suspensão TEMPORÁRIA (volta sozinho). Bom pra dar um tempo sem banir de vez.'}
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {[
+                  { h: 1, l: '1h' },
+                  { h: 24, l: '24h' },
+                  { h: 168, l: '7 dias' },
+                ].map((p) => (
+                  <Pressable
+                    key={p.h}
+                    onPress={() => muteMutation.mutate(p.h)}
+                    disabled={muteMutation.isPending}
+                    style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, backgroundColor: '#F59E0B', opacity: muteMutation.isPending ? 0.5 : 1 }}
+                  >
+                    <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: '#fff' }}>{p.l}</Text>
+                  </Pressable>
+                ))}
+                {mutedUntil ? (
+                  <Pressable
+                    onPress={() => muteMutation.mutate(null)}
+                    disabled={muteMutation.isPending}
+                    style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, backgroundColor: '#16A34A', opacity: muteMutation.isPending ? 0.5 : 1 }}
+                  >
+                    <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: '#fff' }}>Remover silêncio</Text>
+                  </Pressable>
+                ) : null}
+              </View>
             </View>
 
             {/* Pets */}
