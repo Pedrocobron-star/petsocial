@@ -5,7 +5,7 @@ import { supabase } from './supabase';
 export type GameKey = 'treats' | 'quiz' | 'caminho';
 
 export const GAME_META: Record<GameKey, { label: string; emoji: string; scoreLabel: string }> = {
-  treats: { label: 'Pega o Petisco', emoji: '🦴', scoreLabel: 'petiscos' },
+  treats: { label: 'Cesta do Mozart', emoji: '🧺', scoreLabel: 'petiscos' },
   quiz: { label: 'Quiz Pet', emoji: '🧠', scoreLabel: 'pontos' },
   caminho: { label: 'Caminho do Au-Au', emoji: '🐕', scoreLabel: 'fases' },
 };

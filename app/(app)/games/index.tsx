@@ -38,9 +38,9 @@ const GAMES: GameDef[] = [
   {
     key: 'treats',
     href: '/(app)/games/treats',
-    emoji: '🦴',
-    title: 'Pega o Petisco',
-    desc: 'Pegue os petiscos voando em 30s. Reflexo + combo!',
+    emoji: '🧺',
+    title: 'Cesta do Mozart',
+    desc: 'Arraste a cesta e pegue os petiscos que caem. Combos, ímã e escalada!',
     c1: '#F97316',
     c2: '#DB2777',
   },
