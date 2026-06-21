@@ -305,6 +305,38 @@ export default function AdminScreen() {
             color="#92400E"
             bg="#FEF3C7"
           />
+          <NavCard
+            href="/(app)/admin/founder-promo"
+            icon="ribbon"
+            label="Fundadores"
+            sub="Promo dos 100 primeiros"
+            color="#B45309"
+            bg="#FEF3C7"
+          />
+          <NavCard
+            href="/(app)/admin/banned-users"
+            icon="ban"
+            label="Banidos"
+            sub="Ver e desbanir usuários"
+            color="#991B1B"
+            bg="#FEE2E2"
+          />
+          <NavCard
+            href="/(app)/admin/errors"
+            icon="bug"
+            label="Erros"
+            sub="Bugs do app ao vivo"
+            color="#7F1D1D"
+            bg="#FEE2E2"
+          />
+          <NavCard
+            href="/(app)/admin/audit-log"
+            icon="receipt"
+            label="Auditoria"
+            sub="Quem fez o quê no painel"
+            color="#374151"
+            bg="#F1F5F9"
+          />
         </View>
 
         {/* Loading */}

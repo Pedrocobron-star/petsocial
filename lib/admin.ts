@@ -9,6 +9,20 @@
 
 import { supabase } from './supabase';
 
+/**
+ * Gate de admin de UI centralizado (fonte única; antes o e-mail estava
+ * espalhado por ~37 arquivos). Suporta múltiplos admins via env, sem tocar no
+ * código. O gate de verdade é server-side (is_admin() nas RPCs).
+ */
+export const ADMIN_EMAILS: string[] = (process.env.EXPO_PUBLIC_ADMIN_EMAILS || 'pedrocobron@gmail.com')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+export function isAdminEmail(email: string | null | undefined): boolean {
+  return !!email && ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 export interface GrantProResult {
   ok: boolean;
   user_id: string;
@@ -62,3 +76,104 @@ export const PRO_GRANT_PRESETS = [
   { label: '1 ano', days: 365 as number | null },
   { label: 'Permanente', days: null as number | null },
 ] as const;
+
+// ----------------------------------------------------------------------------
+// Visibilidade operacional (telas Banidos / Erros / Fundadores)
+// ----------------------------------------------------------------------------
+
+export interface AdminErrorRow {
+  id: string;
+  created_at: string;
+  message: string;
+  route: string | null;
+  platform: string | null;
+  app_version: string | null;
+  user_id: string | null;
+  email: string | null;
+  stack: string | null;
+}
+
+export async function fetchAdminErrors(limit = 100, search?: string): Promise<AdminErrorRow[]> {
+  const { data, error } = await supabase.rpc('admin_list_errors', {
+    p_limit: limit,
+    p_offset: 0,
+    p_search: search?.trim() || null,
+  });
+  if (error) throw error;
+  return (data ?? []) as AdminErrorRow[];
+}
+
+export interface AdminBannedRow {
+  id: string;
+  email: string | null;
+  display_name: string | null;
+  banned_at: string;
+  banned_reason: string | null;
+}
+
+export async function fetchBannedUsers(limit = 100, search?: string): Promise<AdminBannedRow[]> {
+  const { data, error } = await supabase.rpc('admin_list_banned_users', {
+    p_limit: limit,
+    p_offset: 0,
+    p_search: search?.trim() || null,
+  });
+  if (error) throw error;
+  return (data ?? []) as AdminBannedRow[];
+}
+
+/** Desbane um usuário (reusa admin_ban_user com p_ban=false). */
+export async function adminUnbanUser(userId: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_ban_user', { p_user_id: userId, p_ban: false, p_reason: null });
+  if (error) throw error;
+}
+
+export interface FounderOverview {
+  limit: number;
+  taken: number;
+  remaining: number;
+  display_count: number;
+  pro_active: number;
+  expired: number;
+}
+
+export async function fetchFounderOverview(): Promise<FounderOverview | null> {
+  const { data, error } = await supabase.rpc('admin_founder_overview');
+  if (error) throw error;
+  return (data as FounderOverview) ?? null;
+}
+
+export interface FounderRow {
+  founder_number: number;
+  id: string;
+  email: string | null;
+  display_name: string | null;
+  pro_until: string | null;
+  pro_active: boolean;
+}
+
+export async function fetchFounders(limit = 120): Promise<FounderRow[]> {
+  const { data, error } = await supabase.rpc('admin_list_founders', { p_limit: limit, p_offset: 0 });
+  if (error) throw error;
+  return (data ?? []) as FounderRow[];
+}
+
+export interface AdminAuditRow {
+  id: string;
+  admin_email: string | null;
+  action: string;
+  entity: string;
+  entity_id: string | null;
+  meta: Record<string, unknown> | null;
+  created_at: string;
+}
+
+/** Lê o log de auditoria direto (RLS já permite SELECT pro admin). */
+export async function fetchAuditLog(limit = 200): Promise<AdminAuditRow[]> {
+  const { data, error } = await supabase
+    .from('admin_audit')
+    .select('id, admin_email, action, entity, entity_id, meta, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as AdminAuditRow[];
+}
