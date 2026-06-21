@@ -31,7 +31,7 @@ import { useToast } from '@/providers/toast-provider';
 const DELETE_CONFIRM_WORD = 'DELETAR';
 
 export default function AccountScreen() {
-  const { theme } = useTheme();
+  const { theme, mode, setMode } = useTheme();
   const router = useRouter();
   const toast = useToast();
   const qc = useQueryClient();
@@ -451,6 +451,64 @@ export default function AccountScreen() {
               <Ionicons name="chevron-forward" size={18} color={theme.textDim} />
             </Pressable>
           </Link>
+        </View>
+
+        {/* Aparência (tema claro / escuro / sistema) */}
+        <View style={{ marginTop: 12 }}>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.textDim, marginBottom: 8, marginLeft: 4 }}>
+            Aparência
+          </Text>
+          <View
+            style={{
+              backgroundColor: theme.surface,
+              borderRadius: 12,
+              padding: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EDE9FE', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="contrast-outline" size={18} color="#6D28D9" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: theme.text }}>Tema</Text>
+              <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textDim, marginTop: 2 }}>
+                Claro, escuro ou seguir o sistema
+              </Text>
+            </View>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+            {([
+              { k: 'light', l: '☀️ Claro' },
+              { k: 'dark', l: '🌙 Escuro' },
+              { k: 'system', l: '⚙️ Sistema' },
+            ] as const).map((o) => {
+              const on = mode === o.k;
+              return (
+                <Pressable
+                  key={o.k}
+                  onPress={() => setMode(o.k)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={`Tema ${o.l}`}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 10,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    backgroundColor: on ? theme.brand : theme.surface,
+                    borderWidth: 1,
+                    borderColor: on ? theme.brand : theme.borderLight,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12.5, color: on ? '#fff' : theme.text }}>
+                    {o.l}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* Sair da conta (logout simples, não destrutivo) */}

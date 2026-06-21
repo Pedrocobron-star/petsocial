@@ -16,7 +16,9 @@ export const ThemeContext = createContext<ThemeContextValue | undefined>(undefin
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme();
-  const [mode, setModeState] = useState<ThemeMode>('system');
+  // Padrão = CLARO (fundo branco). O modo escuro é opt-in nas Configurações —
+  // não seguir o 'system' automático, pra não deixar o app preto sem o usuário pedir.
+  const [mode, setModeState] = useState<ThemeMode>('light');
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((v) => {
