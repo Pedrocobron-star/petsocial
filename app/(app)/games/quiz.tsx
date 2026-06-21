@@ -21,13 +21,16 @@ import { useToast } from '@/providers/toast-provider';
 
 const BG = '#140E22';
 const DIFF_KEY = 'petsocial:game-diff:quiz';
+const REVEAL_MS = 1700; // tempo mostrando o resultado antes de auto-avançar
 
-/** Parâmetros por tier. Médio(2) reproduz a experiência original hardcoded. */
-const DIFF_PARAMS: Record<GameDifficulty, { questions: number; bonusWindow: number; bonusMax: number }> = {
-  1: { questions: 8, bonusWindow: 8, bonusMax: 6 },
-  2: { questions: 10, bonusWindow: 6, bonusMax: 6 },
-  3: { questions: 12, bonusWindow: 4, bonusMax: 8 },
+/** Parâmetros por tier: nº de perguntas + tempo por pergunta (ms). */
+const DIFF_PARAMS: Record<GameDifficulty, { questions: number; qtime: number }> = {
+  1: { questions: 8, qtime: 11000 },
+  2: { questions: 10, qtime: 8500 },
+  3: { questions: 12, qtime: 6500 },
 };
+
+const TIMEOUT = -1; // "picked" quando o tempo esgota
 
 type Phase = 'idle' | 'playing' | 'over';
 
@@ -43,12 +46,26 @@ export default function PetQuizScreen() {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [bestCombo, setBestCombo] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
-  const startRef = useRef(0);
-  const paramsRef = useRef(DIFF_PARAMS[2]);
-  const sessionRef = useRef<string | null>(null); // sessão server-side da partida (anti-cheat)
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [lastGain, setLastGain] = useState(0);
+  const [flash, setFlash] = useState<'correct' | 'wrong' | null>(null);
 
-  // carrega o tier salvo no mount
+  const phaseRef = useRef<Phase>('idle');
+  const indexRef = useRef(0);
+  const pickedRef = useRef<number | null>(null);
+  const startRef = useRef(0);
+  const qtimeRef = useRef(DIFF_PARAMS[2].qtime);
+  const comboRef = useRef(0);
+  const bestComboRef = useRef(0);
+  const scoreRef = useRef(0);
+  const questionsRef = useRef<QuizQuestion[]>([]);
+  const sessionRef = useRef<string | null>(null);
+  const advanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     AsyncStorage.getItem(DIFF_KEY)
       .then((v) => {
@@ -65,55 +82,120 @@ export default function PetQuizScreen() {
 
   const params = DIFF_PARAMS[difficulty];
 
+  const doFlash = (kind: 'correct' | 'wrong') => {
+    setFlash(kind);
+    if (flashRef.current) clearTimeout(flashRef.current);
+    flashRef.current = setTimeout(() => setFlash(null), 420);
+  };
+
+  // cronômetro por pergunta (também dispara o "tempo esgotou")
+  useEffect(() => {
+    const iv = setInterval(() => {
+      if (phaseRef.current !== 'playing') return;
+      if (pickedRef.current !== null) return;
+      const left = Math.max(0, qtimeRef.current - (Date.now() - startRef.current));
+      setTimeLeft(left);
+      if (left <= 0) handleAnswer(TIMEOUT);
+    }, 100);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (advanceRef.current) clearTimeout(advanceRef.current);
+      if (flashRef.current) clearTimeout(flashRef.current);
+    };
+  }, []);
+
+  function handleAnswer(i: number) {
+    if (pickedRef.current !== null) return;
+    pickedRef.current = i;
+    setPicked(i);
+    const q = questionsRef.current[indexRef.current];
+    const correct = i === q.answer;
+    if (correct) {
+      const secsLeft = Math.max(0, (qtimeRef.current - (Date.now() - startRef.current)) / 1000);
+      const timeBonus = Math.round(Math.min(8, secsLeft));
+      comboRef.current += 1;
+      if (comboRef.current > bestComboRef.current) {
+        bestComboRef.current = comboRef.current;
+        setBestCombo(comboRef.current);
+      }
+      const streakBonus = Math.min(comboRef.current, 8);
+      const gain = 10 + timeBonus + streakBonus;
+      scoreRef.current += gain;
+      setScore(scoreRef.current);
+      setCombo(comboRef.current);
+      setLastGain(gain);
+      doFlash('correct');
+      haptic.success();
+    } else {
+      comboRef.current = 0;
+      setCombo(0);
+      setLastGain(0);
+      doFlash('wrong');
+      haptic.error();
+    }
+    advanceRef.current = setTimeout(advance, REVEAL_MS);
+  }
+
+  function advance() {
+    if (advanceRef.current) clearTimeout(advanceRef.current);
+    if (indexRef.current + 1 >= questionsRef.current.length) {
+      phaseRef.current = 'over';
+      setPhase('over');
+      const finalScore = scoreRef.current;
+      if (userId && finalScore > 0) {
+        submitGameScore({ game: 'quiz', score: finalScore, petId: activePet?.id ?? null, userId, sessionId: sessionRef.current })
+          .then(() => invalidateGameQueries(qc, 'quiz'))
+          .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
+      }
+      return;
+    }
+    indexRef.current += 1;
+    setIndex(indexRef.current);
+    pickedRef.current = null;
+    setPicked(null);
+    startRef.current = Date.now();
+    setTimeLeft(qtimeRef.current);
+  }
+
   const start = () => {
-    paramsRef.current = DIFF_PARAMS[difficulty];
+    qtimeRef.current = DIFF_PARAMS[difficulty].qtime;
     sessionRef.current = null;
     beginGameSession('quiz', difficulty)
       .then((id) => {
         sessionRef.current = id;
       })
       .catch(() => {});
-    setQuestions(pickQuizQuestions(paramsRef.current.questions));
+    const qs = pickQuizQuestions(DIFF_PARAMS[difficulty].questions);
+    questionsRef.current = qs;
+    setQuestions(qs);
+    indexRef.current = 0;
     setIndex(0);
+    scoreRef.current = 0;
     setScore(0);
+    comboRef.current = 0;
+    setCombo(0);
+    bestComboRef.current = 0;
+    setBestCombo(0);
+    pickedRef.current = null;
     setPicked(null);
-    setPhase('playing');
+    setLastGain(0);
+    setFlash(null);
     startRef.current = Date.now();
+    setTimeLeft(qtimeRef.current);
+    setPhase('playing');
+    phaseRef.current = 'playing';
     haptic.light();
   };
 
-  const choose = (i: number) => {
-    if (picked !== null) return;
-    setPicked(i);
-    const correct = i === questions[index].answer;
-    if (correct) {
-      const secs = (Date.now() - startRef.current) / 1000;
-      const { bonusWindow, bonusMax } = paramsRef.current;
-      const bonus = Math.min(bonusMax, Math.max(0, Math.round(bonusWindow - secs)));
-      setScore((s) => s + 10 + bonus);
-      haptic.light();
-    } else {
-      haptic.light();
-    }
-  };
-
-  const next = () => {
-    if (index + 1 >= questions.length) {
-      setPhase('over');
-      const finalScore = score; // já acumulado
-      if (userId && finalScore > 0) {
-        submitGameScore({ game: 'quiz', score: finalScore, petId: activePet?.id ?? null, userId, sessionId: sessionRef.current })
-          .then(() => invalidateGameQueries(qc, 'quiz'))
-          .catch(() => toast.error('Não consegui salvar seu score', 'Tenta de novo daqui a pouco.'));
-      }
-    } else {
-      setIndex((i) => i + 1);
-      setPicked(null);
-      startRef.current = Date.now();
-    }
-  };
+  const choose = (i: number) => handleAnswer(i);
 
   const q = questions[index];
+  const timeFrac = q && picked === null ? Math.max(0, Math.min(1, timeLeft / qtimeRef.current)) : picked === null ? 1 : 0;
+  const lowTime = timeFrac < 0.3;
 
   return (
     <View style={{ flex: 1, backgroundColor: BG }}>
@@ -126,6 +208,21 @@ export default function PetQuizScreen() {
           headerTitleStyle: { color: '#fff', fontFamily: FONTS.display },
         }}
       />
+      {/* flash de acerto/erro */}
+      {flash ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 5,
+            backgroundColor: flash === 'correct' ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)',
+          }}
+        />
+      ) : null}
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 16 }}>
         {phase === 'idle' ? (
           <>
@@ -133,10 +230,9 @@ export default function PetQuizScreen() {
               <Text style={{ fontSize: 48, textAlign: 'center' }}>🧠</Text>
               <Text style={{ fontFamily: FONTS.display, fontSize: 24, color: '#fff', textAlign: 'center' }}>Quiz Pet</Text>
               <Text style={{ fontFamily: FONTS.body, fontSize: 13.5, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 20 }}>
-                {params.questions} perguntas de conhecimentos gerais sobre cães, gatos e companhia. Acerte rápido pra ganhar bônus de tempo e subir no ranking! 🏆
+                {params.questions} perguntas sobre cães, gatos e companhia. Corra contra o relógio ⏱️ de cada pergunta e emende acertos pra acender o 🔥 combo (cada acerto seguido vale mais). Não dá pra vacilar!
               </Text>
               <GameGradeBadge game="quiz" variant="idle" />
-              {/* só aparece na tela idle; nunca durante a partida */}
               <GameDifficultyPicker value={difficulty} onChange={onChangeDifficulty} disabled={false} />
               <TournamentGameBanner game="quiz" difficulty={difficulty} onRaiseDifficulty={onChangeDifficulty} />
               <Button title="Começar" onPress={start} fullWidth />
@@ -148,15 +244,33 @@ export default function PetQuizScreen() {
 
         {phase === 'playing' && q ? (
           <>
-            {/* progresso */}
+            {/* progresso + score + combo */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
                 Pergunta {index + 1}/{questions.length}
               </Text>
-              <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#FBBF24' }}>{score} pts</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                {combo >= 2 ? (
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FB923C' }}>🔥 x{combo}</Text>
+                ) : null}
+                <Text style={{ fontFamily: FONTS.display, fontSize: 18, color: '#FBBF24' }}>{score} pts</Text>
+              </View>
             </View>
-            <View style={{ height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
-              <View style={{ width: `${((index + 1) / questions.length) * 100}%`, height: 6, backgroundColor: '#FBBF24' }} />
+            {/* barra de progresso das perguntas */}
+            <View style={{ height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+              <View style={{ width: `${((index + 1) / questions.length) * 100}%`, height: 5, backgroundColor: '#FBBF24' }} />
+            </View>
+
+            {/* cronômetro da pergunta */}
+            <View style={{ height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+              <View
+                style={{
+                  width: `${timeFrac * 100}%`,
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: lowTime ? '#EF4444' : timeFrac < 0.6 ? '#FBBF24' : '#22C55E',
+                }}
+              />
             </View>
 
             <Card>
@@ -206,12 +320,19 @@ export default function PetQuizScreen() {
             {picked !== null ? (
               <Card>
                 <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: picked === q.answer ? '#4ADE80' : '#FCA5A5' }}>
-                  {picked === q.answer ? 'Acertou! 🎉' : 'Quase! A resposta certa está em verde.'}
+                  {picked === q.answer
+                    ? `Acertou! +${lastGain}${combo >= 2 ? `  ·  🔥 combo x${combo}` : ''}`
+                    : picked === TIMEOUT
+                      ? 'Tempo esgotado! A resposta certa está em verde.'
+                      : 'Quase! A resposta certa está em verde.'}
                 </Text>
-                <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 19 }}>
-                  {q.explain}
-                </Text>
-                <Button title={index + 1 >= questions.length ? 'Ver resultado' : 'Próxima'} onPress={next} fullWidth />
+                <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 19 }}>{q.explain}</Text>
+                <Pressable onPress={advance} style={{ alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 }}>
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FBBF24' }}>
+                    {index + 1 >= questions.length ? 'Ver resultado' : 'Próxima'}
+                  </Text>
+                  <Ionicons name="arrow-forward" size={15} color="#FBBF24" />
+                </Pressable>
               </Card>
             ) : null}
           </>
@@ -220,15 +341,14 @@ export default function PetQuizScreen() {
         {phase === 'over' ? (
           <>
             <Card>
-              <Text style={{ fontSize: 48, textAlign: 'center' }}>{score >= params.questions * 12 ? '🏆' : score >= params.questions * 8 ? '🎉' : '🐾'}</Text>
+              <Text style={{ fontSize: 48, textAlign: 'center' }}>{score >= params.questions * 22 ? '🏆' : score >= params.questions * 15 ? '🎉' : '🐾'}</Text>
               <Text style={{ fontFamily: FONTS.display, fontSize: 30, color: '#FBBF24', textAlign: 'center' }}>{score} pts</Text>
               <Text style={{ fontFamily: FONTS.body, fontSize: 13.5, color: 'rgba(255,255,255,0.75)', textAlign: 'center' }}>
-                {score >= params.questions * 12 ? 'Fera dos pets! 🧠✨' : score >= params.questions * 8 ? 'Muito bem! Bora pro topo do ranking.' : 'Joga de novo pra subir no ranking!'}
+                {bestCombo >= 2 ? `Melhor sequência: 🔥 x${bestCombo}. ` : ''}
+                {score >= params.questions * 22 ? 'Fera dos pets! 🧠✨' : score >= params.questions * 15 ? 'Muito bem! Bora pro topo do ranking.' : 'Joga de novo pra subir no ranking!'}
               </Text>
               <Button title="Jogar de novo" onPress={start} fullWidth />
-              {score > 0 ? (
-                <GameResultShareButton game="quiz" score={score} difficulty={difficulty} petName={activePet?.name} />
-              ) : null}
+              {score > 0 ? <GameResultShareButton game="quiz" score={score} difficulty={difficulty} petName={activePet?.name} /> : null}
             </Card>
             <SectionTitle>🏆 Ranking · Quiz Pet</SectionTitle>
             <GameLeaderboard game="quiz" limit={20} currentUserId={userId} />
@@ -257,7 +377,5 @@ function Card({ children }: { children: ReactNode }) {
 }
 
 function SectionTitle({ children }: { children: ReactNode }) {
-  return (
-    <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>{children}</Text>
-  );
+  return <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>{children}</Text>;
 }
