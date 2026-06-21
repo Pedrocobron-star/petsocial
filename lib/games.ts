@@ -2,12 +2,13 @@ import type { QueryClient } from '@tanstack/react-query';
 
 import { supabase } from './supabase';
 
-export type GameKey = 'treats' | 'quiz' | 'caminho';
+export type GameKey = 'treats' | 'quiz' | 'caminho' | 'runner';
 
 export const GAME_META: Record<GameKey, { label: string; emoji: string; scoreLabel: string }> = {
   treats: { label: 'Cesta do Mozart', emoji: '🧺', scoreLabel: 'petiscos' },
   quiz: { label: 'Quiz Pet', emoji: '🧠', scoreLabel: 'pontos' },
   caminho: { label: 'Caminho do Au-Au', emoji: '🐕', scoreLabel: 'fases' },
+  runner: { label: 'Mozart Corre', emoji: '🏃', scoreLabel: 'pontos' },
 };
 
 /** Tiers de dificuldade. 1=Fácil, 2=Médio, 3=Difícil. Médio = experiência original. */

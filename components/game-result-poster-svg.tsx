@@ -7,6 +7,7 @@ const ACCENT: Record<GameKey, { a: string; b: string }> = {
   treats: { a: '#F97316', b: '#DB2777' },
   quiz: { a: '#7C3AED', b: '#2563EB' },
   caminho: { a: '#0EA5E9', b: '#22C55E' },
+  runner: { a: '#16A34A', b: '#0D9488' },
 };
 
 interface Props {

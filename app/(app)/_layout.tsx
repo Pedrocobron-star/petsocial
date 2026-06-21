@@ -122,6 +122,7 @@ export default function AppLayout() {
         <Stack.Screen name="games/treats" options={{ headerShown: true, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="games/quiz" options={{ headerShown: true, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="games/caminho" options={{ headerShown: true, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="games/runner" options={{ headerShown: true, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="news/index" options={{ headerShown: true, title: 'Notícias' }} />
         <Stack.Screen name="news/[slug]" options={{ headerShown: true, title: 'Notícia' }} />
         <Stack.Screen name="news/category/[slug]" options={{ headerShown: true, title: 'Categoria' }} />

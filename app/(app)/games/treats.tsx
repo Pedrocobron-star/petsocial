@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { FONTS } from '@/lib/fonts';
 import { beginGameSession, DIFF_META, invalidateGameQueries, submitGameScore, type GameDifficulty } from '@/lib/games';
 import { haptic } from '@/lib/haptics';
+import { MOZART } from '@/lib/mozart';
 import { useActivePet } from '@/providers/active-pet-provider';
 import { useSession } from '@/providers/session-provider';
 import { useToast } from '@/providers/toast-provider';
@@ -61,17 +62,6 @@ const TREAT_BY_SPECIES: Record<string, string> = {
   reptile: '🦗',
   horse: '🍎',
 };
-const PET_BY_SPECIES: Record<string, string> = {
-  dog: '🐶',
-  cat: '🐱',
-  rabbit: '🐰',
-  bird: '🐤',
-  hamster: '🐹',
-  fish: '🐠',
-  turtle: '🐢',
-  reptile: '🦎',
-  horse: '🐴',
-};
 const GOLD_EMOJI = '⭐';
 const BAD_EMOJI = '🐝';
 const MAGNET_EMOJI = '🧲';
@@ -107,7 +97,6 @@ export default function TreatsGameScreen() {
   const qc = useQueryClient();
   const userId = session?.user.id;
   const treat = (activePet && TREAT_BY_SPECIES[activePet.species]) || '🍪';
-  const petFace = (activePet && PET_BY_SPECIES[activePet.species]) || '🐶';
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [difficulty, setDifficulty] = useState<GameDifficulty>(2);
@@ -433,18 +422,20 @@ export default function TreatsGameScreen() {
               transform: [{ translateX: basketAnim }],
             }}
           >
-            <Animated.Text
+            <Animated.Image
+              source={{ uri: MOZART.rosto }}
+              resizeMode="contain"
+              accessibilityLabel="Mozart"
               style={{
-                fontSize: 30,
-                marginBottom: -4,
+                width: 46,
+                height: 46,
+                marginBottom: -6,
                 transform: [
                   { translateY: petBounce.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -10, 0] }) },
                   { scale: petBounce.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.18, 1] }) },
                 ],
               }}
-            >
-              {petFace}
-            </Animated.Text>
+            />
             <View
               style={{
                 width: basketW,

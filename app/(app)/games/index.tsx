@@ -62,6 +62,15 @@ const GAMES: GameDef[] = [
     c1: '#0EA5E9',
     c2: '#22C55E',
   },
+  {
+    key: 'runner',
+    href: '/(app)/games/runner',
+    emoji: '🏃',
+    title: 'Mozart Corre',
+    desc: 'O Mozart corre, você toca pra pular. A velocidade só aumenta!',
+    c1: '#16A34A',
+    c2: '#0D9488',
+  },
 ];
 
 export default function GamesHubScreen() {
@@ -212,7 +221,7 @@ export default function GamesHubScreen() {
 
           {scope === 'global' ? (
             <Text style={{ fontFamily: FONTS.body, fontSize: 11.5, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
-              Soma do seu melhor placar em cada um dos 3 jogos. Mande bem em todos pra liderar! 🐾
+              Soma do seu melhor placar em cada jogo. Mande bem em todos pra liderar! 🐾
             </Text>
           ) : null}
 
@@ -242,8 +251,8 @@ export default function GamesHubScreen() {
             })}
           </View>
 
-          {/* toggle */}
-          <View style={{ flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 999, padding: 4 }}>
+          {/* toggle de jogo (scroll horizontal — cabe 4+ jogos sem espremer) */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
             {GAMES.map((g) => {
               const active = rankGame === g.key;
               return (
@@ -251,11 +260,10 @@ export default function GamesHubScreen() {
                   key={g.key}
                   onPress={() => setRankGame(g.key)}
                   style={{
-                    flex: 1,
                     paddingVertical: 8,
+                    paddingHorizontal: 14,
                     borderRadius: 999,
-                    backgroundColor: active ? '#FBBF24' : 'transparent',
-                    alignItems: 'center',
+                    backgroundColor: active ? '#FBBF24' : 'rgba(0,0,0,0.3)',
                   }}
                 >
                   <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: active ? '#1A1410' : 'rgba(255,255,255,0.7)' }}>
@@ -264,7 +272,7 @@ export default function GamesHubScreen() {
                 </Pressable>
               );
             })}
-          </View>
+          </ScrollView>
 
           {/* Sua posição (mesmo fora do top-20) */}
           {userId ? (
@@ -309,7 +317,7 @@ export default function GamesHubScreen() {
                 </Text>
               ) : (
                 <Text style={{ fontFamily: FONTS.body, fontSize: 12.5, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
-                  Você ainda não pontuou — jogue os 3 jogos pra entrar no placar geral! 🎮
+                  Você ainda não pontuou — jogue os jogos pra entrar no placar geral! 🎮
                 </Text>
               )}
             </View>

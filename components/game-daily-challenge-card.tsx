@@ -25,6 +25,7 @@ const GAME_ROUTE: Record<GameKey, string> = {
   treats: '/(app)/games/treats',
   quiz: '/(app)/games/quiz',
   caminho: '/(app)/games/caminho',
+  runner: '/(app)/games/runner',
 };
 const MEDALS = ['🥇', '🥈', '🥉'];
 const PINK = '#F472B6';
