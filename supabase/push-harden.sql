@@ -173,6 +173,33 @@ begin
     end if;
   end loop;
 
+  -- 6) REMEDIOS continuos ATIVOS -> lembrete diario de manha (cobre app fechado).
+  --    So daily/twice_daily (continuos): weekly/monthly precisariam de intervalo
+  --    a partir do start_date (nao modelado). Dedup diario (1x/dia).
+  for r in
+    select pet.owner_id as uid, string_agg(distinct pet.name, ', ') as pet_names
+    from public.medications m
+    join public.pets pet on pet.id = m.pet_id
+    where m.active = true
+      and m.frequency in ('daily', 'twice_daily')
+      and m.start_date <= current_date
+      and (m.end_date is null or m.end_date >= current_date)
+      and exists (select 1 from public.push_subscriptions ps where ps.user_id = pet.owner_id)
+    group by pet.owner_id
+  loop
+    v_dedup := 'meds:' || current_date::text;
+    select count(*) into v_already from public.push_notifications_sent
+      where user_id = r.uid and dedup_key = v_dedup and sent_at > now() - interval '20 hours';
+    if v_already = 0 then
+      perform net.http_post(url := v_url, headers := v_headers,
+        body := jsonb_build_object('user_id', r.uid,
+          'title', chr(128138) || ' Remedios de hoje',
+          'body', 'Nao esqueca os remedios de ' || r.pet_names || ' hoje.',
+          'url', '/reminders', 'tag', 'meds-daily'));
+      insert into public.push_notifications_sent(user_id, dedup_key) values (r.uid, v_dedup);
+    end if;
+  end loop;
+
   -- housekeeping: limpa dedup antigo
   delete from public.push_notifications_sent where sent_at < now() - interval '30 days';
 end;
