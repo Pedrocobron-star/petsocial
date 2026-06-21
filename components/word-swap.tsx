@@ -40,7 +40,7 @@ export function WordSwap({ words, interval = 2200, style, className }: Props) {
   }));
 
   return (
-    <Animated.View style={[animStyle, { alignSelf: 'flex-start' }]}>
+    <Animated.View style={animStyle}>
       <Text style={style} className={className}>
         {words[index]}
       </Text>

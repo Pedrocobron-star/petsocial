@@ -91,6 +91,9 @@ function FounderPromoBanner() {
     staleTime: 60_000,
   });
   if (!data || !data.active) return null;
+  // Mostra quantos JÁ garantiram (display_count = reais + 14, pra ter momento de
+  // largada e nunca aparecer vazio/"seja o primeiro"). Nunca em branco.
+  const joined = data.display_count ?? 14;
   return (
     <Link href="/(auth)/sign-up" asChild>
       <Pressable
@@ -109,9 +112,8 @@ function FounderPromoBanner() {
         <Text
           style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#FFFFFF', textAlign: 'center' }}
         >
-          Lançamento: os <Text style={{ color: '#FFE08A' }}>100 primeiros</Text> ganham{' '}
-          <Text style={{ color: '#FFE08A' }}>3 meses de Pet Pro grátis</Text> · restam{' '}
-          {data.remaining}
+          Lançamento: <Text style={{ color: '#FFE08A' }}>3 meses de Pet Pro grátis</Text> pros 100
+          primeiros · <Text style={{ color: '#FFE08A' }}>{joined} já garantiram</Text>
         </Text>
         <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
       </Pressable>
