@@ -29,6 +29,7 @@ import {
   fetchHealthTimeline,
   fetchParasiteSummary,
   fetchPet,
+  fetchPetPrivate,
   fetchPetSymptoms,
   qk,
   type ParasiteSummary,
@@ -82,8 +83,14 @@ function HealthHubInner() {
     queryFn: () => fetchActiveDiet(id),
     enabled: !!id,
   });
+  const petPrivateQuery = useQuery({
+    queryKey: ['pet-private', id],
+    queryFn: () => fetchPetPrivate(id),
+    enabled: !!id,
+  });
 
   const pet = petQuery.data;
+  const petPrivate = petPrivateQuery.data;
   const summary = summaryQuery.data;
   const parasiteSummary = parasiteSummaryQuery.data;
   const timeline = timelineQuery.data ?? [];
@@ -160,6 +167,15 @@ function HealthHubInner() {
             })}
             parasiteSummary={parasiteSummary}
             softNudge={softNudge}
+          />
+        ) : null}
+
+        {pet ? (
+          <ConditionsCard
+            allergies={petPrivate?.allergies ?? null}
+            conditions={petPrivate?.known_conditions ?? null}
+            petName={pet.name}
+            editHref={`/pet/${id}/edit`}
           />
         ) : null}
 
@@ -594,6 +610,67 @@ function AlertRow({ alert }: { alert: HealthAlert }) {
         </Text>
       </View>
     </View>
+  );
+}
+
+function ConditionsCard({
+  allergies,
+  conditions,
+  petName,
+  editHref,
+}: {
+  allergies: string | null;
+  conditions: string | null;
+  petName: string;
+  editHref: string;
+}) {
+  const { theme } = useTheme();
+  const a = allergies?.trim();
+  const c = conditions?.trim();
+  if (a || c) {
+    return (
+      <View style={{ backgroundColor: '#FEF3C7', borderRadius: 16, padding: 14, gap: 8, borderWidth: 1, borderColor: '#FCD34D' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: '#92400E' }}>⚠️ Condições & alergias</Text>
+          <Link href={editHref as never} asChild>
+            <Pressable hitSlop={6}>
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#92400E' }}>Editar</Text>
+            </Pressable>
+          </Link>
+        </View>
+        {a ? (
+          <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#78350F', lineHeight: 18 }}>
+            <Text style={{ fontFamily: FONTS.bodyBold }}>Alergias: </Text>
+            {a}
+          </Text>
+        ) : null}
+        {c ? (
+          <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#78350F', lineHeight: 18 }}>
+            <Text style={{ fontFamily: FONTS.bodyBold }}>Condições: </Text>
+            {c}
+          </Text>
+        ) : null}
+        <Text style={{ fontFamily: FONTS.body, fontSize: 11, color: '#92400E', opacity: 0.8 }}>
+          Aparece também no prontuário e na carteirinha que você leva ao vet.
+        </Text>
+      </View>
+    );
+  }
+  return (
+    <Link href={editHref as never} asChild>
+      <Pressable
+        style={{ backgroundColor: theme.surface, borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: theme.borderLight }}
+      >
+        <Text style={{ fontSize: 20 }}>🩹</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: theme.text }}>Tem alergia ou condição crônica?</Text>
+          <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: theme.textMuted }}>
+            Anote pra {petName} e o vet terem sempre à mão.
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
+      </Pressable>
+    </Link>
   );
 }
 
