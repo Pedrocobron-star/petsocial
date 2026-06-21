@@ -156,7 +156,7 @@ export function TournamentCard() {
         </View>
       ) : (
         <Text style={{ fontFamily: FONTS.body, fontSize: 12.5, color: '#C4B5FD' }}>
-          Ninguém pontuou ainda — seja o primeiro do pódio! 🚀
+          Ninguém pontuou ainda. Seja o primeiro do pódio! 🚀
         </Text>
       )}
 

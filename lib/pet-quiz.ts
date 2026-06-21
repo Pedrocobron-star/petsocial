@@ -7,7 +7,11 @@ export interface QuizQuestion {
 
 /**
  * Banco de perguntas de conhecimentos gerais sobre pets (PT-BR).
- * Fatos amplamente conhecidos — NÃO é diagnóstico/aconselhamento veterinário.
+ * Fatos amplamente conhecidos. NÃO é diagnóstico/aconselhamento veterinário.
+ *
+ * MÍNIMO RECOMENDADO: 20 perguntas. O Quiz no Difícil sorteia 12 por partida
+ * (lib/games -> DIFF_PARAMS), então manter folga garante variedade entre
+ * partidas. Se cair abaixo disso, as partidas começam a repetir muito.
  */
 export const PET_QUIZ: QuizQuestion[] = [
   {

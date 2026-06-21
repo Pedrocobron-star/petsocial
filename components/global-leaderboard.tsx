@@ -61,7 +61,7 @@ export function GlobalLeaderboard({ limit = 30, currentUserId }: { limit?: numbe
             textAlign: 'center',
           }}
         >
-          Ninguém pontuou ainda. Jogue os 3 jogos e lidere o placar geral!
+          Ninguém pontuou ainda. Jogue os jogos e lidere o placar geral!
         </Text>
       </View>
     );

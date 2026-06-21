@@ -41,7 +41,7 @@
 create table if not exists public.game_sessions (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
-  game        text not null check (game in ('treats', 'quiz', 'caminho')),
+  game        text not null check (game in ('treats', 'quiz', 'caminho', 'runner')),
   difficulty  smallint not null check (difficulty in (1, 2, 3)),
   started_at  timestamptz not null default now(),
   used_at     timestamptz
@@ -63,7 +63,7 @@ begin
   if auth.uid() is null then
     raise exception 'nao autenticado' using errcode = '42501';
   end if;
-  if p_game not in ('treats', 'quiz', 'caminho') then
+  if p_game not in ('treats', 'quiz', 'caminho', 'runner') then
     raise exception 'jogo invalido' using errcode = '22023';
   end if;
   insert into public.game_sessions(user_id, game, difficulty)
@@ -109,7 +109,7 @@ begin
   -- teto PLAUSIVEL por jogo (max real x margem: treats ~1900, quiz 216,
   -- caminho 750). Bem abaixo do teto bruto antigo (5000/800/1500), mas com
   -- folga generosa pra nunca barrar um run legitimo (licao do v139).
-  v_max := case s.game when 'treats' then 3000 when 'quiz' then 400 when 'caminho' then 1200 else 10000 end;
+  v_max := case s.game when 'treats' then 3000 when 'quiz' then 400 when 'caminho' then 1200 when 'runner' then 8000 else 10000 end;
   if p_score < 0 or p_score > v_max then
     raise exception 'pontuacao invalida' using errcode = '22023';
   end if;

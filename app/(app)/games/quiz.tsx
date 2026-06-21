@@ -297,6 +297,9 @@ export default function PetQuizScreen() {
                     key={i}
                     onPress={() => choose(i)}
                     disabled={picked !== null}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Resposta: ${opt}`}
+                    accessibilityState={{ disabled: picked !== null, selected: isPicked }}
                     style={{
                       backgroundColor: bg,
                       borderWidth: 1.5,

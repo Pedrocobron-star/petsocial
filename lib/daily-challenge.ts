@@ -5,8 +5,8 @@
  * iguais pra todo mundo — o que permite um placar diário compartilhado e
  * comparação social (motor de FOMO/retorno-diário, estilo Wordle).
  *
- * A escolha é determinística a partir do número do dia: passo 4 (coprimo de 9)
- * percorre as 9 combinações (3 jogos × 3 dificuldades) antes de repetir, e a
+ * A escolha é determinística a partir do número do dia: passo 5 (coprimo de 12)
+ * percorre as 12 combinações (4 jogos × 3 dificuldades) antes de repetir, e a
  * tabela é intercalada por jogo, então nunca cai no mesmo jogo dois dias
  * seguidos. Tudo puro/testável; só o cálculo da data usa o relógio.
  */
@@ -22,20 +22,24 @@ const COMBOS: Combo[] = [
   { game: 'treats', difficulty: 1 }, // 0
   { game: 'quiz', difficulty: 2 }, // 1
   { game: 'caminho', difficulty: 3 }, // 2
-  { game: 'treats', difficulty: 2 }, // 3
-  { game: 'quiz', difficulty: 3 }, // 4
-  { game: 'caminho', difficulty: 1 }, // 5
-  { game: 'treats', difficulty: 3 }, // 6
-  { game: 'quiz', difficulty: 1 }, // 7
-  { game: 'caminho', difficulty: 2 }, // 8
+  { game: 'runner', difficulty: 1 }, // 3
+  { game: 'treats', difficulty: 2 }, // 4
+  { game: 'quiz', difficulty: 3 }, // 5
+  { game: 'caminho', difficulty: 1 }, // 6
+  { game: 'runner', difficulty: 2 }, // 7
+  { game: 'treats', difficulty: 3 }, // 8
+  { game: 'quiz', difficulty: 1 }, // 9
+  { game: 'caminho', difficulty: 2 }, // 10
+  { game: 'runner', difficulty: 3 }, // 11
 ];
 
-const STEP = 4; // coprimo de 9 → cobre as 9 combinações antes de repetir
+const STEP = 5; // coprimo de 12 → cobre as 12 combinações antes de repetir
 
 /** PURO. Mesmo dayNumber → mesmo {game, difficulty}, sempre. Lida com negativos. */
 export function pickDailyChallenge(dayNumber: number): Combo {
   const n = Math.trunc(dayNumber);
-  const idx = (((n * STEP) % 9) + 9) % 9;
+  const len = COMBOS.length;
+  const idx = (((n * STEP) % len) + len) % len;
   return COMBOS[idx];
 }
 

@@ -9,10 +9,10 @@
 alter table public.game_scores
   add column if not exists difficulty smallint check (difficulty in (1, 2, 3));
 
--- 2) liberar o jogo novo 'caminho' (Caminho do Au-Au) no CHECK de game
+-- 2) CHECK de game (inclui 'caminho' e 'runner'; runner tambem liberado em games-runner.sql)
 alter table public.game_scores drop constraint if exists game_scores_game_check;
 alter table public.game_scores add constraint game_scores_game_check
-  check (game in ('treats', 'quiz', 'caminho'));
+  check (game in ('treats', 'quiz', 'caminho', 'runner'));
 
 create index if not exists game_scores_game_diff_idx
   on public.game_scores(game, difficulty, score desc);

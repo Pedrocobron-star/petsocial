@@ -102,7 +102,7 @@ const BASE_ACHIEVEMENTS: AchievementDef[] = [
     id: 'arcade_explorer',
     emoji: '🕹️',
     title: 'Explorador da Arena',
-    description: 'Jogou os 3 jogos da Arena Pet',
+    description: 'Jogou 3 jogos diferentes da Arena Pet',
     tier: 2,
   },
   {

@@ -291,7 +291,7 @@ export default function GamesHubScreen() {
                 </Text>
               ) : (
                 <Text style={{ fontFamily: FONTS.body, fontSize: 12.5, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
-                  Você ainda não pontuou{period === 'week' ? ' esta semana' : ''} — jogue pra entrar no ranking! 🎮
+                  Você ainda não pontuou{period === 'week' ? ' esta semana' : ''}. Jogue pra entrar no ranking! 🎮
                 </Text>
               )}
             </View>
@@ -317,7 +317,7 @@ export default function GamesHubScreen() {
                 </Text>
               ) : (
                 <Text style={{ fontFamily: FONTS.body, fontSize: 12.5, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
-                  Você ainda não pontuou — jogue os jogos pra entrar no placar geral! 🎮
+                  Você ainda não pontuou. Jogue os jogos pra entrar no placar geral! 🎮
                 </Text>
               )}
             </View>

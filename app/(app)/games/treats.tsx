@@ -183,7 +183,7 @@ export default function TreatsGameScreen() {
   function moveBasket(localX: number) {
     const w = areaRef.current.w;
     const bw = TREATS_TUNING[difficultyRef.current].basketW;
-    if (!w) return;
+    if (!w || typeof localX !== 'number' || !Number.isFinite(localX)) return; // ignora eventos de toque malformados (locationX ausente)
     const x = Math.max(0, Math.min(localX - bw / 2, w - bw));
     basketXRef.current = x;
     basketAnim.setValue(x);

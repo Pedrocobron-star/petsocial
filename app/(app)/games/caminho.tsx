@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Confetti } from '@/components/confetti';
@@ -121,7 +121,8 @@ function genLevel(diff: GameDifficulty, idx: number): Level {
     level.collectibles = new Set(cands.slice(0, numColl));
     return level;
   }
-  // fallback garantido (sem paredes)
+  // fallback garantido (sem paredes) — só chega aqui se 90 tentativas falharem (raro)
+  console.warn(`[caminho] genLevel usou fallback (diff=${diff}, idx=${idx})`);
   return { rows, cols, start: [0, 0], treat: [rows - 1, cols - 1], walls: new Set(), collectibles: new Set([cellKey(0, cols - 1)]) };
 }
 
@@ -153,13 +154,19 @@ export default function CaminhoGameScreen() {
   const levelRef = useRef<Level>(level);
   const collectedRef = useRef<Set<string>>(new Set());
   const sessionRef = useRef<string | null>(null);
+  const tickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   scoreRef.current = score;
   levelRef.current = level;
+  // par (menor caminho) memoizado: roda só quando a fase muda, não a cada passo do cão
+  const par = useMemo(() => bfsPar(level), [level]);
 
   useEffect(() => {
     aliveRef.current = true;
     return () => {
       aliveRef.current = false;
+      if (tickTimerRef.current) clearTimeout(tickTimerRef.current);
+      if (advTimerRef.current) clearTimeout(advTimerRef.current);
     };
   }, []);
 
@@ -282,7 +289,6 @@ export default function CaminhoGameScreen() {
       }
       if (pos[0] === lv.treat[0] && pos[1] === lv.treat[1]) {
         const used = i;
-        const par = bfsPar(lv);
         const effBonus = Math.max(0, 40 - Math.max(0, used - par) * 8);
         const collBonus = collectedRef.current.size * 15;
         const gained = 60 + effBonus + collBonus;
@@ -297,12 +303,12 @@ export default function CaminhoGameScreen() {
         setRunning(false);
         setMessage({ text: `+${gained}${collBonus ? `  ·  ${collectedRef.current.size} ⭐ coletado${collectedRef.current.size > 1 ? 's' : ''}` : ''}`, ok: true, stars: got });
         haptic.success();
-        setTimeout(() => {
+        advTimerRef.current = setTimeout(() => {
           if (aliveRef.current) finishOrAdvance(total);
         }, ADVANCE_MS);
         return;
       }
-      setTimeout(tick, STEP_MS);
+      tickTimerRef.current = setTimeout(tick, STEP_MS);
     };
     setTimeout(tick, STEP_MS);
   };
@@ -352,7 +358,7 @@ export default function CaminhoGameScreen() {
               </Text>
             ) : (
               <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
-                Melhor caminho: {bfsPar(level)} passos{level.collectibles.size > 0 ? `  ·  ⭐ x${level.collectibles.size} no caminho` : ''}
+                Melhor caminho: {par} passos{level.collectibles.size > 0 ? `  ·  ⭐ x${level.collectibles.size} no caminho` : ''}
               </Text>
             )}
 

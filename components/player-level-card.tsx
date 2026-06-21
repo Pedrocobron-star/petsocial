@@ -51,7 +51,7 @@ export function PlayerLevelCard() {
           <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: 'rgba(255,255,255,0.65)' }}>
             {xp > 0
               ? `${lvl.xp} XP · faltam ${lvl.toNext} pro nível ${lvl.level + 1}`
-              : 'Jogue os 3 jogos pra ganhar XP e subir de nível!'}
+              : 'Jogue os jogos pra ganhar XP e subir de nível!'}
           </Text>
         </View>
       </View>
