@@ -90,6 +90,23 @@ function HealthHubInner() {
   const activeSymptoms = activeSymptomsQuery.data ?? [];
   const snapshots = snapshotsQuery.data ?? [];
   const computedScore = summary ? computeHealthScore(summary, parasiteSummary) : null;
+  // Nudge gentil de cuidado: check-up anual (último >6 meses ou nunca). Aparece
+  // só quando não há nada urgente/atenção — vira "próxima ação" sem alarmismo.
+  const monthsSinceVet = summary?.last_vet_visit?.visited_at
+    ? (Date.now() - new Date(summary.last_vet_visit.visited_at).getTime()) / 2.592e9
+    : null;
+  const softNudge: SoftNudge | null =
+    pet && (monthsSinceVet === null || monthsSinceVet >= 6)
+      ? {
+          title: 'Que tal um check-up?',
+          description:
+            monthsSinceVet === null
+              ? `Registre a primeira consulta do ${pet.name}. Um check-up anual pega problemas cedo.`
+              : `A última consulta foi há ${Math.round(monthsSinceVet)} meses. Um check-up anual mantém tudo em ordem.`,
+          href: `/pet/${id}/vet-visits`,
+          label: 'Ver consultas',
+        }
+      : null;
   // Cadastro de saúde incompleto: nenhuma das 3 dimensões essenciais
   // (vacina, vermífugo, consulta) tem registro. Aí não faz sentido mostrar
   // "evolução" — não há histórico real pra acompanhar ainda.
@@ -133,6 +150,7 @@ function HealthHubInner() {
         {pet && summary ? (
           <AlertsPreview
             petId={id}
+            petName={pet.name}
             alerts={computeHealthAlerts({
               pet,
               summary,
@@ -141,6 +159,7 @@ function HealthHubInner() {
               // alertas detalhados de parasitas aparecem na tela dedicada
             })}
             parasiteSummary={parasiteSummary}
+            softNudge={softNudge}
           />
         ) : null}
 
@@ -400,14 +419,25 @@ function parasiteSubtitle(summary: ParasiteSummary | undefined): string {
   return `${summary.total} ${summary.total === 1 ? 'registro' : 'registros'}`;
 }
 
+interface SoftNudge {
+  title: string;
+  description: string;
+  href: string;
+  label: string;
+}
+
 function AlertsPreview({
   petId,
+  petName,
   alerts,
   parasiteSummary,
+  softNudge,
 }: {
   petId: string;
+  petName: string;
   alerts: HealthAlert[];
   parasiteSummary: ParasiteSummary | undefined;
+  softNudge: SoftNudge | null;
 }) {
   const { theme } = useTheme();
   const isPro = useIsPro();
@@ -451,7 +481,39 @@ function AlertsPreview({
     return (a.daysUntil ?? Infinity) - (b.daysUntil ?? Infinity);
   });
 
-  if (combined.length === 0) return null;
+  // Nada urgente/atenção: celebra (reforço positivo) ou sugere 1 ação gentil.
+  if (combined.length === 0) {
+    if (softNudge) {
+      return (
+        <View style={{ backgroundColor: '#DBEAFE', borderRadius: 16, padding: 16, gap: 8 }}>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: '#1E40AF' }}>
+            🩺 {softNudge.title}
+          </Text>
+          <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#1E3A8A', lineHeight: 19 }}>
+            {softNudge.description}
+          </Text>
+          <Link href={softNudge.href as never} asChild>
+            <Pressable
+              style={{ alignSelf: 'flex-start', backgroundColor: '#1E40AF', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, marginTop: 2 }}
+            >
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 13, color: '#fff' }}>{softNudge.label}</Text>
+            </Pressable>
+          </Link>
+        </View>
+      );
+    }
+    return (
+      <View style={{ backgroundColor: '#DCFCE7', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Text style={{ fontSize: 30 }}>🎉</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: '#166534' }}>Tudo em dia!</Text>
+          <Text style={{ fontFamily: FONTS.body, fontSize: 13, color: '#15803D', lineHeight: 18 }}>
+            {petName} está com a saúde em ordem. Continue cuidando assim. 🐾
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   // Alertas preventivos (info) = coaching do Pet Pro. Urgentes/atenção sempre livres.
   const rendered = isPro ? combined : combined.filter((a) => a.severity !== 'info');
