@@ -629,47 +629,54 @@ export default function PetPhoneScreen() {
             ))}
           </View>
 
-          <View style={{ flex: 1, minHeight: 12 }} />
-
-          {/* Pílula de busca */}
+          {/* Área vazia da home: segurar abre o seletor de papel de parede (como num celular) */}
           <Pressable
-            onPress={() => router.push('/(app)/(tabs)/explore' as never)}
-            style={{
-              alignSelf: 'center',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-              backgroundColor: 'rgba(255,255,255,0.22)',
-              borderRadius: 20,
-              paddingHorizontal: 18,
-              paddingVertical: 8,
-              marginTop: 12,
+            onLongPress={() => {
+              haptic.light();
+              setShowWallpapers(true);
             }}
-          >
-            <Ionicons name="search" size={15} color="#fff" />
-            <Text style={[{ fontFamily: FONTS.bodyMedium, fontSize: 13, color: '#fff' }, LABEL_SHADOW]}>Buscar</Text>
-          </Pressable>
+            delayLongPress={400}
+            style={{ flex: 1, minHeight: 12 }}
+          />
+
+          {/* Pílula de busca + paleta (trocar papel de parede) */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 12 }}>
+            <Pressable
+              onPress={() => router.push('/(app)/(tabs)/explore' as never)}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                backgroundColor: 'rgba(255,255,255,0.22)',
+                borderRadius: 20,
+                paddingHorizontal: 18,
+                paddingVertical: 8,
+              }}
+            >
+              <Ionicons name="search" size={15} color="#fff" />
+              <Text style={[{ fontFamily: FONTS.bodyMedium, fontSize: 13, color: '#fff' }, LABEL_SHADOW]}>Buscar</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                haptic.light();
+                setShowWallpapers((s) => !s);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Trocar papel de parede"
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 19,
+                backgroundColor: 'rgba(255,255,255,0.22)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="color-palette-outline" size={18} color="#fff" />
+            </Pressable>
+          </View>
         </ScrollView>
       </View>
-
-      {/* Botão papel de parede */}
-      <Pressable
-        onPress={() => setShowWallpapers((s) => !s)}
-        accessibilityLabel="Trocar papel de parede"
-        style={{
-          position: 'absolute',
-          top: 52,
-          right: 14,
-          width: 34,
-          height: 34,
-          borderRadius: 17,
-          backgroundColor: 'rgba(0,0,0,0.22)',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Text style={{ fontSize: 16 }}>🎨</Text>
-      </Pressable>
 
       {/* Animação de abrir app (zoom do ícone) */}
       {openingTile ? (
