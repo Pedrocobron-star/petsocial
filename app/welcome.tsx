@@ -421,7 +421,7 @@ function AppsShowcase() {
     { emoji: '💬', name: 'Mensagens', desc: 'Converse no chat com outros tutores e combine cuidados.', bg: '#F3E8FF', fg: '#7E22CE' },
     { emoji: '🏆', name: 'Conquistas', desc: 'Medalhas por cuidar bem e manter tudo em dia.', bg: '#FEF3C7', fg: '#B45309' },
     { emoji: '🦴', name: 'Achados', desc: 'Mural de perdidos e encontrados com geolocalização.', bg: '#FEF9C3', fg: '#A16207' },
-    { emoji: '🎁', name: 'Vantagens', desc: 'Clube de descontos em produtos e serviços pet.', bg: '#FCE7F3', fg: '#BE185D' },
+    // 'Vantagens' (clube de descontos) escondido da vitrine até ter ofertas reais.
   ];
   const { width } = useWindowDimensions();
   const cols = width >= 1000 ? 3 : width >= 640 ? 2 : 1;

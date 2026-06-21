@@ -481,7 +481,10 @@ export default function PetPhoneScreen() {
       { label: 'Notificações', emoji: '🔔', bg: '#F87171', href: '/(app)/notifications' },
       { label: 'Achados', emoji: '🦴', bg: '#FCD34D', href: '/(app)/lost-found' },
       { label: 'Adoção', emoji: '🏠', bg: '#F472B6', href: '/(app)/adoption' },
-      { label: 'Vantagens', emoji: '🎁', bg: '#DB2777', href: '/(app)/offers' },
+      // 'Vantagens' (clube de descontos) escondido por enquanto — sem parcerias
+      // fechadas ainda. Estrutura mantida (tela /offers + admin); é só readicionar
+      // este tile quando houver ofertas reais.
+      // { label: 'Vantagens', emoji: '🎁', bg: '#DB2777', href: '/(app)/offers' },
       { label: 'Ajustes', emoji: '⚙️', bg: '#94A3B8', href: '/(app)/account' },
       { label: 'Pet Pro', emoji: '⭐', bg: '#FBBF24', href: '/(app)/pro' },
       ...(isAdmin ? [{ label: 'Admin', emoji: '🛠️', bg: '#1F2937', href: '/(app)/admin' }] : []),
