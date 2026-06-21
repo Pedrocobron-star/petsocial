@@ -9,6 +9,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MetaTags } from '@/components/meta-tags';
+import { AdSlot } from '@/components/news/ad-slot';
 import { AffiliateProducts } from '@/components/news/affiliate-products';
 import { ArticleBody, ImageCaption } from '@/components/news/article-body';
 import { ArticleTags } from '@/components/news/article-tags';
@@ -322,6 +323,9 @@ export default function PublicArticleReader() {
 
               {/* Corpo (parágrafos + imagens com legenda via ![legenda](url)) */}
               <ArticleBody body={article.body} />
+
+              {/* Espaço de anúncio após a matéria (dormente até o AdSense ligar) */}
+              <AdSlot style={{ marginTop: 20 }} />
 
               {/* Tags (sem link na versão pública) */}
               <ArticleTags tags={article.tags} />

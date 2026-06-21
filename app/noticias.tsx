@@ -7,6 +7,9 @@ import { Link, Stack } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Fragment } from 'react';
+
+import { AdSlot } from '@/components/news/ad-slot';
 import { MetaTags } from '@/components/meta-tags';
 import { CenteredColumn } from '@/components/ui/centered-column';
 import { FONTS } from '@/lib/fonts';
@@ -75,8 +78,12 @@ export default function PublicNewsIndex() {
           ) : null}
 
           <View style={{ paddingHorizontal: 14, gap: 12 }}>
-            {articles.map((a) => (
-              <ArticleCard key={a.id} article={a} />
+            {articles.map((a, i) => (
+              <Fragment key={a.id}>
+                <ArticleCard article={a} />
+                {/* Espaço de anúncio a cada 4 matérias (dormente até o AdSense ligar) */}
+                {(i + 1) % 4 === 0 && i < articles.length - 1 ? <AdSlot /> : null}
+              </Fragment>
             ))}
           </View>
 
