@@ -1,3 +1,4 @@
+import { deleteFromBucket } from './storage';
 import { supabase } from './supabase';
 import type {
   AiConversation,
@@ -1574,7 +1575,36 @@ export async function resolveLostReport(id: string) {
   if (error) throw error;
 }
 
+/**
+ * Data de HOJE no fuso LOCAL do dispositivo (yyyy-MM-dd). NÃO usar
+ * toISOString().split('T')[0] pra "hoje": isso é UTC e, à noite no Brasil
+ * (UTC-3), vira o dia seguinte — fazia vacina/vermífugo/remédio de hoje cair
+ * fora do filtro de data (colunas date no banco).
+ */
+function localDateStr(d: Date = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export async function deleteLostReport(id: string) {
+  // Limpa a mídia do storage ANTES de apagar a linha (senão fotos/vídeo ficam
+  // órfãos no bucket). Best-effort: a exclusão da linha roda de qualquer forma.
+  try {
+    const { data: rep } = await supabase
+      .from('lost_reports')
+      .select('image_urls, video_url')
+      .eq('id', id)
+      .single();
+    const urls: string[] = [
+      ...(((rep as { image_urls?: string[] | null } | null)?.image_urls) ?? []),
+      ...(((rep as { video_url?: string | null } | null)?.video_url) ? [(rep as { video_url?: string | null }).video_url as string] : []),
+    ];
+    if (urls.length) await Promise.all(urls.map((u) => deleteFromBucket('posts', u).catch(() => undefined)));
+  } catch {
+    // ignora — não bloqueia a exclusão
+  }
   const { error } = await supabase.from('lost_reports').delete().eq('id', id);
   if (error) throw error;
 }
@@ -1991,7 +2021,7 @@ export async function createMedication(input: {
     .from('medications')
     .insert({
       ...input,
-      start_date: input.start_date ?? new Date().toISOString().split('T')[0],
+      start_date: input.start_date ?? localDateStr(),
     })
     .select('*')
     .single();
@@ -2193,7 +2223,7 @@ export async function addWeightRecord(input: {
     .from('weight_records')
     .insert({
       ...input,
-      weighed_at: input.weighed_at ?? new Date().toISOString().split('T')[0],
+      weighed_at: input.weighed_at ?? localDateStr(),
     })
     .select('*')
     .single();
@@ -2209,7 +2239,7 @@ export async function deleteWeightRecord(id: string): Promise<void> {
 // -------- Pet Health: Summary --------
 
 export async function fetchHealthSummary(petId: string): Promise<HealthSummary> {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateStr();
 
   // Próxima vacina (mais cedo no futuro, não null)
   const { data: vacs } = await supabase
@@ -2535,7 +2565,12 @@ export async function fetchPlaces(filter: {
   let q = supabase.from('places').select('*');
   if (filter.kind) q = q.eq('kind', filter.kind);
   if (filter.city) q = q.ilike('city', `%${filter.city}%`);
-  if (filter.search) q = q.or(`name.ilike.%${filter.search}%,address.ilike.%${filter.search}%`);
+  if (filter.search) {
+    // sanitiza: tira os chars com significado no filtro PostgREST or() (, ( ) * % \)
+    // pra o texto de busca não conseguir injetar condições extras.
+    const safe = filter.search.replace(/[,()*%\\]/g, ' ').trim();
+    if (safe) q = q.or(`name.ilike.%${safe}%,address.ilike.%${safe}%`);
+  }
   q = q.order('verified', { ascending: false }).order('created_at', { ascending: false }).limit(limit);
   const { data: places, error } = await q;
   if (error) throw error;
